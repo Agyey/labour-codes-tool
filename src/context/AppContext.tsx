@@ -182,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       alert("Failed to save to database. Check console.");
     }
-  }, []);
+  }, [session]);
 
   const deleteProvision = useCallback((id: string) => {
     setProvisions((prev) => prev.filter((x) => x.id !== id));
