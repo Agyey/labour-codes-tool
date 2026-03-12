@@ -1,6 +1,8 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
+import { useFilter } from "@/context/FilterContext";
 import { CODES } from "@/config/codes";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { ProvisionCard } from "@/components/provisions/ProvisionCard";
@@ -10,12 +12,9 @@ import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function MappingView() {
-  const {
-    activeCode,
-    filteredProvisions,
-    canEdit,
-    setEditingProvision,
-  } = useApp();
+  const { activeCode, setEditingProvision } = useUI();
+  const { canEdit } = useData();
+  const { filteredProvisions } = useFilter();
 
   const cObj = CODES[activeCode];
 

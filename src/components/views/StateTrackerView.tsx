@@ -1,6 +1,7 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import { STATES } from "@/config/states";
 import { Badge } from "@/components/shared/Badge";
@@ -9,7 +10,8 @@ import { Globe, MapPin } from "lucide-react";
 import { useMemo } from "react";
 
 export function StateTrackerView() {
-  const { activeCode, provisions } = useApp();
+  const { activeCode } = useUI();
+  const { provisions } = useData();
   const cObj = CODES[activeCode];
 
   const stateProvisions = useMemo(() => provisions

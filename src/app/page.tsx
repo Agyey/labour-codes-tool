@@ -1,6 +1,7 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { MappingView } from "@/components/views/MappingView";
@@ -12,7 +13,7 @@ import { CompareView } from "@/components/views/CompareView";
 import { EditorModal } from "@/components/provisions/EditorModal";
 
 function ViewRouter() {
-  const { activeView, editingProvision } = useApp();
+  const { activeView, editingProvision } = useUI();
 
   return (
     <>
@@ -40,7 +41,7 @@ function ViewRouter() {
 }
 
 export default function Home() {
-  const { loading } = useApp();
+  const { loading } = useData();
 
   if (loading) {
     return (

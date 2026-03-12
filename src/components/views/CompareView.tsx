@@ -1,6 +1,7 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import { IMPACT_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
@@ -9,8 +10,8 @@ import { GitCompare, ArrowLeftRight } from "lucide-react";
 import { useMemo } from "react";
 
 export function CompareView() {
-  const { activeCode, provisions, compareA, compareB, setCompareA, setCompareB } =
-    useApp();
+  const { activeCode, compareA, compareB, setCompareA, setCompareB } = useUI();
+  const { provisions } = useData();
   const cObj = CODES[activeCode];
   
   const codeProvisions = useMemo(() => provisions.filter((x) => x.code === activeCode), [provisions, activeCode]);

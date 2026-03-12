@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useApp } from "@/context/AppContext";
+import { useData } from "@/context/DataContext";
+import { useUI } from "@/context/UIContext";
 import { Search, Command, FileText } from "lucide-react";
 import { CODES } from "@/config/codes";
 import { AnimatePresence, motion } from "framer-motion";
 
 export function CommandPalette() {
-  const { provisions, setActiveCode, setExpandedProvision, setActiveView } = useApp();
+  const { provisions } = useData();
+  const { setActiveCode, setExpandedProvision, setActiveView } = useUI();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 

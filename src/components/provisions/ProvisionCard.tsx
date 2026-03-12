@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import { IMPACT_COLORS, CHANGE_TAG_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
 import { STATES } from "@/config/states";
@@ -36,16 +37,18 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
     activeCode,
     expandedProvisionId,
     setExpandedProvision,
-    canEdit,
     setEditingProvision,
+    showTextMap,
+    toggleShowText,
+  } = useUI();
+  const {
+    canEdit,
     toggleVerify,
     togglePin,
     deleteProvision,
-    showTextMap,
-    toggleShowText,
     complianceStatuses,
     setComplianceStatus,
-  } = useApp();
+  } = useData();
 
   const cObj = CODES[activeCode];
   const isExpanded = expandedProvisionId === p.id;

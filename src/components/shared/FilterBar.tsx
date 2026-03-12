@@ -1,6 +1,8 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
+import { useFilter } from "@/context/FilterContext";
 import { CODES } from "@/config/codes";
 import {
   IMPACT_LEVELS,
@@ -13,22 +15,13 @@ import { createBlankProvision } from "@/lib/utils";
 import { Search, RotateCcw, Plus, Printer } from "lucide-react";
 
 export function FilterBar() {
-  const {
-    activeCode,
-    searchQuery,
-    setSearchQuery,
-    filters,
-    setFilter,
-    resetFilters,
-    canEdit,
-    setEditingProvision,
-    stats,
-  } = useApp();
+  const { activeCode, setEditingProvision } = useUI();
+  const { provisions, canEdit, stats } = useData();
+  const { searchQuery, setSearchQuery, filters, setFilter, resetFilters } = useFilter();
 
   const cObj = CODES[activeCode];
 
   // Get all chapters for the current code
-  const { provisions } = useApp();
   const chapterMap: Record<string, string> = {};
   provisions
     .filter((x) => x.code === activeCode)

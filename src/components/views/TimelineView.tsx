@@ -1,12 +1,14 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function TimelineView() {
-  const { activeCode, provisions } = useApp();
+  const { activeCode } = useUI();
+  const { provisions } = useData();
   const cObj = CODES[activeCode];
 
   const events = provisions

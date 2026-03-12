@@ -1,6 +1,8 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
+import { useFilter } from "@/context/FilterContext";
 import { CODES } from "@/config/codes";
 import type { CodeKey } from "@/types/code";
 import { CommandPalette } from "../shared/CommandPalette";
@@ -37,9 +39,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const {
     mode,
     setMode,
-    passwordVerified,
-    setPasswordVerified,
-    editorPassword,
     activeView,
     setActiveView,
     activeCode,
@@ -47,10 +46,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     sidebarOpen,
     setSidebarOpen,
     setExpandedProvision,
-    setFilter,
-    provisions,
-    canEdit,
-  } = useApp();
+  } = useUI();
+  const { provisions, canEdit, editorPassword } = useData();
+  const { setFilter } = useFilter();
 
   const { data: session } = useSession();
 

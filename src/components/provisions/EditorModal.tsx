@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import {
   CHANGE_TAGS,
@@ -21,8 +22,8 @@ import { CommentSection } from "./CommentSection";
 import { addComment } from "@/app/actions/provisions";
 
 export function EditorModal() {
-  const { editingProvision, setEditingProvision, saveProvision, activeCode, users } =
-    useApp();
+  const { editingProvision, setEditingProvision, activeCode } = useUI();
+  const { saveProvision, users } = useData();
 
   const prov = editingProvision;
   if (!prov) return null;

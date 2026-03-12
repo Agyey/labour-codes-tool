@@ -1,13 +1,15 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import { AlertTriangle, ArrowRight, ShieldAlert } from "lucide-react";
 
 import { useMemo } from "react";
 
 export function PenaltiesView() {
-  const { activeCode, provisions } = useApp();
+  const { activeCode } = useUI();
+  const { provisions } = useData();
   const cObj = CODES[activeCode];
 
   const penaltyProvisions = useMemo(() => provisions.filter(

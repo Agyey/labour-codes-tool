@@ -1,6 +1,7 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import type { CodeKey } from "@/types/code";
 import { ProgressBar } from "@/components/shared/ProgressBar";
@@ -18,7 +19,8 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 
 export function DashboardView() {
-  const { activeCode, provisions, stats, setActiveCode, setActiveView } = useApp();
+  const { activeCode, setActiveCode, setActiveView } = useUI();
+  const { provisions, stats } = useData();
   const cObj = CODES[activeCode];
 
   // Group provisions by code once to prevent map-filter O(N^2) inner loops
