@@ -102,22 +102,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const saveProvision = useCallback(async (p: Provision) => {
     if (!p.id) return;
     const userId = session?.user?.id;
-    const res = await updateProvision(p.id, p, userId);
-
-    if (res.success) {
-      setProvisions((prev) => {
-        const i = prev.findIndex((x) => x.id === p.id);
-        if (i >= 0) {
-          const next = [...prev];
-          next[i] = p;
-          return next;
-        }
-        return [...prev, p];
-      });
-      toast.success("Provision saved.");
-    } else {
-      toast.error("Failed to save. Check your connection and try again.");
-    }
+    
+    await toast.promise(
+      updateProvision(p.id, p, userId).then((res) => {
+        if (!res.success) throw new Error("Failed to save");
+        setProvisions((prev) => {
+          const i = prev.findIndex((x) => x.id === p.id);
+          if (i >= 0) {
+            const next = [...prev];
+            next[i] = p;
+            return next;
+          }
+          return [...prev, p];
+        });
+        return res;
+      }),
+      {
+        loading: "Saving provision...",
+        success: "Provision saved.",
+        error: "Failed to save. Check your connection.",
+      }
+    );
   }, [session]);
 
   const deleteProvision = useCallback((id: string) => {

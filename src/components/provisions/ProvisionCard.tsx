@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, memo } from "react";
 import toast from "react-hot-toast";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
@@ -33,7 +33,7 @@ interface ProvisionCardProps {
   provision: Provision;
 }
 
-export function ProvisionCard({ provision: p }: ProvisionCardProps) {
+export const ProvisionCard = memo(function ProvisionCard({ provision: p }: ProvisionCardProps) {
   const {
     activeCode,
     expandedProvisionId,
@@ -491,4 +491,4 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
       )}
     </div>
   );
-}
+});
