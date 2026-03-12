@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Zod Validation Schema for Provision Updates
 const ProvisionUpdateSchema = z.object({
@@ -119,7 +120,7 @@ export async function getProvisions() {
       })),
     }))
   } catch (error) {
-    console.error("Error fetching provisions:", error)
+    logger.error("Failed to fetch provisions", error);
     return []
   }
 }
@@ -203,7 +204,7 @@ export async function updateProvision(id: string, rawUpdates: any, userId?: stri
     revalidatePath('/')
     return { success: true, provision }
   } catch (error) {
-    console.error("Error updating provision:", error)
+    logger.error("Failed to update provision", error, { provisionId: id, userId });
     throw new Error('Failed to update provision')
   }
 }
@@ -231,7 +232,7 @@ export async function addComment(provisionId: string, body: string, parentId?: s
     revalidatePath('/')
     return { success: true, comment }
   } catch (error) {
-    console.error("Error adding comment:", error)
+    logger.error("Failed to add comment", error, { provisionId });
     throw new Error('Failed to add comment')
   }
 }
