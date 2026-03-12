@@ -6,15 +6,17 @@ import { STATES } from "@/config/states";
 import { Badge } from "@/components/shared/Badge";
 import { Globe, MapPin } from "lucide-react";
 
+import { useMemo } from "react";
+
 export function StateTrackerView() {
   const { activeCode, provisions } = useApp();
   const cObj = CODES[activeCode];
 
-  const stateProvisions = provisions
+  const stateProvisions = useMemo(() => provisions
     .filter((x) => x.code === activeCode)
     .filter((p) =>
       STATES.some((s) => (p.stateNotes || {})[s] || (p.stateRuleText || {})[s])
-    );
+    ), [provisions, activeCode]);
 
   return (
     <div className="space-y-4">

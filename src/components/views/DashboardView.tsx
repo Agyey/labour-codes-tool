@@ -14,11 +14,22 @@ import {
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 
 export function DashboardView() {
   const { activeCode, provisions, stats, setActiveCode, setActiveView } = useApp();
   const cObj = CODES[activeCode];
+
+  // Group provisions by code once to prevent map-filter O(N^2) inner loops
+  const provisionsByCode = useMemo(() => {
+    const acc = {} as Record<string, typeof provisions>;
+    for (const p of provisions) {
+      if (!acc[p.code]) acc[p.code] = [];
+      acc[p.code].push(p);
+    }
+    return acc;
+  }, [provisions]);
 
   const statCards = [
     { label: "Provisions", value: stats.totalProvisions, icon: FileText, color: cObj.c, bg: cObj.bg },
@@ -107,7 +118,7 @@ export function DashboardView() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
             ([key, code], index) => {
-              const codeProvs = provisions.filter((x) => x.code === key);
+              const codeProvs = provisionsByCode[key] || [];
               return (
                 <motion.button
                   key={key}

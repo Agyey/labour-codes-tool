@@ -6,14 +6,17 @@ import { IMPACT_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
 import { GitCompare, ArrowLeftRight } from "lucide-react";
 
+import { useMemo } from "react";
+
 export function CompareView() {
   const { activeCode, provisions, compareA, compareB, setCompareA, setCompareB } =
     useApp();
   const cObj = CODES[activeCode];
-  const codeProvisions = provisions.filter((x) => x.code === activeCode);
+  
+  const codeProvisions = useMemo(() => provisions.filter((x) => x.code === activeCode), [provisions, activeCode]);
 
-  const a = compareA ? provisions.find((x) => x.id === compareA) : null;
-  const b = compareB ? provisions.find((x) => x.id === compareB) : null;
+  const a = useMemo(() => compareA ? codeProvisions.find((x) => x.id === compareA) : null, [compareA, codeProvisions]);
+  const b = useMemo(() => compareB ? codeProvisions.find((x) => x.id === compareB) : null, [compareB, codeProvisions]);
 
   return (
     <div className="space-y-4">

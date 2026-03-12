@@ -272,7 +272,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [provisions, complianceStatuses, activeCode]
   );
 
-  const value = {
+  const value = useMemo(() => ({
     // State
     provisions,
     complianceStatuses,
@@ -315,7 +315,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     canEdit,
     filteredProvisions,
     stats,
-  };
+  }), [
+    provisions, complianceStatuses, editorPassword, loading, mode, passwordVerified, 
+    activeView, activeCode, searchQuery, filters, expandedProvisionId, editingProvision, 
+    showTextMap, compareA, compareB, sidebarOpen, users, saveProvision, deleteProvision, 
+    togglePin, toggleVerify, setComplianceStatus, setEditorPassword, setMode, 
+    setPasswordVerified, setActiveView, setActiveCode, setSearchQuery, setFilter, 
+    resetFilters, setExpandedProvision, setEditingProvision, toggleShowText, 
+    setCompareA, setCompareB, setSidebarOpen, canEdit, filteredProvisions, stats
+  ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

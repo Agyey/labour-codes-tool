@@ -1,9 +1,47 @@
-"use server"
-
 import { PrismaClient } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod';
 
 const prisma = new PrismaClient()
+
+// Zod Validation Schema for Provision Updates
+const ProvisionUpdateSchema = z.object({
+  code: z.string(),
+  ch: z.string().optional().nullable(),
+  chName: z.string().optional().nullable(),
+  sec: z.string(),
+  sub: z.string().optional().nullable(),
+  title: z.string(),
+  summary: z.string(),
+  fullText: z.string().optional().nullable(),
+  impact: z.string().optional().nullable(),
+  ruleAuth: z.string().optional().nullable(),
+  changeTags: z.array(z.string()).optional(),
+  workflowTags: z.array(z.string()).optional(),
+  penaltyOld: z.string().optional().nullable(),
+  penaltyNew: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  assignee: z.string().optional().nullable(),
+  dueDate: z.string().optional().nullable(),
+  verified: z.boolean().optional(),
+  pinned: z.boolean().optional(),
+  
+  oldMappings: z.array(z.object({
+    act: z.string(),
+    sec: z.string(),
+    summary: z.string(),
+    fullText: z.string().optional().nullable(),
+    change: z.string().optional().nullable(),
+    changeTags: z.array(z.string()).optional()
+  })).optional(),
+  
+  compItems: z.array(z.object({
+    task: z.string(),
+    assignee: z.string().optional().nullable(),
+    status: z.string().optional().nullable(),
+    due: z.string().optional().nullable()
+  })).optional()
+}).passthrough();
 
 // Fetch all provisions with relations
 export async function getProvisions() {
@@ -87,39 +125,42 @@ export async function getProvisions() {
 }
 
 // Update an existing provision
-export async function updateProvision(id: string, updates: any, userId?: string) {
+export async function updateProvision(id: string, rawUpdates: any, userId?: string) {
   try {
-    // Basic fields
+    // Validate inputs via Zod
+    const validatedData = ProvisionUpdateSchema.parse(rawUpdates);
+
+    // Basic fields mapping for Prisma
     const data: any = {
-      code: updates.code,
-      chapter: updates.ch,
-      chapter_name: updates.chName,
-      section: updates.sec,
-      sub_section: updates.sub,
-      title: updates.title,
-      summary: updates.summary,
-      full_text: updates.fullText,
-      impact: updates.impact,
-      rule_authority: updates.ruleAuth,
-      change_tags: updates.changeTags,
-      workflow_tags: updates.workflowTags,
-      penalty_old: updates.penaltyOld,
-      penalty_new: updates.penaltyNew,
-      notes: updates.notes,
-      assignee: updates.assignee,
-      due_date: updates.dueDate ? new Date(updates.dueDate) : null,
-      verified: updates.verified,
-      pinned: updates.pinned,
+      code: validatedData.code,
+      chapter: validatedData.ch,
+      chapter_name: validatedData.chName,
+      section: validatedData.sec,
+      sub_section: validatedData.sub,
+      title: validatedData.title,
+      summary: validatedData.summary,
+      full_text: validatedData.fullText,
+      impact: validatedData.impact,
+      rule_authority: validatedData.ruleAuth,
+      change_tags: validatedData.changeTags,
+      workflow_tags: validatedData.workflowTags,
+      penalty_old: validatedData.penaltyOld,
+      penalty_new: validatedData.penaltyNew,
+      notes: validatedData.notes,
+      assignee: validatedData.assignee,
+      due_date: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
+      verified: validatedData.verified,
+      pinned: validatedData.pinned,
     };
     
     // We update the core provision. For nested arrays like oldMappings, 
     // a full enterprise implementation would diff them. For now, we clear and recreate, 
     // or just handle the top-level fields for simplicity in this phase.
     
-    if (updates.oldMappings) {
+    if (validatedData.oldMappings) {
       await prisma.oldMapping.deleteMany({ where: { provision_id: id } });
       data.oldMappings = {
-        create: updates.oldMappings.map((m: any) => ({
+        create: validatedData.oldMappings.map((m: any) => ({
           act_name: m.act,
           section: m.sec,
           summary: m.summary,
@@ -130,10 +171,10 @@ export async function updateProvision(id: string, updates: any, userId?: string)
       }
     }
     
-    if (updates.compItems) {
+    if (validatedData.compItems) {
       await prisma.complianceItem.deleteMany({ where: { provision_id: id } });
       data.complianceItems = {
-        create: updates.compItems.map((c: any) => ({
+        create: validatedData.compItems.map((c: any) => ({
           task: c.task,
           assignee: c.assignee,
           status: c.status || 'Not Started',
@@ -153,7 +194,7 @@ export async function updateProvision(id: string, updates: any, userId?: string)
         data: {
           provision_id: id,
           user_id: userId,
-          diff: JSON.parse(JSON.stringify(updates)), // Store the raw updates as diff
+          diff: JSON.parse(JSON.stringify(validatedData)), // Store the raw updates as diff
           edit_type: "MANUAL_EDIT",
         }
       });

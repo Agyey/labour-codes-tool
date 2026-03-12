@@ -4,13 +4,15 @@ import { useApp } from "@/context/AppContext";
 import { CODES } from "@/config/codes";
 import { AlertTriangle, ArrowRight, ShieldAlert } from "lucide-react";
 
+import { useMemo } from "react";
+
 export function PenaltiesView() {
   const { activeCode, provisions } = useApp();
   const cObj = CODES[activeCode];
 
-  const penaltyProvisions = provisions.filter(
+  const penaltyProvisions = useMemo(() => provisions.filter(
     (x) => x.code === activeCode && (x.penaltyOld || x.penaltyNew)
-  );
+  ), [provisions, activeCode]);
 
   return (
     <div className="space-y-4">
