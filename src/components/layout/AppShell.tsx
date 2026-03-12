@@ -99,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <div className="text-right hidden sm:block">
                     <p className="text-sm font-bold text-slate-900 leading-tight">{session.user.name || session.user.email}</p>
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
-                      {(session.user as any).role || "Viewer"}
+                      {session.user.role || "Viewer"}
                     </p>
                   </div>
                   {session.user.image ? (
@@ -127,7 +127,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               )}
 
               {/* Mode toggle - Only visible to Admins/Editors */}
-              {(session?.user as any)?.role === "admin" || (session?.user as any)?.role === "editor" ? (
+              {session?.user?.role === "admin" || session?.user?.role === "editor" ? (
                 <button
                   onClick={() => setMode(mode === "read" ? "admin" : "read")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${

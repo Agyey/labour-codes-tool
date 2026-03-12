@@ -215,14 +215,14 @@ export async function addComment(provisionId: string, body: string, parentId?: s
     const { authOptions } = await import("@/lib/auth")
     const session = await getServerSession(authOptions)
     
-    if (!session?.user || !(session.user as any).id) {
+    if (!session?.user || !session.user.id) {
       throw new Error("Unauthorized to comment")
     }
     
     const comment = await prisma.comment.create({
       data: {
         provision_id: provisionId,
-        user_id: (session.user as any).id,
+        user_id: session.user.id,
         body,
         parent_id: parentId || null,
       }

@@ -100,7 +100,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Actions
   const saveProvision = useCallback(async (p: Provision) => {
     if (!p.id) return;
-    const userId = (session?.user as any)?.id;
+    const userId = session?.user?.id;
     const res = await updateProvision(p.id, p, userId);
 
     if (res.success) {
@@ -142,7 +142,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setEditorPasswordState(pw);
   }, []);
 
-  const canEdit = !!session?.user && ((session.user as any).role === "admin" || (session.user as any).role === "editor") || (mode === "admin" && (!editorPassword || passwordVerified));
+  const canEdit = !!session?.user && (session.user.role === "admin" || session.user.role === "editor") || (mode === "admin" && (!editorPassword || passwordVerified));
 
   const stats = useMemo(
     () =>

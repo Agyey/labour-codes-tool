@@ -1,9 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -31,13 +29,13 @@ export const authOptions: NextAuthOptions = {
     async session({ session, user }) {
       if (session?.user && user) {
         // Expose the custom ID & role
-        (session.user as any).id = user.id;
+        session.user.id = user.id;
         // In reality, you'd fetch user role from db
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
           select: { role: true },
         });
-        (session.user as any).role = dbUser?.role || "viewer";
+        session.user.role = dbUser?.role || "viewer";
       }
       return session;
     },
