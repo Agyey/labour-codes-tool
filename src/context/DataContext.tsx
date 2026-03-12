@@ -16,6 +16,7 @@ import { getUsers } from "@/app/actions/users";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useUI } from "./UIContext";
+import toast from "react-hot-toast";
 
 const STORAGE_KEY = "lc-enterprise-v1";
 
@@ -70,7 +71,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setUsers(dbUsers as any[]);
         }
 
-        const data = await loadStorage<StorageData>(STORAGE_KEY);
+        const data = loadStorage<StorageData>(STORAGE_KEY);
         if (data) {
           if (data.compSt) setComplianceStatuses(data.compSt);
           if (data.editorPw) setEditorPasswordState(data.editorPw);
@@ -113,8 +114,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
         return [...prev, p];
       });
+      toast.success("Provision saved.");
     } else {
-      alert("Failed to save to database. Check console.");
+      toast.error("Failed to save. Check your connection and try again.");
     }
   }, [session]);
 

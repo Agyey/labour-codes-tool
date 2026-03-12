@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
@@ -170,7 +171,19 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
               </button>
               <button
                 onClick={() => {
-                  if (confirm("Delete this provision?")) deleteProvision(p.id);
+                  toast((t) => (
+                    <span className="flex items-center gap-3">
+                      <span className="text-sm">Delete this provision?</span>
+                      <button
+                        onClick={() => { deleteProvision(p.id); toast.dismiss(t.id); }}
+                        className="px-2.5 py-1 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600"
+                      >Delete</button>
+                      <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-2.5 py-1 bg-slate-600 text-white rounded-lg text-xs font-bold hover:bg-slate-700"
+                      >Cancel</button>
+                    </span>
+                  ), { duration: 8000 });
                 }}
                 className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs hover:bg-red-100 transition-colors cursor-pointer ml-auto"
               >
