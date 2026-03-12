@@ -1,3 +1,5 @@
+"use server"
+
 import { PrismaClient } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod';
