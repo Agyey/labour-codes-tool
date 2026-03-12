@@ -17,9 +17,11 @@ import { TagChip } from "@/components/shared/TagChip";
 import { createBlankOldMapping } from "@/lib/utils";
 import type { Provision, OldMapping, ComplianceItem } from "@/types/provision";
 import { X, Plus, Trash2, Save } from "lucide-react";
+import { CommentSection } from "./CommentSection";
+import { addComment } from "@/app/actions/provisions";
 
 export function EditorModal() {
-  const { editingProvision, setEditingProvision, saveProvision, activeCode } =
+  const { editingProvision, setEditingProvision, saveProvision, activeCode, users } =
     useApp();
 
   const prov = editingProvision;
@@ -291,7 +293,12 @@ export function EditorModal() {
             {(form.compItems || []).map((c, i) => (
               <div key={i} className="flex gap-2 items-center">
                 <input value={c.task} onChange={(e) => updateCompItem(i, "task", e.target.value)} placeholder="Task" className={inputCls} />
-                <input value={c.assignee} onChange={(e) => updateCompItem(i, "assignee", e.target.value)} placeholder="Assignee" className={`${inputCls} w-24`} />
+                <select value={c.assignee || ""} onChange={(e) => updateCompItem(i, "assignee", e.target.value)} className={`${inputCls} w-32`}>
+                  <option value="">Unassigned</option>
+                  {(users || []).map(u => (
+                    <option key={u.id} value={u.name || u.email || ""}>{u.name || u.email}</option>
+                  ))}
+                </select>
                 <input type="date" value={c.due} onChange={(e) => updateCompItem(i, "due", e.target.value)} className={`${inputCls} w-32`} />
                 <button onClick={() => removeCompItem(i)} className="p-1 text-red-400 hover:text-red-600 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
@@ -351,11 +358,38 @@ export function EditorModal() {
           <div className={sectionCls}>
             <h3 className="text-xs font-bold text-gray-700">Metadata</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className={labelCls}>Overall Assignee</label><input value={form.assignee || ""} onChange={(e) => update("assignee", e.target.value)} className={inputCls} /></div>
+              <div>
+                <label className={labelCls}>Overall Assignee</label>
+                <select value={form.assignee || ""} onChange={(e) => update("assignee", e.target.value)} className={inputCls}>
+                  <option value="">Unassigned</option>
+                  {(users || []).map(u => (
+                    <option key={u.id} value={u.name || u.email || ""}>{u.name || u.email}</option>
+                  ))}
+                </select>
+              </div>
               <div><label className={labelCls}>Overall Due Date</label><input type="date" value={form.dueDate || ""} onChange={(e) => update("dueDate", e.target.value)} className={inputCls} /></div>
             </div>
             <div><label className={labelCls}>Internal Notes</label><textarea value={form.notes || ""} onChange={(e) => update("notes", e.target.value)} rows={2} className={inputCls} /></div>
           </div>
+
+          {/* Comment Section (Internal Discussion) */}
+          <CommentSection 
+            comments={form.comments} 
+            provisionId={prov.id} 
+            onAddComment={async (body) => {
+              // Ignore temporary IDs for uncreated provisions
+              if (prov.id.includes(String(Date.now()))) return;
+              
+              const res = await addComment(prov.id, body);
+              if (res.success && res.comment) {
+                // Optimistically add to local form state to show immediately
+                setForm(prev => ({
+                  ...prev,
+                  comments: [...(prev.comments || []), res.comment as any]
+                }));
+              }
+            }} 
+          />
 
           {/* Save / Cancel */}
           <div className="flex gap-3 pt-2">

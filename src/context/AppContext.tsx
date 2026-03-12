@@ -12,6 +12,8 @@ import {
 import type { Provision } from "@/types/provision";
 import type { CodeKey } from "@/types/code";
 import { getProvisions, updateProvision } from "@/app/actions/provisions";
+import { getUsers } from "@/app/actions/users";
+import type { User } from "@/types/provision";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 
@@ -32,6 +34,7 @@ interface AppState {
   complianceStatuses: Record<string, string>;
   editorPassword: string;
   loading: boolean;
+  users: User[];
   
   // UI State
   mode: ModeType;
@@ -103,6 +106,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [complianceStatuses, setComplianceStatuses] = useState<Record<string, string>>({});
   const [editorPassword, setEditorPasswordState] = useState("");
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [mode, setMode] = useState<ModeType>("read");
   const [passwordVerified, setPasswordVerified] = useState(false);
@@ -124,6 +128,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const dbProvs = await getProvisions();
         if (dbProvs && dbProvs.length > 0) {
           setProvisions(dbProvs as Provision[]);
+        }
+        
+        const dbUsers = await getUsers();
+        if (dbUsers) {
+          setUsers(dbUsers as any[]);
         }
         
         const data = await loadStorage<StorageData>(STORAGE_KEY);
@@ -281,6 +290,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     compareA,
     compareB,
     sidebarOpen,
+    users,
     // Actions
     saveProvision,
     deleteProvision,

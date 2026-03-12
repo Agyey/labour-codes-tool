@@ -1,3 +1,19 @@
+export interface User {
+  id: string;
+  name: string | null;
+  email?: string | null;
+  image: string | null;
+  role: string | null;
+}
+
+export interface Comment {
+  id: string;
+  body: string;
+  parentId: string | null;
+  createdAt: string;
+  user: User;
+}
+
 export interface OldMapping {
   act: string;
   sec: string;
@@ -67,6 +83,7 @@ export interface Provision {
   pinned: boolean;
   assignee: string;
   dueDate: string;
+  comments?: Comment[];
 }
 
 export interface ChapterGroup {

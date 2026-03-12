@@ -13,6 +13,21 @@ export async function getProvisions() {
         oldMappings: true,
         complianceItems: true,
         stateData: true,
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+                role: true,
+              }
+            }
+          },
+          orderBy: {
+            created_at: 'asc'
+          }
+        }
       },
       orderBy: {
         code: 'asc',
@@ -57,6 +72,13 @@ export async function getProvisions() {
         if (curr.state && curr.compliance_status) acc[curr.state] = curr.compliance_status;
         return acc;
       }, {} as Record<string, string>),
+      comments: p.comments.map((c: any) => ({
+        id: c.id,
+        body: c.body,
+        parentId: c.parent_id,
+        createdAt: c.created_at.toISOString(),
+        user: c.user,
+      })),
     }))
   } catch (error) {
     console.error("Error fetching provisions:", error)
@@ -141,6 +163,34 @@ export async function updateProvision(id: string, updates: any, userId?: string)
     return { success: true, provision }
   } catch (error) {
     console.error("Error updating provision:", error)
-    return { success: false, error: "Failed to update record" }
+    throw new Error('Failed to update provision')
+  }
+}
+
+// Add a comment to a provision
+export async function addComment(provisionId: string, body: string, parentId?: string) {
+  try {
+    const { getServerSession } = await import("next-auth/next")
+    const { authOptions } = await import("@/lib/auth")
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user || !(session.user as any).id) {
+      throw new Error("Unauthorized to comment")
+    }
+    
+    const comment = await prisma.comment.create({
+      data: {
+        provision_id: provisionId,
+        user_id: (session.user as any).id,
+        body,
+        parent_id: parentId || null,
+      }
+    })
+    
+    revalidatePath('/')
+    return { success: true, comment }
+  } catch (error) {
+    console.error("Error adding comment:", error)
+    throw new Error('Failed to add comment')
   }
 }
