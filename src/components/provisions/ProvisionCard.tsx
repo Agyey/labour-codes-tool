@@ -1,5 +1,5 @@
 "use client";
-
+import { useState } from "react";
 import { useApp } from "@/context/AppContext";
 import { CODES } from "@/config/codes";
 import { IMPACT_COLORS, CHANGE_TAG_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
@@ -19,7 +19,10 @@ import {
   Eye,
   EyeOff,
   Globe,
+  Download,
 } from "lucide-react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
 interface ProvisionCardProps {
   provision: Provision;
@@ -44,6 +47,35 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
   const cObj = CODES[activeCode];
   const isExpanded = expandedProvisionId === p.id;
   const impactColor = IMPACT_COLORS[p.impact] || "#6b7280";
+  const [isExporting, setIsExporting] = useState(false);
+
+  const exportPDF = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExporting(true);
+    try {
+      const element = document.getElementById(`pdf-content-${p.id}`);
+      if (!element) return;
+      
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.text(`Labour Code Advisory: ${cObj.s} S.${p.sec}${p.sub}`, 10, 10);
+      pdf.addImage(imgData, "PNG", 0, 15, pdfWidth, pdfHeight);
+      pdf.save(`Advisory_S${p.sec}_${p.title.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div
@@ -141,8 +173,21 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
             </div>
           )}
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* Export PDF Button (Available to all users) */}
+          <div className="flex justify-end">
+            <button
+              onClick={exportPDF}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-gray-800 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+            >
+              <Download className="w-3.5 h-3.5" /> 
+              {isExporting ? "Generating..." : "Export as PDF Report"}
+            </button>
+          </div>
+
+          <div id={`pdf-content-${p.id}`} className="space-y-4 bg-white p-2">
+            {/* Tags */}
+            <div className="flex flex-wrap gap-1.5">
             {(p.changeTags || []).map((t) => (
               <Badge key={`c-${t}`} text={t} bgColor={CHANGE_TAG_COLORS[t]} />
             ))}
@@ -401,6 +446,7 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
               </div>
             </div>
           )}
+          </div> {/* End of PDF grab area */}
         </div>
       )}
     </div>

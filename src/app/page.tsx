@@ -1,6 +1,7 @@
 "use client";
 
 import { useApp } from "@/context/AppContext";
+import { AnimatePresence, motion } from "framer-motion";
 import { AppShell } from "@/components/layout/AppShell";
 import { MappingView } from "@/components/views/MappingView";
 import { DashboardView } from "@/components/views/DashboardView";
@@ -17,12 +18,23 @@ function ViewRouter() {
     <>
       {editingProvision && <EditorModal />}
 
-      {activeView === "mapping" && <MappingView />}
-      {activeView === "dashboard" && <DashboardView />}
-      {activeView === "stateTracker" && <StateTrackerView />}
-      {activeView === "timeline" && <TimelineView />}
-      {activeView === "penalties" && <PenaltiesView />}
-      {activeView === "compare" && <CompareView />}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeView}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15, position: "absolute", width: "100%" }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="relative h-full"
+        >
+          {activeView === "mapping" && <MappingView />}
+          {activeView === "dashboard" && <DashboardView />}
+          {activeView === "stateTracker" && <StateTrackerView />}
+          {activeView === "timeline" && <TimelineView />}
+          {activeView === "penalties" && <PenaltiesView />}
+          {activeView === "compare" && <CompareView />}
+        </motion.div>
+      </AnimatePresence>
     </>
   );
 }

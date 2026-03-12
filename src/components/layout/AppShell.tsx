@@ -3,6 +3,7 @@
 import { useApp } from "@/context/AppContext";
 import { CODES } from "@/config/codes";
 import type { CodeKey } from "@/types/code";
+import { CommandPalette } from "../shared/CommandPalette";
 import {
   LayoutDashboard,
   Map,
@@ -11,8 +12,8 @@ import {
   AlertTriangle,
   GitCompare,
   Menu,
-  Eye,
   Pencil,
+  Eye,
   Lock,
   ChevronRight,
   Pin,
@@ -90,6 +91,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Global Search */}
+              <CommandPalette />
+
               {/* User Session Info */}
               {session?.user ? (
                 <div className="flex items-center gap-3">
