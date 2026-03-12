@@ -72,20 +72,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 text-white shadow-xl">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all duration-300">
         <div className="max-w-[1400px] mx-auto px-4 py-3.5">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-emerald-400 flex items-center justify-center shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg shadow-slate-900/10">
                 <Scale className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-extrabold tracking-tight leading-tight">
+                <h1 className="text-lg font-extrabold tracking-tight text-slate-900 leading-tight">
                   India Labour Code Reform
                 </h1>
-                <p className="text-[10px] text-white/60 leading-tight">
-                  Legal Intelligence Platform · 4 Codes · 29 Repealed Acts ·
-                  6 Jurisdictions
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
+                  Legal Intelligence Platform
                 </p>
               </div>
             </div>
@@ -94,25 +93,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {/* Global Search */}
               <CommandPalette />
 
+              <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+
               {/* User Session Info */}
               {session?.user ? (
                 <div className="flex items-center gap-3">
                   <div className="text-right hidden sm:block">
-                    <p className="text-xs font-bold leading-tight">{session.user.name || session.user.email}</p>
-                    <p className="text-[10px] text-white/70 capitalize">
-                      Role: {(session.user as any).role || "Viewer"}
+                    <p className="text-sm font-bold text-slate-900 leading-tight">{session.user.name || session.user.email}</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
+                      {(session.user as any).role || "Viewer"}
                     </p>
                   </div>
                   {session.user.image ? (
-                    <img src={session.user.image} alt="Avatar" className="w-8 h-8 rounded-full border-2 border-white/20" />
+                    <img src={session.user.image} alt="Avatar" className="w-9 h-9 rounded-full ring-2 ring-slate-100 shadow-sm" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border-2 border-white/20">
-                      <User className="w-4 h-4" />
+                    <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center ring-2 ring-slate-200">
+                      <User className="w-4 h-4 text-slate-600" />
                     </div>
                   )}
                   <button
                     onClick={() => signOut()}
-                    className="p-1.5 rounded-md hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                     title="Sign Out"
                   >
                     <LogOut className="w-4 h-4" />
@@ -121,7 +122,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ) : (
                 <button
                   onClick={() => signIn()}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-md text-xs font-bold transition-colors"
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-md"
                 >
                   Sign In
                 </button>
@@ -131,10 +132,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {(session?.user as any)?.role === "admin" || (session?.user as any)?.role === "editor" ? (
                 <button
                   onClick={() => setMode(mode === "read" ? "admin" : "read")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                     mode === "admin"
-                      ? "bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/30"
-                      : "bg-white/10 text-white border-white/20 hover:bg-white/20"
+                      ? "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm shadow-indigo-100"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                   }`}
                 >
                   {mode === "admin" ? (
@@ -152,7 +153,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {/* Sidebar toggle */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg border border-white/20 bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer shadow-sm"
               >
                 <Menu className="w-4 h-4" />
               </button>
@@ -162,20 +163,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Navigation */}
-      <nav className="sticky top-[60px] z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-[1400px] mx-auto flex items-center overflow-x-auto">
+      <nav className="sticky top-[73px] z-40 bg-white/60 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-[1400px] mx-auto flex items-center overflow-x-auto px-4">
           {/* View tabs */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-1 py-1.5">
             {VIEWS.map((v) => {
               const Icon = v.icon;
               return (
                 <button
                   key={v.id}
                   onClick={() => setActiveView(v.id as typeof activeView)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                     activeView === v.id
-                      ? "border-slate-800 text-slate-800 bg-slate-50 font-bold"
-                      : "border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                      ? "bg-slate-900 text-white shadow-md shadow-slate-900/10"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -188,7 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex-1" />
 
           {/* Code tabs */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-2 py-1.5">
             {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
               ([key, code]) => (
                 <button
@@ -198,17 +199,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     setExpandedProvision(null);
                     setFilter("chapter", "All");
                   }}
-                  className={`px-3.5 py-2.5 text-xs font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer border border-transparent ${
                     activeCode === key
-                      ? "font-bold"
-                      : "border-transparent text-gray-400 hover:text-gray-600"
+                      ? "shadow-sm border-opacity-20"
+                      : "text-slate-500 hover:bg-slate-100"
                   }`}
                   style={
                     activeCode === key
                       ? {
-                          borderBottomColor: code.c,
+                          borderColor: code.c,
                           color: code.c,
-                          backgroundColor: code.bg,
+                          backgroundColor: `${code.c}10`,
                         }
                       : undefined
                   }

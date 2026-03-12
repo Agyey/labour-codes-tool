@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
 });
@@ -30,8 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body>
+    <html lang="en" className={jakarta.variable}>
+      <body className="antialiased bg-slate-50 text-slate-900 selection:bg-blue-500/30">
         <AuthProvider>
           <AppProvider>{children}</AppProvider>
         </AuthProvider>

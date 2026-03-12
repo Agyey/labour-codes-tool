@@ -5,8 +5,9 @@ import { CODES } from "@/config/codes";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { ProvisionCard } from "@/components/provisions/ProvisionCard";
 import { createBlankProvision } from "@/lib/utils";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function MappingView() {
   const {
@@ -57,26 +58,48 @@ export function MappingView() {
         </div>
       )}
 
-      {chapters.map(([chNum, ch]) => (
-        <details key={chNum} open={chapters.length <= 5} className="mb-2">
-          <summary
-            className="py-2 text-sm font-bold cursor-pointer select-none flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 transition-colors"
-            style={{ color: cObj.c }}
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-4"
+      >
+        {chapters.map(([chNum, ch], i) => (
+          <motion.details 
+            key={chNum} 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.05 }}
+            open={chapters.length <= 5} 
+            className="group bg-white border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden 
+                       [&_summary::-webkit-details-marker]:hidden"
           >
-            <span>
-              Chapter {chNum}: {ch.name}
-            </span>
-            <span className="text-xs text-gray-400 font-normal">
-              ({ch.items.length})
-            </span>
-          </summary>
-          <div className="pl-1 pb-2">
-            {ch.items.map((p) => (
-              <ProvisionCard key={p.id} provision={p} />
-            ))}
-          </div>
-        </details>
-      ))}
+            <summary
+              className="py-4 px-6 text-sm font-extrabold cursor-pointer select-none flex items-center gap-3 bg-slate-50/50 hover:bg-slate-100/60 transition-colors border-b border-transparent group-open:border-slate-100"
+            >
+              <div 
+                className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] shadow-sm transform group-open:rotate-90 transition-transform duration-200"
+                style={{ backgroundColor: cObj.c }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </div>
+              <span className="text-slate-900 tracking-tight">
+                {ch.name} <span className="text-slate-400 font-medium ml-1">Chapter {chNum}</span>
+              </span>
+              <span className="ml-auto bg-slate-200 text-slate-600 font-semibold px-2 py-0.5 rounded-md text-[10px]">
+                {ch.items.length} {ch.items.length === 1 ? 'Provision' : 'Provisions'}
+              </span>
+            </summary>
+            
+            <div className="p-4 bg-slate-50/30">
+              <div className="space-y-4 pl-1 pb-2">
+                {ch.items.map((p) => (
+                  <ProvisionCard key={p.id} provision={p} />
+                ))}
+              </div>
+            </div>
+          </motion.details>
+        ))}
+      </motion.div>
     </div>
   );
 }

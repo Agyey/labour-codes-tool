@@ -14,6 +14,7 @@ import {
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function DashboardView() {
   const { activeCode, provisions, stats, setActiveCode, setActiveView } = useApp();
@@ -30,48 +31,61 @@ export function DashboardView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-extrabold text-gray-800 mb-1">
-          Dashboard — {cObj.n}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h2 className="text-2xl font-extrabold text-slate-800 mb-1.5 tracking-tight">
+          Executive Dashboard — {cObj.n}
         </h2>
-        <p className="text-xs text-gray-500">
-          Overall compliance posture and progress tracking
+        <p className="text-sm text-slate-500 font-medium">
+          Overall compliance posture and real-time mapping progress
         </p>
-      </div>
+      </motion.div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {statCards.map((s) => {
+        {statCards.map((s, index) => {
           const Icon = s.icon;
           return (
-            <div
+            <motion.div
               key={s.label}
-              className="p-4 rounded-2xl text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.05 }}
+              className="p-5 rounded-[20px] text-center border border-white border-opacity-50 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
               style={{ background: s.bg }}
             >
               <Icon
-                className="w-5 h-5 mx-auto mb-2 opacity-60"
+                className="w-5 h-5 mx-auto mb-3 opacity-70"
                 style={{ color: s.color }}
               />
               <div
-                className="text-3xl font-extrabold"
+                className="text-4xl font-black tracking-tighter"
                 style={{ color: s.color }}
               >
                 {s.value}
               </div>
-              <div className="text-[10px] text-gray-500 font-medium mt-0.5">
+              <div className="text-[11px] font-bold uppercase tracking-widest mt-1 opacity-70" style={{ color: s.color }}>
                 {s.label}
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Progress */}
-      <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm font-bold text-gray-700">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="p-6 bg-white rounded-[24px] border border-slate-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)]"
+      >
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="p-1.5 bg-emerald-50 rounded-lg">
+            <TrendingUp className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="text-sm font-extrabold text-slate-800 uppercase tracking-widest">
             Overall Compliance Progress
           </span>
         </div>
@@ -79,55 +93,65 @@ export function DashboardView() {
           value={stats.compliant + stats.notApplicable}
           max={stats.totalCompItems}
         />
-      </div>
+      </motion.div>
 
       {/* All Codes overview */}
-      <div>
-        <h3 className="text-base font-bold text-gray-700 mb-3">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
           All Codes Overview
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
-            ([key, code]) => {
+            ([key, code], index) => {
               const codeProvs = provisions.filter((x) => x.code === key);
               return (
-                <button
+                <motion.button
                   key={key}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + index * 0.1 }}
                   onClick={() => {
                     setActiveCode(key);
                     setActiveView("mapping");
                   }}
-                  className="p-5 rounded-2xl border-2 text-left transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer group"
+                  className="p-6 rounded-[24px] border border-white text-left transition-all hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-1 cursor-pointer group relative overflow-hidden"
                   style={{
-                    borderColor: `${code.c}30`,
-                    background: code.bg,
+                    background: `linear-gradient(135deg, ${code.bg} 0%, white 100%)`,
                   }}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/40 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+                  
+                  <div className="flex items-center justify-between relative z-10">
                     <span
-                      className="text-xs font-extrabold tracking-wider uppercase"
-                      style={{ color: code.c }}
+                      className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md"
+                      style={{ color: code.c, backgroundColor: `${code.c}20` }}
                     >
                       {code.s}
                     </span>
-                    <ArrowRight
-                      className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ color: code.c }}
-                    />
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0"
+                      style={{ backgroundColor: code.c, color: "white" }}
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
-                  <h4 className="text-base font-bold text-gray-800 mt-1.5 mb-1">
+                  <h4 className="text-lg font-black text-slate-900 mt-4 mb-1.5 leading-tight relative z-10">
                     {code.n}
                   </h4>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs font-semibold text-slate-500 relative z-10">
                     {code.secs} Sections · {code.acts.length} Repealed Acts ·{" "}
                     {codeProvs.length} Mapped
                   </p>
-                </button>
+                </motion.button>
               );
             }
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

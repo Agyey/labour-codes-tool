@@ -20,9 +20,12 @@ import {
   EyeOff,
   Globe,
   Download,
+  AlertTriangle,
+  GitCompare,
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { motion } from "framer-motion";
 
 interface ProvisionCardProps {
   provision: Provision;
@@ -79,23 +82,23 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
 
   return (
     <div
-      className="border border-gray-200 rounded-xl mb-3 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+      className="bg-white rounded-2xl mb-4 overflow-hidden shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05),_0_4px_16px_-4px_rgba(0,0,0,0.02)] border border-slate-200/60 ring-1 ring-slate-900/5 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.08)] transition-all duration-300 transform-gpu"
       style={{ borderLeftWidth: 4, borderLeftColor: impactColor }}
     >
       {/* Collapsed header */}
       <button
         onClick={() => setExpandedProvision(isExpanded ? null : p.id)}
-        className="w-full flex items-center px-4 py-3 text-left gap-3 hover:bg-gray-50/80 transition-colors cursor-pointer"
+        className="w-full flex items-center px-5 py-4 text-left gap-4 hover:bg-slate-50/50 transition-colors cursor-pointer"
       >
         {p.pinned && <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />}
         <span
-          className="text-xs font-bold min-w-[55px] flex-shrink-0"
+          className="text-sm font-extrabold tracking-tight min-w-[60px] flex-shrink-0"
           style={{ color: cObj.c }}
         >
           S.{p.sec}
           {p.sub}
         </span>
-        <span className="flex-1 text-sm font-semibold text-gray-800 truncate">
+        <span className="flex-1 text-[15px] font-bold text-slate-900 truncate tracking-tight">
           {p.title}
         </span>
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -119,16 +122,16 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
           />
           <Badge text={p.impact} bgColor={impactColor} />
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-gray-400" />
+            <ChevronUp className="w-4 h-4 text-slate-400" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-slate-400" />
           )}
         </div>
       </button>
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="px-4 py-4 border-t border-gray-100 space-y-4 bg-white animate-in slide-in-from-top-1 duration-200">
+        <div className="px-5 py-5 border-t border-slate-100 space-y-5 bg-white animate-in slide-in-from-top-1 duration-200">
           {/* Admin actions */}
           {canEdit && (
             <div className="flex items-center gap-2 flex-wrap">
@@ -197,74 +200,95 @@ export function ProvisionCard({ provision: p }: ProvisionCardProps) {
           </div>
 
           {/* Summary */}
-          <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-            <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-2">
-              {cObj.s} S.{p.sec}
-              {p.sub} — Summary
+          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-[11px] font-extrabold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5" />
+                {cObj.s} S.{p.sec}{p.sub} — Executive Summary
+              </div>
+              <button
+                onClick={() => toggleShowText(`n-${p.id}`)}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                {showTextMap[`n-${p.id}`] ? (
+                  <><EyeOff className="w-3 h-3" /> Hide Text</>
+                ) : (
+                  <><Eye className="w-3 h-3" /> Read Statute</>
+                )}
+              </button>
             </div>
-            <div className="text-sm text-gray-800 leading-relaxed">
+            <div className="text-[15px] text-slate-800 leading-relaxed font-medium">
               {p.summary}
             </div>
-            <button
-              onClick={() => toggleShowText(`n-${p.id}`)}
-              className="flex items-center gap-1 mt-3 text-xs text-emerald-600 cursor-pointer hover:text-emerald-800 transition-colors"
-            >
-              {showTextMap[`n-${p.id}`] ? (
-                <><EyeOff className="w-3 h-3" /> Hide full statutory text</>
-              ) : (
-                <><Eye className="w-3 h-3" /> Show full statutory text</>
-              )}
-            </button>
+            
             {showTextMap[`n-${p.id}`] && (
-              <pre className="mt-2 p-3 bg-emerald-100/50 rounded-lg text-xs text-gray-700 whitespace-pre-wrap font-serif leading-relaxed max-h-[300px] overflow-auto">
-                {p.fullText}
-              </pre>
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mt-4 pt-4 border-t border-slate-200/60"
+              >
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Original Statutory Text</div>
+                <pre className="p-4 bg-white border border-slate-100 rounded-xl text-sm text-slate-700 whitespace-pre-wrap font-serif leading-relaxed max-h-[400px] overflow-auto shadow-inner">
+                  {p.fullText}
+                </pre>
+              </motion.div>
             )}
           </div>
 
           {/* Per-Act Change Analysis */}
           {(p.oldMappings || []).length > 0 && (
-            <div>
-              <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-3">
-                Per-Act Change Analysis ({p.oldMappings.length})
+            <div className="mt-6">
+              <h4 className="text-[11px] font-extrabold text-rose-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <GitCompare className="w-4 h-4" />
+                Repealed Act Analysis ({p.oldMappings.length})
               </h4>
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {p.oldMappings.map((m, i) => (
                   <div
                     key={i}
-                    className="border border-red-200 rounded-xl overflow-hidden"
+                    className="bg-white border border-rose-100 rounded-2xl overflow-hidden shadow-sm"
                   >
-                    <div className="p-3 bg-red-50">
-                      <div className="text-xs font-bold text-red-600 flex items-center gap-1">
-                        <FileText className="w-3 h-3" />
-                        ✕ {m.act} — {m.sec}
+                    <div className="p-4 bg-rose-50/50 border-b border-rose-100/50">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="text-[13px] font-bold text-rose-700 flex items-center gap-1.5 mb-1.5">
+                            <span className="bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-[4px] text-[10px] tracking-wider uppercase">Repealed</span>
+                            {m.act} — {m.sec}
+                          </div>
+                          <div className="text-sm text-slate-700 font-medium leading-relaxed">
+                            {m.summary}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => toggleShowText(`o-${p.id}-${i}`)}
+                          className="flex-shrink-0 px-2.5 py-1.5 bg-white border border-rose-100 rounded-lg text-[10px] font-bold text-rose-600 cursor-pointer hover:bg-rose-50 transition-colors shadow-sm"
+                        >
+                          {showTextMap[`o-${p.id}-${i}`] ? "Hide Text" : "Read Text"}
+                        </button>
                       </div>
-                      <div className="text-xs text-gray-600 mt-1.5">
-                        {m.summary}
-                      </div>
-                      <button
-                        onClick={() => toggleShowText(`o-${p.id}-${i}`)}
-                        className="text-[10px] text-red-500 cursor-pointer hover:text-red-700 mt-1.5 transition-colors"
-                      >
-                        {showTextMap[`o-${p.id}-${i}`]
-                          ? "Hide full text"
-                          : "Show full text"}
-                      </button>
+                      
                       {showTextMap[`o-${p.id}-${i}`] && (
-                        <pre className="mt-2 p-2 bg-red-100/50 rounded text-[10px] text-gray-600 whitespace-pre-wrap font-serif leading-relaxed max-h-[200px] overflow-auto">
-                          {m.fullText}
-                        </pre>
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="mt-3"
+                        >
+                          <pre className="p-3 bg-white border border-rose-100 rounded-xl text-xs text-slate-600 whitespace-pre-wrap font-serif leading-relaxed max-h-[250px] overflow-auto shadow-inner">
+                            {m.fullText}
+                          </pre>
+                        </motion.div>
                       )}
                     </div>
-                    <div className="p-3">
-                      <div className="text-[10px] font-bold text-blue-600 mb-1.5">
-                        WHAT CHANGED (vs this Act):
+                    <div className="p-4 bg-white">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                        Key Changes
                       </div>
-                      <div className="text-xs text-gray-800 leading-relaxed">
+                      <div className="text-[14px] text-slate-800 leading-relaxed font-medium">
                         {m.change}
                       </div>
                       {(m.changeTags || []).length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
+                        <div className="flex flex-wrap gap-1.5 mt-3">
                           {m.changeTags.map((t) => (
                             <Badge
                               key={t}
