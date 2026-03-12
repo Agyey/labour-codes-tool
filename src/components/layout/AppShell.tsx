@@ -17,8 +17,11 @@ import {
   ChevronRight,
   Pin,
   Scale,
+  LogOut,
+  User,
 } from "lucide-react";
 import { useState } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 const VIEWS = [
   { id: "mapping", label: "Mapping", icon: Map },
@@ -46,10 +49,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setFilter,
     provisions,
     canEdit,
-    setEditorPassword,
   } = useApp();
 
-  const [pwInput, setPwInput] = useState("");
+  const { data: session } = useSession();
 
   const cObj = CODES[activeCode];
 
@@ -87,57 +89,61 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Password input for admin mode */}
-              {mode === "admin" && editorPassword && !passwordVerified && (
-                <div className="flex items-center gap-1.5 animate-in slide-in-from-right">
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <input
-                    type="password"
-                    value={pwInput}
-                    onChange={(e) => setPwInput(e.target.value)}
-                    placeholder="Editor password"
-                    className="px-2 py-1.5 rounded-md text-xs bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-amber-400 w-28"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        if (pwInput === editorPassword) setPasswordVerified(true);
-                      }
-                    }}
-                  />
+            <div className="flex items-center gap-4">
+              {/* User Session Info */}
+              {session?.user ? (
+                <div className="flex items-center gap-3">
+                  <div className="text-right hidden sm:block">
+                    <p className="text-xs font-bold leading-tight">{session.user.name || session.user.email}</p>
+                    <p className="text-[10px] text-white/70 capitalize">
+                      Role: {(session.user as any).role || "Viewer"}
+                    </p>
+                  </div>
+                  {session.user.image ? (
+                    <img src={session.user.image} alt="Avatar" className="w-8 h-8 rounded-full border-2 border-white/20" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border-2 border-white/20">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
                   <button
-                    onClick={() => {
-                      if (pwInput === editorPassword) setPasswordVerified(true);
-                    }}
-                    className="px-2.5 py-1.5 bg-amber-500 text-black rounded-md text-xs font-bold hover:bg-amber-400 transition-colors cursor-pointer"
+                    onClick={() => signOut()}
+                    className="p-1.5 rounded-md hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                    title="Sign Out"
                   >
-                    Unlock
+                    <LogOut className="w-4 h-4" />
                   </button>
                 </div>
+              ) : (
+                <button
+                  onClick={() => signIn()}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-md text-xs font-bold transition-colors"
+                >
+                  Sign In
+                </button>
               )}
 
-              {/* Mode toggle */}
-              <button
-                onClick={() => {
-                  setMode(mode === "read" ? "admin" : "read");
-                  setPasswordVerified(false);
-                  setPwInput("");
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                  mode === "admin"
-                    ? "bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/30"
-                    : "bg-white/10 text-white border-white/20 hover:bg-white/20"
-                }`}
-              >
-                {mode === "admin" ? (
-                  <>
-                    <Pencil className="w-3.5 h-3.5" /> EDITOR
-                  </>
-                ) : (
-                  <>
-                    <Eye className="w-3.5 h-3.5" /> READER
-                  </>
-                )}
-              </button>
+              {/* Mode toggle - Only visible to Admins/Editors */}
+              {(session?.user as any)?.role === "admin" || (session?.user as any)?.role === "editor" ? (
+                <button
+                  onClick={() => setMode(mode === "read" ? "admin" : "read")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                    mode === "admin"
+                      ? "bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/30"
+                      : "bg-white/10 text-white border-white/20 hover:bg-white/20"
+                  }`}
+                >
+                  {mode === "admin" ? (
+                    <>
+                      <Pencil className="w-3.5 h-3.5" /> EDITOR
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5" /> READER
+                    </>
+                  )}
+                </button>
+              ) : null}
 
               {/* Sidebar toggle */}
               <button
@@ -269,20 +275,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 )}
               </div>
 
-              {/* Editor password setting */}
-              {canEdit && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <h4 className="text-xs font-bold text-gray-700 mb-2">
-                    Editor Password
-                  </h4>
-                  <input
-                    value={editorPassword}
-                    onChange={(e) => setEditorPassword(e.target.value)}
-                    placeholder="Set password"
-                    className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
-                  />
-                </div>
-              )}
             </div>
           </aside>
         )}

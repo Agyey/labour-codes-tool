@@ -11,8 +11,9 @@ import {
 } from "react";
 import type { Provision } from "@/types/provision";
 import type { CodeKey } from "@/types/code";
-import { SEED_PROVISIONS } from "@/data/seed-provisions";
+import { getProvisions, updateProvision } from "@/app/actions/provisions";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 const STORAGE_KEY = "lc-enterprise-v1";
 
@@ -96,7 +97,9 @@ const DEFAULT_FILTERS = {
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [provisions, setProvisions] = useState<Provision[]>(SEED_PROVISIONS);
+  const { data: session } = useSession();
+  
+  const [provisions, setProvisions] = useState<Provision[]>([]);
   const [complianceStatuses, setComplianceStatuses] = useState<Record<string, string>>({});
   const [editorPassword, setEditorPasswordState] = useState("");
   const [loading, setLoading] = useState(true);
@@ -114,24 +117,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [compareB, setCompareB] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Load from localStorage
+  // Load from database + localStorage
   useEffect(() => {
-    loadStorage<StorageData>(STORAGE_KEY).then((data) => {
-      if (data) {
-        if (data.provs) setProvisions(data.provs);
-        if (data.compSt) setComplianceStatuses(data.compSt);
-        if (data.editorPw) setEditorPasswordState(data.editorPw);
+    async function initData() {
+      try {
+        const dbProvs = await getProvisions();
+        if (dbProvs && dbProvs.length > 0) {
+          setProvisions(dbProvs as Provision[]);
+        }
+        
+        const data = await loadStorage<StorageData>(STORAGE_KEY);
+        if (data) {
+          if (data.compSt) setComplianceStatuses(data.compSt);
+          if (data.editorPw) setEditorPasswordState(data.editorPw);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    }
+    initData();
   }, []);
 
-  // Auto-save with debounce
+  // Auto-save local preferences with debounce
   useEffect(() => {
     if (loading) return;
     const timer = setTimeout(() => {
       saveStorage(STORAGE_KEY, {
-        provs: provisions,
+        provs: provisions, // Remove this in future when offline strictly not needed 
         compSt: complianceStatuses,
         editorPw: editorPassword,
       });
@@ -140,17 +154,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [provisions, complianceStatuses, editorPassword, loading]);
 
   // Actions
-  const saveProvision = useCallback((p: Provision) => {
-    setProvisions((prev) => {
-      const i = prev.findIndex((x) => x.id === p.id);
-      if (i >= 0) {
-        const next = [...prev];
-        next[i] = p;
-        return next;
-      }
-      return [...prev, p];
-    });
-    setEditingProvision(null);
+  const saveProvision = useCallback(async (p: Provision) => {
+    if (!p.id) return;
+    const userId = (session?.user as any)?.id;
+    const res = await updateProvision(p.id, p, userId);
+    
+    if (res.success) {
+      setProvisions((prev) => {
+        const i = prev.findIndex((x) => x.id === p.id);
+        if (i >= 0) {
+          const next = [...prev];
+          next[i] = p; // update locally instantly
+          return next;
+        }
+        return [...prev, p];
+      });
+      setEditingProvision(null);
+    } else {
+      alert("Failed to save to database. Check console.");
+    }
   }, []);
 
   const deleteProvision = useCallback((id: string) => {
@@ -193,7 +215,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setShowTextMap((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
 
-  const canEdit = mode === "admin" && (!editorPassword || passwordVerified);
+  // Compute 'canEdit' using the new NextAuth role system
+  // Offline password system acts as a fallback or is completely overridden
+  const canEdit = !!session?.user && ((session.user as any).role === "admin" || (session.user as any).role === "editor") || (mode === "admin" && (!editorPassword || passwordVerified));
 
   // Filtered provisions
   const filteredProvisions = useMemo(() => {
