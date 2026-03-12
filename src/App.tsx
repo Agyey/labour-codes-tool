@@ -2,8 +2,8 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
 /* ========== STORAGE ========== */
 const SK = "lc-v5";
-async function ld(k) { try { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } catch { return null; } }
-async function sv(k, v) { try { await window.storage.set(k, JSON.stringify(v)); } catch (e) { console.error(e); } }
+async function ld(k: string) { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch { return null; } }
+async function sv(k: string, v: any) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.error(e); } }
 
 /* ========== CONSTANTS ========== */
 const CODES = {
