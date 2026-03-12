@@ -42,6 +42,20 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+  events: {
+    async createUser({ user }) {
+      // Guarantee new users get the admin role on first sign up
+      if (
+        user.email === "shreeyash1998@gmail.com" ||
+        user.email === "agyey1997@gmail.com"
+      ) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { role: "admin" },
+        }).catch(console.error);
+      }
+    },
+  },
   session: {
     strategy: "database",
   },
