@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, LayoutGrid, Info, AlertCircle, Pencil } from "lucide-r
 import { Breadcrumbs } from "../shared/Breadcrumbs";
 import { useMemo, useState } from "react";
 import { LegislationModal } from "./LegislationModal";
+import { FrameworkModal } from "./FrameworkModal";
 import { Legislation } from "@/types/provision";
 import toast from "react-hot-toast";
 
@@ -14,6 +15,7 @@ export function BucketExplorer() {
   const { activeCode, setActiveView, setActiveCode } = useUI();
   const { frameworks, legislations, deleteLegislation, canEdit } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFwModalOpen, setIsFwModalOpen] = useState(false);
   const [editingLeg, setEditingLeg] = useState<Legislation | null>(null);
 
   const framework = useMemo(() => 
@@ -44,13 +46,15 @@ export function BucketExplorer() {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{framework.name}</h2>
-              <button 
-                title="Edit Framework Metadata"
-                className="p-2 text-slate-300 hover:text-indigo-500 transition-colors"
-                onClick={() => toast.success("Framework Editor coming soon!")}
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
+              {canEdit && (
+                <button 
+                  title="Edit Framework Metadata"
+                  className="p-2 text-slate-300 hover:text-indigo-500 transition-colors"
+                  onClick={() => setIsFwModalOpen(true)}
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Legislation Bucket • {framework.shortName}</p>
           </div>
@@ -138,6 +142,11 @@ export function BucketExplorer() {
         onClose={() => setIsModalOpen(false)} 
         editingLegislation={editingLeg}
         frameworkId={framework.id}
+      />
+      <FrameworkModal
+        isOpen={isFwModalOpen}
+        onClose={() => setIsFwModalOpen(false)}
+        editingFramework={framework}
       />
     </div>
   );
