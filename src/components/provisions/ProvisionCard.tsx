@@ -85,17 +85,17 @@ export const ProvisionCard = memo(function ProvisionCard({ provision: p }: Provi
         layout: { duration: 0.4, ease: [0.23, 1, 0.32, 1] },
         opacity: { duration: 0.2 }
       }}
-      className={`group relative bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-400 overflow-hidden mb-4 ${
+      className={`group relative bg-white dark:bg-zinc-900 rounded-2xl border transition-all duration-400 overflow-hidden mb-4 ${
         isExpanded 
-          ? 'border-slate-300 dark:border-slate-700 shadow-premium-hover ring-4 ring-slate-100/50 dark:ring-white/5' 
-          : 'border-slate-200 dark:border-slate-800/80 hover:shadow-premium hover:border-slate-300 dark:hover:border-slate-700'
+          ? 'border-slate-300 dark:border-zinc-700 shadow-premium-hover ring-4 ring-slate-100/50 dark:ring-white/5' 
+          : 'border-slate-200 dark:border-zinc-800/80 hover:shadow-premium hover:border-slate-300 dark:hover:border-zinc-700'
       }`}
       style={{ borderLeftWidth: 4, borderLeftColor: impactColor }}
     >
       <button
         onClick={() => setExpandedProvision(isExpanded ? null : p.id)}
         aria-label={isExpanded ? "Collapse" : "Expand"}
-        className="w-full flex items-center px-5 py-4 text-left gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+        className="w-full flex items-center px-5 py-4 text-left gap-4 hover:bg-slate-50/50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer"
       >
         {p.pinned && <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />}
         <span className="text-sm font-extrabold tracking-tight min-w-[60px] flex-shrink-0" style={{ color: cObj.c }}>
@@ -127,26 +127,26 @@ export const ProvisionCard = memo(function ProvisionCard({ provision: p }: Provi
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-6 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-6">
-                <StatuteView provision={p} codeShortName={cObj.n} />
-                <RepealedAnalysis provision={p} />
-              </div>
+              <div className="px-5 pb-6 border-t border-slate-100 dark:border-zinc-800/80">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-6">
+                  <StatuteView provision={p} codeShortName={cObj.n} />
+                  <RepealedAnalysis provision={p} />
+                </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 border-t border-slate-100 dark:border-slate-800/80">
-                <PenaltyInfo provision={p} />
-                <RulesAndForms provision={p} />
-                <ComplianceItemsList provision={p} />
-              </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 border-t border-slate-100 dark:border-zinc-800/80">
+                  <PenaltyInfo provision={p} />
+                  <RulesAndForms provision={p} />
+                  <ComplianceItemsList provision={p} />
+                </div>
 
-              <StateNotesTable provision={p} />
+                <StateNotesTable provision={p} />
 
               <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <button onClick={() => toggleVerify(p.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${p.verified ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'}`}>
+                  <button onClick={() => toggleVerify(p.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${p.verified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700 hover:text-slate-900 dark:hover:text-white'}`}>
                     <CheckCircle className="w-4 h-4" /> {p.verified ? "Verified" : "Verify Content"}
                   </button>
-                  <button onClick={() => togglePin(p.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${p.pinned ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'}`}>
+                  <button onClick={() => togglePin(p.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${p.pinned ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-700 hover:text-slate-900 dark:hover:text-white'}`}>
                     <Pin className="w-4 h-4" /> {p.pinned ? "Unpinned" : "Pin for Review"}
                   </button>
                 </div>

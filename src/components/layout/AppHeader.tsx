@@ -12,18 +12,18 @@ export function AppHeader() {
   const { data: session } = useSession();
 
   return (
-    <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm transition-all duration-300">
+    <header className="sticky top-0 z-50 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-zinc-800/50 shadow-sm transition-all duration-300">
       <div className="max-w-[1400px] mx-auto px-4 py-3.5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center shadow-lg shadow-slate-900/10 dark:shadow-blue-900/20">
-              <Scale className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 dark:from-zinc-100 dark:to-zinc-300 flex items-center justify-center shadow-lg shadow-slate-900/10 dark:shadow-zinc-950/50">
+              <Scale className="w-5 h-5 text-white dark:text-zinc-900" />
             </div>
             <div>
-              <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+              <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 leading-tight">
                 India Labour Code Reform
               </h1>
-              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-widest mt-0.5">
                 Legal Intelligence Platform
               </p>
             </div>
@@ -33,21 +33,21 @@ export function AppHeader() {
             {/* Global Search */}
             <CommandPalette />
 
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
 
             {/* Theme Toggle */}
             <ThemeToggle />
 
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
 
             {/* Mode toggle - Only visible to Admins/Editors */}
             {(session?.user?.role === "admin" || session?.user?.role === "editor") && (
               <button
                 onClick={() => setMode(mode === "read" ? "admin" : "read")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border transition-all cursor-pointer select-none active:scale-95 ${
                   mode === "admin"
-                    ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/50 shadow-sm shadow-indigo-100 dark:shadow-none"
-                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
+                    ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/20 shadow-sm shadow-indigo-100"
+                    : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 shadow-sm"
                 }`}
               >
                 {mode === "admin" ? (

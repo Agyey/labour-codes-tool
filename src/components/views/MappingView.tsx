@@ -36,11 +36,11 @@ export function MappingView() {
 
       {chapters.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <BookOpen className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-400 dark:text-slate-500 mb-2">
+          <BookOpen className="w-12 h-12 text-slate-300 dark:text-zinc-700 mb-4" />
+          <h3 className="text-lg font-semibold text-slate-400 dark:text-zinc-500 mb-2">
             No provisions mapped for {cObj.s} yet
           </h3>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mb-4">
+          <p className="text-sm text-slate-400 dark:text-zinc-500 mb-4">
             {canEdit
               ? "Get started by adding your first provision."
               : "Switch to editor mode to add provisions."}
@@ -69,11 +69,11 @@ export function MappingView() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.05 }}
             open={chapters.length <= 5} 
-            className="group bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl shadow-sm overflow-hidden 
+            className="group bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800/60 rounded-2xl shadow-sm overflow-hidden 
                        [&_summary::-webkit-details-marker]:hidden"
           >
             <summary
-              className="py-4 px-6 text-sm font-extrabold cursor-pointer select-none flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-colors border-b border-transparent group-open:border-slate-100 dark:group-open:border-slate-800"
+              className="py-4 px-6 text-sm font-extrabold cursor-pointer select-none flex items-center gap-3 bg-slate-50/50 dark:bg-zinc-800/50 hover:bg-slate-100/60 dark:hover:bg-zinc-800/80 transition-colors border-b border-transparent group-open:border-slate-100 dark:group-open:border-zinc-800"
             >
               <div 
                 className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] shadow-sm transform group-open:rotate-90 transition-transform duration-200"
@@ -81,15 +81,15 @@ export function MappingView() {
               >
                 <ChevronRight className="w-4 h-4" />
               </div>
-              <span className="text-slate-900 dark:text-slate-100 tracking-tight">
-                {ch.name} <span className="text-slate-400 dark:text-slate-500 font-medium ml-1">Chapter {chNum}</span>
+              <span className="text-slate-900 dark:text-zinc-100 tracking-tight">
+                {ch.name} <span className="text-slate-400 dark:text-zinc-500 font-medium ml-1">Chapter {chNum}</span>
               </span>
-              <span className="ml-auto bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold px-2 py-0.5 rounded-md text-[10px]">
+              <span className="ml-auto bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-semibold px-2 py-0.5 rounded-md text-[10px]">
                 {ch.items.length} {ch.items.length === 1 ? 'Provision' : 'Provisions'}
               </span>
             </summary>
             
-            <div className="p-4 bg-slate-50/30 dark:bg-slate-900/40">
+            <div className="p-4 bg-slate-50/30 dark:bg-zinc-950/20">
               <div className="space-y-4 pl-1 pb-2">
                 {ch.items.map((p) => (
                   <ProvisionCard key={p.id} provision={p} />

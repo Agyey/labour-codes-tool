@@ -35,11 +35,11 @@ export function DashboardView() {
 
   const statCards = [
     { label: "Provisions", value: stats.totalProvisions, icon: FileText, color: cObj.c, bg: cObj.bg },
-    { label: "Verified", value: stats.verified, icon: CheckCircle, color: "#059669", bg: "#ecfdf5" },
-    { label: "Compliance Items", value: stats.totalCompItems, icon: ClipboardList, color: "#374151", bg: "#f3f4f6" },
-    { label: "Compliant", value: stats.compliant, icon: CheckCheck, color: "#10b981", bg: "#d1fae5" },
-    { label: "In Progress", value: stats.inProgress, icon: Clock, color: "#f59e0b", bg: "#fef3c7" },
-    { label: "Not Started", value: stats.notStarted, icon: Circle, color: "#6b7280", bg: "#f3f4f6" },
+    { label: "Verified", value: stats.verified, icon: CheckCircle, color: "#10b981", bg: "#10b98115" },
+    { label: "Compliance Items", value: stats.totalCompItems, icon: ClipboardList, color: "#71717a", bg: "#71717a15" },
+    { label: "Compliant", value: stats.compliant, icon: CheckCheck, color: "#10b981", bg: "#10b98115" },
+    { label: "In Progress", value: stats.inProgress, icon: Clock, color: "#f59e0b", bg: "#f59e0b15" },
+    { label: "Not Started", value: stats.notStarted, icon: Circle, color: "#71717a", bg: "#71717a15" },
   ];
 
   return (
@@ -48,10 +48,10 @@ export function DashboardView() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mb-1.5 tracking-tight">
+        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-zinc-100 mb-1.5 tracking-tight">
           Executive Dashboard — {cObj.n}
         </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+        <p className="text-sm text-slate-500 dark:text-zinc-500 font-medium">
           Overall compliance posture and real-time mapping progress
         </p>
       </motion.div>
@@ -71,8 +71,8 @@ export function DashboardView() {
                 ease: [0.23, 1, 0.32, 1]
               }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="p-5 rounded-[24px] text-center border border-white/60 dark:border-slate-800 shadow-premium hover:shadow-premium-hover backdrop-blur-md transition-all duration-300 group overflow-hidden"
-              style={{ background: `linear-gradient(135deg, ${s.bg}80 0%, ${s.bg}40 100%)` }}
+              className="p-5 rounded-[24px] text-center border border-white/60 dark:border-zinc-800/60 shadow-premium hover:shadow-premium-hover backdrop-blur-md transition-all duration-300 group overflow-hidden relative"
+              style={{ background: `linear-gradient(135deg, ${s.bg} 0%, transparent 100%)` }}
             >
               <div className="absolute inset-0 bg-white/10 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               <Icon
@@ -98,13 +98,13 @@ export function DashboardView() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-        className="p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[32px] border border-white/80 dark:border-slate-800 shadow-premium relative overflow-hidden"
+        className="p-8 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl rounded-[32px] border border-white/80 dark:border-zinc-800 shadow-premium relative overflow-hidden"
       >
         <div className="flex items-center gap-3 mb-6 relative z-10">
-          <div className="p-2 bg-emerald-100/50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200/50 dark:border-emerald-800/50">
+          <div className="p-2 bg-emerald-100/50 dark:bg-emerald-500/10 rounded-xl border border-emerald-200/50 dark:border-emerald-500/20">
             <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">
+          <span className="text-[11px] font-black text-slate-800 dark:text-zinc-100 uppercase tracking-widest">
             System Compliance Health
           </span>
         </div>
@@ -124,8 +124,8 @@ export function DashboardView() {
         transition={{ delay: 0.4 }}
       >
         <div className="flex items-center gap-2 mb-6 ml-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-          <h3 className="text-[11px] font-black text-slate-400 dark:text-slate-500 subtitle uppercase tracking-widest">
+          <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
+          <h3 className="text-[11px] font-black text-slate-400 dark:text-zinc-500 subtitle uppercase tracking-widest">
             Legal Code Repository
           </h3>
         </div>
@@ -144,9 +144,9 @@ export function DashboardView() {
                     setActiveView("mapping");
                   }}
                   whileHover={{ y: -5 }}
-                  className="p-8 rounded-[32px] border border-white/60 dark:border-slate-800 text-left transition-all shadow-premium hover:shadow-premium-hover cursor-pointer group relative overflow-hidden"
+                  className="p-8 rounded-[32px] border border-white/60 dark:border-zinc-800 text-left transition-all shadow-premium hover:shadow-premium-hover cursor-pointer group relative overflow-hidden bg-white dark:bg-zinc-900"
                   style={{
-                    background: `linear-gradient(135deg, ${code.bg} 0%, white 100%)`, // We need to handle this gradient carefully for dark mode
+                    backgroundImage: `linear-gradient(135deg, ${code.bg} 0%, transparent 100%)`,
                   }}
                 >
                   <div className="absolute inset-0 bg-white/20 dark:bg-black/20 opacity-0 dark:opacity-40" />

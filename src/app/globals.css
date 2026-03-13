@@ -20,7 +20,7 @@ html {
 
 body {
   font-family: var(--font-sans);
-  @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300;
+  @apply bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors duration-300;
 }
 
 /* Custom scrollbar */
@@ -30,15 +30,15 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  @apply bg-transparent dark:bg-zinc-950;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  @apply bg-slate-300 dark:bg-zinc-800 rounded-full border-2 border-transparent dark:border-zinc-950 bg-clip-padding;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400 dark:bg-slate-600;
+  @apply bg-slate-400 dark:bg-zinc-700;
 }
 
 /* Print styles */
