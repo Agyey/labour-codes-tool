@@ -1,28 +1,31 @@
-import { useState } from 'react'
-import { Comment } from '@/types/provision'
-import { formatDistanceToNow } from 'date-fns'
-import { MessageSquare, User } from 'lucide-react'
+"use client";
+
+import { useState } from 'react';
+import { Comment } from '@/types/provision';
+import { formatDistanceToNow } from 'date-fns';
+import { MessageSquare, User } from 'lucide-react';
+import Image from 'next/image';
+
+interface CommentSectionProps {
+  comments?: Comment[];
+  onAddComment: (body: string) => Promise<void>;
+}
 
 export function CommentSection({
   comments = [],
-  provisionId,
   onAddComment
-}: {
-  comments?: Comment[]
-  provisionId: string
-  onAddComment: (body: string) => Promise<void>
-}) {
-  const [newComment, setNewComment] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+}: CommentSectionProps) {
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newComment.trim()) return
+    e.preventDefault();
+    if (!newComment.trim()) return;
     
-    setIsSubmitting(true)
-    await onAddComment(newComment)
-    setNewComment("")
-    setIsSubmitting(false)
+    setIsSubmitting(true);
+    await onAddComment(newComment);
+    setNewComment("");
+    setIsSubmitting(false);
   }
 
   return (
@@ -40,7 +43,13 @@ export function CommentSection({
           <div key={comment.id} className="flex gap-4">
             <div className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-200">
               {comment.user.image ? (
-                <img src={comment.user.image} alt={comment.user.name || "User"} className="w-full h-full object-cover" />
+                <Image 
+                  src={comment.user.image} 
+                  alt={comment.user.name || "User"} 
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover" 
+                />
               ) : (
                 <User className="w-5 h-5 text-gray-400" />
               )}
@@ -81,5 +90,5 @@ export function CommentSection({
         </button>
       </form>
     </div>
-  )
+  );
 }

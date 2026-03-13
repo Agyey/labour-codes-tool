@@ -1,8 +1,7 @@
 "use server"
 
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 export async function getUsers() {
   try {
@@ -21,7 +20,7 @@ export async function getUsers() {
     
     return users
   } catch (error) {
-    console.error("Error fetching users:", error)
+    logger.error("Failed to fetch users", error);
     return []
   }
 }

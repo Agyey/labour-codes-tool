@@ -3,7 +3,6 @@ import { twMerge } from "tailwind-merge";
 import type {
   Provision,
   OldMapping,
-  ComplianceItem,
 } from "@/types/provision";
 import { STATES } from "@/config/states";
 
@@ -12,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** localStorage wrapper with JSON (de)serialization */
-export async function loadStorage<T>(key: string): Promise<T | null> {
+export function loadStorage<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
@@ -21,7 +20,7 @@ export async function loadStorage<T>(key: string): Promise<T | null> {
   }
 }
 
-export async function saveStorage<T>(key: string, value: T): Promise<void> {
+export function saveStorage<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
