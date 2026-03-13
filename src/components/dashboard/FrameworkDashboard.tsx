@@ -9,7 +9,7 @@ import { FrameworkModal } from "./FrameworkModal";
 import { Framework } from "@/types/provision";
 
 export function FrameworkDashboard() {
-  const { frameworks, loading, deleteFramework } = useData();
+  const { frameworks, loading, deleteFramework, canEdit } = useData();
   const { setActiveView, setActiveCode } = useUI();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFw, setEditingFw] = useState<Framework | null>(null);
@@ -34,12 +34,14 @@ export function FrameworkDashboard() {
           <p className="text-slate-500 dark:text-zinc-400 font-medium max-w-2xl">
             Central intelligence for complex legal frameworks. Manage legislations, rules, and connectors within their respective buckets.
           </p>
-          <button 
-            onClick={() => { setEditingFw(null); setIsModalOpen(true); }}
-            className="px-6 py-3 bg-indigo-600 text-white text-[12px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
-          >
-            Create New Bucket
-          </button>
+          {canEdit && (
+            <button 
+              onClick={() => { setEditingFw(null); setIsModalOpen(true); }}
+              className="px-6 py-3 bg-indigo-600 text-white text-[12px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
+            >
+              Create New Bucket
+            </button>
+          )}
         </div>
       </header>
 
@@ -71,26 +73,28 @@ export function FrameworkDashboard() {
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">Legal Container</span>
                 </div>
                 
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toast.success("Analytics coming soon!"); }}
-                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                  >
-                    <PieChart className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setEditingFw(fw); setIsModalOpen(true); }}
-                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); deleteFramework(fw.id); }}
-                    className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {canEdit && (
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toast.success("Analytics coming soon!"); }}
+                      className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    >
+                      <PieChart className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setEditingFw(fw); setIsModalOpen(true); }}
+                      className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); deleteFramework(fw.id); }}
+                      className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-3">
@@ -134,6 +138,11 @@ export function FrameworkDashboard() {
           ))
         )}
       </div>
+      <FrameworkModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        editingFramework={editingFw}
+      />
     </div>
   );
 }

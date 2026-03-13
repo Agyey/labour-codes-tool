@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 
 export function BucketExplorer() {
   const { activeCode, setActiveView, setActiveCode } = useUI();
-  const { frameworks, legislations, deleteLegislation } = useData();
+  const { frameworks, legislations, deleteLegislation, canEdit } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLeg, setEditingLeg] = useState<Legislation | null>(null);
 
@@ -56,12 +56,14 @@ export function BucketExplorer() {
           </div>
         </div>
 
-        <button 
-          onClick={() => { setEditingLeg(null); setIsModalOpen(true); }}
-          className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl"
-        >
-          <Plus className="w-4 h-4" /> Add Legislation
-        </button>
+        {canEdit && (
+          <button 
+            onClick={() => { setEditingLeg(null); setIsModalOpen(true); }}
+            className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl"
+          >
+            <Plus className="w-4 h-4" /> Add Legislation
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
@@ -85,15 +87,17 @@ export function BucketExplorer() {
               />
             ))}
             
-            <button 
-              onClick={() => { setEditingLeg(null); setIsModalOpen(true); }}
-              className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[32px] hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-indigo-50/10 transition-all group"
-            >
-              <Plus className="w-8 h-8 text-slate-300 dark:text-zinc-700 group-hover:text-indigo-500 mb-2" />
-              <span className="text-xs font-black text-slate-400 dark:text-zinc-600 uppercase tracking-widest group-hover:text-indigo-500 text-center">
-                New Act/Rule Tile
-              </span>
-            </button>
+            {canEdit && (
+              <button 
+                onClick={() => { setEditingLeg(null); setIsModalOpen(true); }}
+                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[32px] hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-indigo-50/10 transition-all group"
+              >
+                <Plus className="w-8 h-8 text-slate-300 dark:text-zinc-700 group-hover:text-indigo-500 mb-2" />
+                <span className="text-xs font-black text-slate-400 dark:text-zinc-600 uppercase tracking-widest group-hover:text-indigo-500 text-center">
+                  New Act/Rule Tile
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -129,6 +133,12 @@ export function BucketExplorer() {
            </div>
         </div>
       </div>
+      <LegislationModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        editingLegislation={editingLeg}
+        frameworkId={framework.id}
+      />
     </div>
   );
 }

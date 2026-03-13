@@ -146,15 +146,9 @@ export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-slate-500">Injecting into:</span>
-                <select 
-                  value={selectedCode}
-                  onChange={(e) => setSelectedCode(e.target.value as CodeKey)}
-                  className="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded px-2 py-1 outline-none cursor-pointer"
-                >
-                  {(Object.entries(CODES) as [CodeKey, any][]).map(([key, obj]) => (
-                    <option key={key} value={key}>{obj.n}</option>
-                  ))}
-                </select>
+                <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded px-2 py-1">
+                  {selectedCode}
+                </span>
               </div>
               <button 
                 onClick={() => toast.success("Use the Nexus Dashboard to create new buckets formally.")}
