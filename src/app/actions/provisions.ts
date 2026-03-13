@@ -80,7 +80,7 @@ export async function getProvisions(): Promise<Provision[]> {
       penaltyOld: p.penalty_old || "",
       penaltyNew: p.penalty_new || "",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      timelineDates: (p.timeline_dates as any) || [],
+      timelineDates: [],
       notes: p.notes || "",
       verified: p.verified,
       pinned: p.pinned,
@@ -116,13 +116,13 @@ const parseDateSafely = (d: string | null | undefined) => {
 };
 
 /**
- * Server action to update a provision with transactional integrity.
+ * Server action to upsert a provision with transactional integrity.
+ * Uses upsert to handle both new provisions (from PDF parser/editor) and existing updates.
  * Ensures that nested updates (oldMappings, complianceItems) are atomic.
  */
 export async function updateProvision(id: string, rawUpdates: Provision, userId?: string) {
   try {
     // Validate inputs via Zod
-    console.log(`[UPDATE_PROVISION_START] ID: ${id}`);
     const validatedData = ProvisionUpdateSchema.parse(rawUpdates);
 
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
@@ -150,62 +150,59 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         pinned: validatedData.pinned,
       };
 
-      // 1. Clear and Recreate relations to maintain transactional state
-      if (validatedData.oldMappings) {
-        await tx.oldMapping.deleteMany({ where: { provision_id: id } });
-        updateData.oldMappings = {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          create: (validatedData.oldMappings as any[]).map((m: any) => ({
-            act_name: m.act,
-            section: m.sec,
-            summary: m.summary,
-            full_text: m.fullText,
-            change_description: m.change,
-            change_tags: m.change_tags || [],
-          }))
-        };
+      // 1. Build nested relation payloads
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const oldMappingsCreate = (validatedData.oldMappings as any[] || []).map((m: any) => ({
+        act_name: m.act,
+        section: m.sec,
+        summary: m.summary,
+        full_text: m.fullText,
+        change_description: m.change,
+        change_tags: m.change_tags || [],
+      }));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const compItemsCreate = (validatedData.compItems as any[] || []).map((c: any) => ({
+        task: c.task,
+        assignee: c.assignee,
+        status: 'Not Started',
+        due_date: parseDateSafely(c.due),
+      }));
+
+      // Merge state data keys
+      const stateKeys = Array.from(new Set([
+        ...Object.keys(validatedData.stateNotes || {}),
+        ...Object.keys(validatedData.stateRuleText || {}),
+        ...Object.keys(validatedData.stateCompStatus || {})
+      ]));
+      const stateDataCreate = stateKeys.map(s => ({
+        state: s,
+        notes: validatedData.stateNotes?.[s] || "",
+        rule_text: validatedData.stateRuleText?.[s] || "",
+        compliance_status: validatedData.stateCompStatus?.[s] || "Not Started"
+      }));
+
+      // 2. Clear existing relations (safe even if record is new — deleteMany returns 0)
+      await tx.oldMapping.deleteMany({ where: { provision_id: id } });
+      await tx.complianceItem.deleteMany({ where: { provision_id: id } });
+      await tx.stateData.deleteMany({ where: { provision_id: id } });
+
+      // 3. Build the full data payload with nested creates
+      if (oldMappingsCreate.length > 0) {
+        updateData.oldMappings = { create: oldMappingsCreate };
+      }
+      if (compItemsCreate.length > 0) {
+        updateData.complianceItems = { create: compItemsCreate };
+      }
+      if (stateDataCreate.length > 0) {
+        updateData.stateData = { create: stateDataCreate };
       }
 
-      if (validatedData.compItems) {
-        await tx.complianceItem.deleteMany({ where: { provision_id: id } });
-        updateData.complianceItems = {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          create: (validatedData.compItems as any[]).map((c: any) => ({
-            task: c.task,
-            assignee: c.assignee,
-            status: 'Not Started',
-            due_date: parseDateSafely(c.due),
-          }))
-        };
-      }
-      
-      // Handle StateData Sync (Mapping Record objects back to flat StateData list)
-      if (validatedData.stateNotes || validatedData.stateRuleText || validatedData.stateCompStatus) {
-        await tx.stateData.deleteMany({ where: { provision_id: id } });
-        
-        // Merge keys from all state objects to ensure coverage
-        const stateKeys = Array.from(new Set([
-          ...Object.keys(validatedData.stateNotes || {}),
-          ...Object.keys(validatedData.stateRuleText || {}),
-          ...Object.keys(validatedData.stateCompStatus || {})
-        ]));
-
-        if (stateKeys.length > 0) {
-          updateData.stateData = {
-            create: stateKeys.map(s => ({
-              state: s,
-              notes: validatedData.stateNotes?.[s] || "",
-              rule_text: validatedData.stateRuleText?.[s] || "",
-              compliance_status: validatedData.stateCompStatus?.[s] || "Not Started"
-            }))
-          };
-        }
-      }
-
-      // 2. Perform the update
-      const updatedProvision = await tx.provision.update({
+      // 4. Upsert: creates if new, updates if existing
+      const updatedProvision = await tx.provision.upsert({
         where: { id },
-        data: updateData
+        update: updateData,
+        create: { id, ...updateData },
       });
 
       // 3. Audit Trail Hook
@@ -225,13 +222,10 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
 
     return { success: true, provision: result };
   } catch (error: any) {
-    console.error("[UPDATE_PROVISION_ERROR]", error);
-    if (error.errors) {
-       console.error("[ZOD_VALIDATION_ERRORS]", JSON.stringify(error.errors, null, 2));
-    }
+    logger.error("Failed to upsert provision", error);
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : "Failed to update provision" 
+      error: error instanceof Error ? error.message : "Failed to save provision" 
     };
   }
 }

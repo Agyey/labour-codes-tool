@@ -33,10 +33,10 @@ export function EditorModal() {
   if (!editingProvision || !form) return null;
 
   const prov = editingProvision;
-  const inputCls = "w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all";
-  const labelCls = "block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1";
-  const sectionCls = "p-5 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-4";
-  const textareaCls = "w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono";
+  const inputCls = "w-full p-2 border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all";
+  const labelCls = "block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1";
+  const sectionCls = "p-5 bg-slate-50/50 dark:bg-zinc-800/50 rounded-2xl border border-slate-100 dark:border-zinc-700 space-y-4";
+  const textareaCls = "w-full p-2 border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono";
 
   function update<K extends keyof Provision>(key: K, val: Provision[K]) {
     setForm((prev) => prev ? ({ ...prev, [key]: val }) : null);
@@ -105,12 +105,12 @@ export function EditorModal() {
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-[95%] max-w-[900px] max-h-[90vh] overflow-auto p-6 shadow-2xl">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl w-[95%] max-w-[900px] max-h-[90vh] overflow-auto p-6 shadow-2xl border border-slate-200 dark:border-zinc-800">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-gray-800">
+          <h2 className="text-lg font-extrabold text-gray-800 dark:text-zinc-100">
             {prov.id.includes("temp-") ? "Add" : "Edit"} Provision
           </h2>
-          <button onClick={() => setEditingProvision(null)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+          <button onClick={() => setEditingProvision(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -179,7 +179,7 @@ export function EditorModal() {
             }} 
           />
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100 mt-6">
+          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-zinc-800 mt-6">
             <button
               onClick={async () => {
                 setIsSaving(true);
@@ -196,7 +196,7 @@ export function EditorModal() {
               <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} /> 
               {isSaving ? "Saving..." : "Save Provision"}
             </button>
-            <button onClick={() => setEditingProvision(null)} disabled={isSaving} className="px-6 py-2.5 bg-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-300 transition-colors cursor-pointer disabled:opacity-50">
+            <button onClick={() => setEditingProvision(null)} disabled={isSaving} className="px-6 py-2.5 bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 rounded-xl text-sm hover:bg-gray-300 dark:hover:bg-zinc-600 transition-colors cursor-pointer disabled:opacity-50">
               Cancel
             </button>
         </div>

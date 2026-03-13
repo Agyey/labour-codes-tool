@@ -8,8 +8,7 @@ import { CODES } from "@/config/codes";
 import { IMPACT_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
 import type { Provision } from "@/types/provision";
-import {
-  Star,
+import { Star,
   ChevronDown,
   ChevronUp,
   Pencil,
@@ -18,8 +17,6 @@ import {
   Trash2,
   Download,
 } from "lucide-react";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { StatuteView } from "./StatuteView";
 import { RepealedAnalysis } from "./RepealedAnalysis";
 import { PenaltyInfo } from "./PenaltyInfo";
@@ -58,6 +55,12 @@ export const ProvisionCard = memo(function ProvisionCard({ provision: p }: Provi
       const element = document.getElementById(`prov-${p.id}`);
       if (!element) return;
       
+      // Lazy-load heavy PDF export libraries (~200KB) only when user clicks Export
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
       const canvas = await html2canvas(element, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');

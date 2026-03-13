@@ -67,7 +67,7 @@ const extractLegalStructure = (text: string) => {
         ch: currentChapter,
         chName: currentChapterName,
         sec: secNum,
-        title: secTitle.length > 50 ? secTitle.substring(0, 50) + "..." : secTitle, // Heuristic title
+        title: secTitle.length > 120 ? secTitle.substring(0, 120) + "..." : secTitle, // Heuristic title
         text: secTitle + "\n" + fullText.trim(),
       });
     }

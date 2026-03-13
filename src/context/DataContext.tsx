@@ -11,7 +11,13 @@ import {
 } from "react";
 import type { Provision } from "@/types/provision";
 import type { User } from "@/types/provision";
-import { getProvisions, updateProvision } from "@/app/actions/provisions";
+import { 
+  getProvisions, 
+  updateProvision, 
+  deleteProvision as deleteProvisionAction,
+  togglePin as togglePinAction,
+  toggleVerify as toggleVerifyAction,
+} from "@/app/actions/provisions";
 import { getUsers } from "@/app/actions/users";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -85,18 +91,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     initData();
   }, []);
 
-  // Auto-save local preferences with debounce
+  // Auto-save local preferences with debounce (NOT provisions — those go to Postgres)
   useEffect(() => {
     if (loading) return;
     const timer = setTimeout(() => {
       saveStorage(STORAGE_KEY, {
-        provs: provisions,
         compSt: complianceStatuses,
         editorPw: editorPassword,
       });
     }, 1500);
     return () => clearTimeout(timer);
-  }, [provisions, complianceStatuses, editorPassword, loading]);
+  }, [complianceStatuses, editorPassword, loading]);
 
   // Actions
   const saveProvision = useCallback(async (p: Provision) => {
@@ -125,21 +130,51 @@ export function DataProvider({ children }: { children: ReactNode }) {
     );
   }, [session]);
 
-  const deleteProvision = useCallback((id: string) => {
-    setProvisions((prev) => prev.filter((x) => x.id !== id));
+  const deleteProvision = useCallback(async (id: string) => {
+    const res = await deleteProvisionAction(id);
+    if (res.success) {
+      setProvisions((prev) => prev.filter((x) => x.id !== id));
+      toast.success("Provision deleted.");
+    } else {
+      toast.error("Failed to delete provision.");
+    }
   }, []);
 
-  const togglePin = useCallback((id: string) => {
+  const togglePin = useCallback(async (id: string) => {
+    const prov = provisions.find((x) => x.id === id);
+    if (!prov) return;
+    const newPinned = !prov.pinned;
+    // Optimistic update
     setProvisions((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, pinned: !x.pinned } : x))
+      prev.map((x) => (x.id === id ? { ...x, pinned: newPinned } : x))
     );
-  }, []);
+    const res = await togglePinAction(id, newPinned);
+    if (!res.success) {
+      // Revert on failure
+      setProvisions((prev) =>
+        prev.map((x) => (x.id === id ? { ...x, pinned: !newPinned } : x))
+      );
+      toast.error("Failed to update pin status.");
+    }
+  }, [provisions]);
 
-  const toggleVerify = useCallback((id: string) => {
+  const toggleVerify = useCallback(async (id: string) => {
+    const prov = provisions.find((x) => x.id === id);
+    if (!prov) return;
+    const newVerified = !prov.verified;
+    // Optimistic update
     setProvisions((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, verified: !x.verified } : x))
+      prev.map((x) => (x.id === id ? { ...x, verified: newVerified } : x))
     );
-  }, []);
+    const res = await toggleVerifyAction(id, newVerified);
+    if (!res.success) {
+      // Revert on failure
+      setProvisions((prev) =>
+        prev.map((x) => (x.id === id ? { ...x, verified: !newVerified } : x))
+      );
+      toast.error("Failed to update verification status.");
+    }
+  }, [provisions]);
 
   const setComplianceStatus = useCallback((id: string, status: string) => {
     setComplianceStatuses((prev) => ({ ...prev, [id]: status }));
