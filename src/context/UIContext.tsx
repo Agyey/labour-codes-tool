@@ -11,7 +11,7 @@ import {
 import type { Provision } from "@/types/provision";
 import type { CodeKey } from "@/types/code";
 
-type ViewType = "mapping" | "dashboard" | "stateTracker" | "timeline" | "penalties" | "compare";
+type ViewType = "mapping" | "dashboard" | "bucket" | "stateTracker" | "timeline" | "penalties" | "compare";
 type ModeType = "read" | "admin";
 
 interface UIState {

@@ -9,14 +9,15 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import type { Provision } from "@/types/provision";
-import type { User } from "@/types/provision";
+import type { Provision, Framework, Legislation, User } from "@/types/provision";
 import { 
   getProvisions, 
   updateProvision, 
   deleteProvision as deleteProvisionAction,
   togglePin as togglePinAction,
   toggleVerify as toggleVerifyAction,
+  getFrameworks,
+  getLegislations
 } from "@/app/actions/provisions";
 import { getUsers } from "@/app/actions/users";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
@@ -34,6 +35,8 @@ interface StorageData {
 
 interface DataState {
   provisions: Provision[];
+  frameworks: Framework[];
+  legislations: Legislation[];
   complianceStatuses: Record<string, string>;
   editorPassword: string;
   loading: boolean;
@@ -58,6 +61,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { activeCode, mode, passwordVerified } = useUI();
 
   const [provisions, setProvisions] = useState<Provision[]>([]);
+  const [frameworks, setFrameworks] = useState<Framework[]>([]);
+  const [legislations, setLegislations] = useState<Legislation[]>([]);
   const [complianceStatuses, setComplianceStatuses] = useState<Record<string, string>>({});
   const [editorPassword, setEditorPasswordState] = useState("");
   const [loading, setLoading] = useState(true);
@@ -67,15 +72,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function initData() {
       try {
-        const dbProvs = await getProvisions();
-        if (dbProvs && dbProvs.length > 0) {
-          setProvisions(dbProvs as Provision[]);
-        }
+        const [dbProvs, dbUsers, dbFrameworks, dbLegislations] = await Promise.all([
+          getProvisions(),
+          getUsers(),
+          getFrameworks(),
+          getLegislations()
+        ]);
 
-        const dbUsers = await getUsers();
-        if (dbUsers) {
-          setUsers(dbUsers as User[]);
-        }
+        if (dbProvs) setProvisions(dbProvs as Provision[]);
+        if (dbUsers) setUsers(dbUsers as User[]);
+        if (dbFrameworks) setFrameworks(dbFrameworks as any[]);
+        if (dbLegislations) setLegislations(dbLegislations as any[]);
 
         const data = loadStorage<StorageData>(STORAGE_KEY);
         if (data) {
@@ -197,6 +204,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({
     provisions,
+    frameworks,
+    legislations,
     complianceStatuses,
     editorPassword,
     loading,
@@ -210,7 +219,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     canEdit,
     stats,
   }), [
-    provisions, complianceStatuses, editorPassword, loading, users,
+    provisions, frameworks, legislations, complianceStatuses, editorPassword, loading, users,
     saveProvision, deleteProvision, togglePin, toggleVerify,
     setComplianceStatus, setEditorPassword, canEdit, stats
   ]);

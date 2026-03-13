@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const ProvisionUpdateSchema = z.object({
   code: z.string(),
+  frameworkId: z.string().optional().nullable(),
+  legislationId: z.string().optional().nullable(),
   ch: z.string(),
   chName: z.string(),
   sec: z.string(),

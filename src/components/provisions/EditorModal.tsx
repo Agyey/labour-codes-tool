@@ -18,6 +18,8 @@ import { StateWideFields } from "./StateWideFields";
 import { TimelineFields } from "./TimelineFields";
 import { MetadataFields } from "./MetadataFields";
 
+import { HierarchyConnectors } from "./HierarchyConnectors";
+
 export function EditorModal() {
   const { editingProvision, setEditingProvision } = useUI();
   const { saveProvision, users } = useData();
@@ -33,10 +35,10 @@ export function EditorModal() {
   if (!editingProvision || !form) return null;
 
   const prov = editingProvision;
-  const inputCls = "w-full p-2 border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all";
-  const labelCls = "block text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider mb-1";
-  const sectionCls = "p-5 bg-slate-50/50 dark:bg-zinc-800/50 rounded-2xl border border-slate-100 dark:border-zinc-700 space-y-4";
-  const textareaCls = "w-full p-2 border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono";
+  const inputCls = "w-full p-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-700 dark:text-zinc-200 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none";
+  const labelCls = "block text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5 ml-1";
+  const sectionCls = "p-8 bg-slate-50/50 dark:bg-zinc-900/50 rounded-[40px] border border-slate-100 dark:border-zinc-800/50 space-y-6";
+  const textareaCls = "w-full p-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl text-sm font-bold text-slate-700 dark:text-zinc-200 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-sans min-h-[120px]";
 
   function update<K extends keyof Provision>(key: K, val: Provision[K]) {
     setForm((prev) => prev ? ({ ...prev, [key]: val }) : null);
@@ -53,7 +55,7 @@ export function EditorModal() {
     });
   }
 
-  function updateOldMapping(idx: number, key: keyof OldMapping, val: string | string[]) {
+  function updateOldMapping(idx: number, key: keyof OldMapping, val: any) {
     setForm((prev) => {
       if (!prev) return null;
       const mappings = [...prev.oldMappings];
@@ -104,18 +106,28 @@ export function EditorModal() {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl w-[95%] max-w-[900px] max-h-[90vh] overflow-auto p-6 shadow-2xl border border-slate-200 dark:border-zinc-800">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-extrabold text-gray-800 dark:text-zinc-100">
-            {prov.id.includes("temp-") ? "Add" : "Edit"} Provision
-          </h2>
-          <button onClick={() => setEditingProvision(null)} className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xl z-[1000] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-zinc-950 rounded-[56px] w-[95%] max-w-[1100px] max-h-[92vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-500 ease-out">
+        <div className="flex items-center justify-between p-10 pb-6 border-b border-slate-50 dark:border-zinc-900">
+          <div>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              {prov.id.includes("temp-") ? "Initialize" : "Optimize"} Provision
+            </h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Intelligence Layer Editor</p>
+          </div>
+          <button onClick={() => setEditingProvision(null)} className="p-4 bg-slate-50 dark:bg-zinc-900 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-3xl transition-all hover:scale-110 active:scale-90 cursor-pointer">
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex-grow overflow-auto p-10 space-y-10 custom-scrollbar">
+          <HierarchyConnectors 
+            form={form} 
+            update={update} 
+            labelCls={labelCls} 
+            sectionCls={sectionCls} 
+          />
+
           <BasicInfoFields form={form} update={update} inputCls={inputCls} labelCls={labelCls} sectionCls={sectionCls} />
           
           <StatuteFields 

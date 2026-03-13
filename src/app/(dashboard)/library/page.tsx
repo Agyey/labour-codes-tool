@@ -7,14 +7,15 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { AppShell } from "@/components/layout/AppShell";
-import { MappingView } from "@/components/views/MappingView";
 import { ComplianceProductView } from "@/components/views/ComplianceProductView";
 import { AgreementsProductView } from "@/components/views/AgreementsProductView";
 import { DiligenceProductView } from "@/components/views/DiligenceProductView";
 import { WorkflowDashboardView } from "@/components/views/WorkflowDashboardView";
 import { WorkspaceView } from "@/components/views/WorkspaceView";
 
-const DashboardView = dynamic(() => import("@/components/views/DashboardView").then(m => m.DashboardView), { ssr: false });
+const DashboardView = dynamic(() => import("@/components/dashboard/FrameworkDashboard").then(m => m.FrameworkDashboard), { ssr: false });
+const BucketExplorer = dynamic(() => import("@/components/dashboard/BucketExplorer").then(m => m.BucketExplorer), { ssr: false });
+const MappingView = dynamic(() => import("@/components/views/MappingView").then(m => m.MappingView), { ssr: false });
 const StateTrackerView = dynamic(() => import("@/components/views/StateTrackerView").then(m => m.StateTrackerView), { ssr: false });
 const TimelineView = dynamic(() => import("@/components/views/TimelineView").then(m => m.TimelineView), { ssr: false });
 const PenaltiesView = dynamic(() => import("@/components/views/PenaltiesView").then(m => m.PenaltiesView), { ssr: false });
@@ -33,14 +34,15 @@ function ViewRouter() {
       <AnimatePresence mode="wait">
         <motion.div
           key={activeView}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -15, position: "absolute", width: "100%" }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.02, position: "absolute", width: "100%" }}
+          transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
           className="relative h-full"
         >
-          {activeView === "mapping" && <MappingView />}
           {activeView === "dashboard" && <DashboardView />}
+          {activeView === "bucket" && <BucketExplorer />}
+          {activeView === "mapping" && <MappingView />}
           {activeView === "stateTracker" && <StateTrackerView />}
           {activeView === "timeline" && <TimelineView />}
           {activeView === "penalties" && <PenaltiesView />}
@@ -58,7 +60,7 @@ export default function Home() {
 
   useEffect(() => {
     setActiveProduct("MAPPING");
-    setActiveView("mapping");
+    setActiveView("dashboard");
   }, []);
 
   if (loading) {

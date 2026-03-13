@@ -1,0 +1,102 @@
+"use client";
+
+import { useData } from "@/context/DataContext";
+import { useUI } from "@/context/UIContext";
+import { FolderKanban, Scale, ChevronRight, Activity } from "lucide-react";
+
+export function FrameworkDashboard() {
+  const { frameworks, loading } = useData();
+  const { setActiveView, setActiveCode } = useUI();
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-64 bg-slate-100 dark:bg-zinc-800 rounded-[32px]" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <header className="flex flex-col gap-2">
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+          Legal Operations <span className="text-indigo-600 dark:text-indigo-400">Nexus</span>
+        </h1>
+        <p className="text-slate-500 dark:text-zinc-400 font-medium max-w-2xl">
+          Central intelligence for complex legal frameworks. Manage legislations, rules, and connectors within their respective buckets.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {frameworks.length === 0 ? (
+           <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[40px] bg-slate-50/50 dark:bg-zinc-900/50">
+              <FolderKanban className="w-12 h-12 mx-auto text-slate-300 dark:text-zinc-700 mb-4" />
+              <p className="text-lg font-bold text-slate-400 dark:text-zinc-600">No frameworks initialized yet.</p>
+           </div>
+        ) : (
+          frameworks.map((fw) => (
+            <button 
+              key={fw.id}
+              onClick={() => {
+                setActiveCode(fw.shortName as any || fw.id);
+                setActiveView('bucket');
+              }}
+              className="group relative flex flex-col p-8 bg-white dark:bg-zinc-900 rounded-[40px] border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 transition-all duration-500 text-left overflow-hidden cursor-pointer"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Scale className="w-32 h-32 rotate-12" />
+              </div>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                  <FolderKanban className="w-6 h-6" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">Legal Container</span>
+              </div>
+
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-3">
+                {fw.name}
+              </h3>
+              
+              <p className="text-sm text-slate-500 dark:text-zinc-400 font-medium line-clamp-2 mb-8 flex-grow">
+                {fw.description || "Comprehensive framework mapping sections, rules, and repealed legislations."}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100 dark:border-zinc-800">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                     <Activity className="w-3.5 h-3.5" />
+                     <span className="text-[10px] font-black uppercase tracking-tighter">In Force</span>
+                  </div>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{(fw.legislations || []).filter(l => !l.isRepealed).length}</p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                     <Scale className="w-3.5 h-3.5" />
+                     <span className="text-[10px] font-black uppercase tracking-tighter">Repealed</span>
+                  </div>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{(fw.legislations || []).filter(l => l.isRepealed).length}</p>
+                </div>
+              </div>
+
+              <div className="mt-8 flex items-center justify-between">
+                <div className="flex -space-x-2">
+                  {(fw.legislations || []).slice(0, 3).map((l, i) => (
+                    <div key={i} className="w-8 h-8 rounded-full border-4 border-white dark:border-zinc-900 bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[8px] font-black overflow-hidden shadow-sm" style={{ backgroundColor: l.color || '#6366f1' }}>
+                      <span className="text-white uppercase">{l.shortName[0]}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-2.5 bg-slate-50 dark:bg-zinc-800 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all transform group-hover:translate-x-1">
+                  <ChevronRight className="w-5 h-5" />
+                </div>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

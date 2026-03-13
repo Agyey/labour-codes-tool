@@ -22,6 +22,8 @@ export async function getProvisions(): Promise<Provision[]> {
       include: {
         oldMappings: true,
         complianceItems: true,
+        framework: true,
+        legislation: true,
         comments: {
           include: {
             user: true
@@ -40,6 +42,8 @@ export async function getProvisions(): Promise<Provision[]> {
     return (dbProvs as any[]).map((p: any) => ({
       id: p.id,
       code: p.code,
+      frameworkId: p.framework_id,
+      legislationId: p.legislation_id,
       ch: p.chapter,
       chName: p.chapter_name,
       sec: p.section,
@@ -136,6 +140,8 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updateData: any = {
         code: validatedData.code,
+        framework_id: validatedData.frameworkId || null,
+        legislation_id: validatedData.legislationId || null,
         chapter: validatedData.ch,
         chapter_name: validatedData.chName,
         section: validatedData.sec,
@@ -310,5 +316,41 @@ export async function addComment(provisionId: string, body: string) {
   } catch (err) {
     console.error(err);
     return { success: false, error: "Failed to add comment" };
+  }
+}
+
+export async function getLegislations() {
+  try {
+    const legislations = await prisma.legislation.findMany({
+      include: {
+        provisions: {
+          select: { id: true }
+        }
+      }
+    });
+    return legislations;
+  } catch (error) {
+    logger.error("Failed to fetch legislations", error);
+    return [];
+  }
+}
+
+export async function getFrameworks() {
+  try {
+    const frameworks = await prisma.framework.findMany({
+      include: {
+        legislations: {
+          include: {
+            provisions: {
+              select: { id: true }
+            }
+          }
+        }
+      }
+    });
+    return frameworks;
+  } catch (error) {
+    logger.error("Failed to fetch frameworks", error);
+    return [];
   }
 }

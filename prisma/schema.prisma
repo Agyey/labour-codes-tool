@@ -118,13 +118,14 @@ model Provision {
   id               String    @id @default(cuid())
   org_id           String?
   framework_id     String?
+  legislation_id   String?   // New: Reference to specific legislation tile
   code             String
   chapter          String
   chapter_name     String
   section          String
   sub_section      String
   title            String
-  provision_type   String    @default("section") // section | rule
+  provision_type   String    @default("section") // section | rule | form | register
   parent_section   String?   // For rules: which section this rule implements
   sub_sections     Json      @default("[]")      // SubSection[] as JSON
   linked_rule_refs String[]  @default([])        // For sections: rule refs that implement this
@@ -149,11 +150,16 @@ model Provision {
   // Relations
   organization    Organization?    @relation(fields: [org_id], references: [id])
   framework       Framework?       @relation(fields: [framework_id], references: [id])
+  legislation     Legislation?     @relation(fields: [legislation_id], references: [id])
   oldMappings     OldMapping[]
   complianceItems ComplianceItem[]
   stateData       StateData[]
   edits           ProvisionEdit[]
   comments        Comment[]
+  
+  // Connectors
+  sourceOf        ProvisionRelation[] @relation("source")
+  targetOf        ProvisionRelation[] @relation("target")
 }
 
 model OldMapping {
@@ -227,14 +233,45 @@ model Comment {
 // ---------------------------------------------------------
 // PRODUCT 1: Universal Provision Mapping Tool
 // ---------------------------------------------------------
+model Legislation {
+  id           String    @id @default(cuid())
+  framework_id String
+  name         String    // e.g., "Payment of Wages Act, 1936"
+  short_name   String    // e.g., "PWA36"
+  type         String    @default("act") // act | rules | repealed_act | repealed_rules
+  is_repealed  Boolean   @default(false)
+  year         Int?
+  color        String?
+  created_at   DateTime  @default(now())
+  
+  framework    Framework @relation(fields: [framework_id], references: [id], onDelete: Cascade)
+  provisions   Provision[]
+}
+
+model ProvisionRelation {
+  id            String   @id @default(cuid())
+  source_id     String
+  target_id     String
+  relation_type String   // IMPLEMENTS | PRESCRIBES | REPLACES | REFERENCES
+  notes         String?
+  created_at    DateTime @default(now())
+
+  source        Provision @relation("source", fields: [source_id], references: [id], onDelete: Cascade)
+  target        Provision @relation("target", fields: [target_id], references: [id], onDelete: Cascade)
+
+  @@unique([source_id, target_id, relation_type])
+}
+
 model Framework {
   id          String   @id @default(cuid())
   name        String // e.g., "Labour Codes", "Companies Act", "FEMA"
+  short_name  String?
   description String?  @db.Text
   org_id      String?
   created_at  DateTime @default(now())
 
-  provisions Provision[]
+  legislations Legislation[]
+  provisions   Provision[]
 }
 
 // ---------------------------------------------------------

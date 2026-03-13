@@ -53,6 +53,33 @@ export interface SubSection {
 
 export type ProvisionType = 'section' | 'rule' | 'form' | 'register';
 
+export interface ProvisionRelation {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  relationType: 'IMPLEMENTS' | 'PRESCRIBES' | 'REPLACES' | 'REFERENCES';
+  notes?: string;
+}
+
+export interface Legislation {
+  id: string;
+  frameworkId: string;
+  name: string;
+  shortName: string;
+  type: 'act' | 'rules' | 'repealed_act' | 'repealed_rules';
+  isRepealed: boolean;
+  year?: number;
+  color?: string;
+}
+
+export interface Framework {
+  id: string;
+  name: string;
+  shortName?: string;
+  description?: string;
+  legislations?: Legislation[];
+}
+
 export type Impact = "Critical" | "High" | "Medium" | "Low";
 export type ComplianceStatus = "Not Started" | "In Progress" | "Compliant" | "N/A";
 export type RuleAuthority =
@@ -65,6 +92,8 @@ export type RuleAuthority =
 export interface Provision {
   id: string;
   code: string;
+  frameworkId?: string;
+  legislationId?: string;
   ch: string;
   chName: string;
   sec: string;
@@ -97,6 +126,7 @@ export interface Provision {
   assignee: string;
   dueDate: string;
   comments?: Comment[];
+  connectors?: ProvisionRelation[];
 }
 
 export interface ChapterGroup {
