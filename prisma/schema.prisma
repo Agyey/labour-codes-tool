@@ -576,3 +576,46 @@ model MatterDocument {
   matter Matter @relation(fields: [matter_id], references: [id], onDelete: Cascade)
   task   Task?  @relation(fields: [task_id], references: [id])
 }
+
+// ==========================================
+// PHASE 6: TIER 1 KNOWLEDGE INGESTION PIPELINE
+// ==========================================
+
+model RawScrapeData {
+  id           String   @id @default(cuid())
+  source_url   String
+  source_name  String   // e.g., "TaxGuru", "ClearTax"
+  raw_html     String   @db.Text
+  raw_text     String   @db.Text
+  scraped_at   DateTime @default(now())
+  processed    Boolean  @default(false)
+  
+  drafts       DraftScenario[]
+}
+
+model DraftScenario {
+  id              String   @id @default(cuid())
+  raw_scrape_id   String?
+  name            String
+  description     String?  @db.Text
+  category        String   // e.g., "Compliance", "Filings"
+  trigger_event   String?
+  status          String   @default("Pending Review") // Pending Review, Approved, Rejected
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  raw_scrape      RawScrapeData?  @relation(fields: [raw_scrape_id], references: [id])
+  tasks           DraftTask[]
+}
+
+model DraftTask {
+  id                String   @id @default(cuid())
+  draft_scenario_id String
+  name              String
+  description       String?  @db.Text
+  stage             String   @default("Structuring")
+  priority          String   @default("Medium")
+  due_logic         String?  // Text description from AI (e.g., "Within 30 days of resolution")
+  
+  draft_scenario    DraftScenario @relation(fields: [draft_scenario_id], references: [id], onDelete: Cascade)
+}

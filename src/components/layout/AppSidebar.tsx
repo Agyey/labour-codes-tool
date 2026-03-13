@@ -9,6 +9,7 @@ import {
   Home,
   Settings,
   ShieldAlert,
+  Database,
   LucideIcon
 } from "lucide-react";
 
@@ -69,6 +70,7 @@ export function AppSidebar() {
         <div className="space-y-1">
           {renderNavButton({ href: "/org-settings", label: "Firm Settings", icon: Settings, desc: "Team & Subscriptions", color: "bg-rose-600", textHover: "group-hover:text-rose-600" })}
           {renderNavButton({ href: "/admin", label: "Super Admin", icon: ShieldAlert, desc: "Platform Control Center", color: "bg-slate-800", textHover: "group-hover:text-slate-900" })}
+          {renderNavButton({ href: "/admin/knowledge-base", label: "AI Verification", icon: Database, desc: "Review Extracted Scenarios", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" })}
         </div>
 
       </div>
