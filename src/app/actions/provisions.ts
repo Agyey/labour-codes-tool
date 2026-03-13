@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import type { Provision, Comment } from "@/types/provision";
 import { ProvisionUpdateSchema } from "@/lib/validations/provision";
-// @ts-ignore - PrismaClient is generated but IDE may require TS Server restart to recognize it
+// @ts-expect-error - PrismaClient is generated but IDE/Build may require TS Server restart to recognize it correctly
 import { PrismaClient } from "@prisma/client";
 
 // Local helper for Prisma transaction client type if Prisma.TransactionClient is missing or causing issues
