@@ -31,7 +31,7 @@ interface LibraryTableProps {
 
 export function LibraryTable({ data }: LibraryTableProps) {
   const { setExpandedProvision, setEditingProvision } = useUI();
-  const { canEdit, deleteProvision, toggleVerify, togglePin } = useData();
+  const { canEdit, deleteProvision, deleteProvisions, toggleVerify, togglePin } = useData();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -58,10 +58,7 @@ export function LibraryTable({ data }: LibraryTableProps) {
   const handleBulkDelete = async () => {
     if (!confirm(`Are you sure you want to delete ${selectedIds.size} provisions?`)) return;
     
-    // Process one by one for now as the action handles single IDs
-    for (const id of Array.from(selectedIds)) {
-      await deleteProvision(id);
-    }
+    await deleteProvisions(Array.from(selectedIds));
     setSelectedIds(new Set());
   };
 

@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { z } from "zod";
 import { logActivity } from "@/lib/audit";
+import { revalidatePath } from "next/cache";
 
 // --- Validation Schemas ---
 const CreateMatterSchema = z.object({
@@ -99,6 +100,54 @@ export async function createMatterFromScenario(data: any) {
   } catch (error: any) {
     if (error instanceof z.ZodError) return { success: false, error: "Invalid matter data" }
     console.error("[createMatterFromScenario] Error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function createMatter(data: any) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { error: "Unauthorized" };
+
+    const validated = z.object({
+      name: z.string().min(3).max(200),
+      description: z.string().optional(),
+      entityId: z.string().optional(),
+      status: z.string().optional().default("Active"),
+    }).parse(data);
+
+    const matter = await prisma.matter.create({
+      data: {
+        org_id: session.user.orgId as string,
+        name: validated.name,
+        description: validated.description,
+        status: validated.status,
+        client_id: validated.entityId,
+      },
+    });
+
+    await prisma.matterMember.create({
+      data: {
+        matter_id: matter.id,
+        user_id: session.user.id,
+        role: "Owner",
+      },
+    });
+
+    await logActivity({
+      orgId: session.user.orgId,
+      actorId: session.user.id,
+      action: "CREATE_MATTER",
+      entityType: "Matter",
+      entityId: matter.id,
+      metadata: { matter_name: validated.name, mode: "MANUAL" }
+    });
+
+    revalidatePath("/matters");
+    return { success: true, matterId: matter.id };
+  } catch (error: any) {
+    if (error instanceof z.ZodError) return { success: false, error: "Invalid matter data" }
+    console.error("[createMatter] Error:", error);
     return { success: false, error: error.message };
   }
 }

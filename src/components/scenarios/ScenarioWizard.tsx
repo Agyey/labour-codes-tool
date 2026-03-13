@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe, Building2, Briefcase, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Play, Scale, Landmark } from "lucide-react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { createMatterFromScenario } from "@/app/actions/matters";
+import { useSession } from "next-auth/react";
 
 type Step = 1 | 2 | 3 | 4;
+// ... (omitting unchanged static arrays for brevity in chunk, but I'll use the proper range)
 
 const JURISDICTIONS = [
   { id: "in", name: "India", icon: Globe, desc: "BSE, NSE, MCA, RBI Compliances" },
@@ -35,6 +38,7 @@ export function ScenarioWizard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [dbScenarios, setDbScenarios] = useState<any[]>([]);
   const router = useRouter();
+  const { data: session } = useSession();
 
   // Load verified scenarios from Knowledge Base
   useEffect(() => {
@@ -83,10 +87,14 @@ export function ScenarioWizard() {
       { title: "Government Filings (PAS-3, MGT-14)", type: "Compliance", priority: "Urgent", due: "In 3 days" },
       { title: "Board & Shareholder Resolutions", type: "Docs", priority: "High", due: "In 2 days" }
     ];
-
     try {
+      if (!session?.user?.orgId) {
+        toast.error("Organization context missing. Please sign in again.");
+        return;
+      }
+
       const res = await createMatterFromScenario({
-        orgId: "org_alpha", // In reality, this would be fetched from the user's current session or org context
+        orgId: session.user.orgId,
         matterName: "Private Placement - Series A",
         clientName: ENTITIES.find(e => e.id === entity)?.name || "New Client",
         tasks: checklist

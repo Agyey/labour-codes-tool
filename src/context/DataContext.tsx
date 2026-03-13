@@ -263,7 +263,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setEditorPasswordState(pw);
   }, []);
 
-  const canEdit = mode === "admin" && (!!session?.user && (session.user.role === "admin" || session.user.role === "editor") || (!editorPassword || passwordVerified));
+  const canEdit = mode === "admin" && !!session?.user && (session.user.role === "admin" || session.user.role === "editor");
 
   const stats = useMemo(
     () =>

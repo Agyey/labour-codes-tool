@@ -5,6 +5,10 @@ import { logger } from "@/lib/logger";
 import type { Provision, Comment } from "@/types/provision";
 import { ProvisionUpdateSchema } from "@/lib/validations/provision";
 import { PrismaClient } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { logActivity } from "@/lib/audit";
+import { revalidatePath } from "next/cache";
 
 // Local helper for Prisma transaction client type if Prisma.TransactionClient is missing or causing issues
 type TransactionClient = Omit<
@@ -125,19 +129,23 @@ const parseDateSafely = (d: string | null | undefined) => {
   return parsed;
 };
 
+async function checkAdmin(session: any) {
+  if (!session?.user) return false;
+  return session.user.role === "admin" || session.user.role === "editor";
+}
+
 /**
  * Server action to upsert a provision with transactional integrity.
- * Uses upsert to handle both new provisions (from PDF parser/editor) and existing updates.
- * Ensures that nested updates (oldMappings, complianceItems) are atomic.
  */
 export async function updateProvision(id: string, rawUpdates: Provision, userId?: string) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
     // Validate inputs via Zod
     const validatedData = ProvisionUpdateSchema.parse(rawUpdates);
 
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
-      // Basic fields mapping for Prisma
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updateData: any = {
         code: validatedData.code,
         framework_id: validatedData.frameworkId || null,
@@ -166,8 +174,6 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         pinned: validatedData.pinned,
       };
 
-      // 1. Build nested relation payloads
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const oldMappingsCreate = (validatedData.oldMappings as any[] || []).map((m: any) => ({
         act_name: m.act,
         section: m.sec,
@@ -179,7 +185,6 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         change_tags: m.change_tags || [],
       }));
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const compItemsCreate = (validatedData.compItems as any[] || []).map((c: any) => ({
         task: c.task,
         assignee: c.assignee,
@@ -187,7 +192,6 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         due_date: parseDateSafely(c.due),
       }));
 
-      // Merge state data keys
       const stateKeys = Array.from(new Set([
         ...Object.keys(validatedData.stateNotes || {}),
         ...Object.keys(validatedData.stateRuleText || {}),
@@ -200,60 +204,60 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         compliance_status: validatedData.stateCompStatus?.[s] || "Not Started"
       }));
 
-      // 2. Clear existing relations (safe even if record is new — deleteMany returns 0)
       await tx.oldMapping.deleteMany({ where: { provision_id: id } });
       await tx.complianceItem.deleteMany({ where: { provision_id: id } });
       await tx.stateData.deleteMany({ where: { provision_id: id } });
 
-      // 3. Build the full data payload with nested creates
-      if (oldMappingsCreate.length > 0) {
-        updateData.oldMappings = { create: oldMappingsCreate };
-      }
-      if (compItemsCreate.length > 0) {
-        updateData.complianceItems = { create: compItemsCreate };
-      }
-      if (stateDataCreate.length > 0) {
-        updateData.stateData = { create: stateDataCreate };
-      }
+      if (oldMappingsCreate.length > 0) updateData.oldMappings = { create: oldMappingsCreate };
+      if (compItemsCreate.length > 0) updateData.complianceItems = { create: compItemsCreate };
+      if (stateDataCreate.length > 0) updateData.stateData = { create: stateDataCreate };
 
-      // 4. Upsert: creates if new, updates if existing
       const updatedProvision = await tx.provision.upsert({
         where: { id },
         update: updateData,
         create: { id, ...updateData },
       });
 
-      // 3. Audit Trail Hook
-      if (userId) {
-        await tx.provisionEdit.create({
-          data: {
-            provision_id: id,
-            user_id: userId,
-            edit_type: "update",
-            diff: { message: "Updated provision via transactional editor" },
-          }
-        });
-      }
+      await tx.provisionEdit.create({
+        data: {
+          provision_id: id,
+          user_id: session.user.id,
+          edit_type: "update",
+          diff: { message: "Updated provision via transactional editor" },
+        }
+      });
 
       return updatedProvision;
     });
 
+    revalidatePath("/library");
     return { success: true, provision: result };
   } catch (error: any) {
     logger.error("Failed to upsert provision", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to save provision" 
-    };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to save provision" };
   }
 }
 
 export async function toggleVerify(id: string, verified: boolean) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     const provision = await prisma.provision.update({
       where: { id },
       data: { verified }
     });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "TOGGLE_VERIFY",
+      entityType: "Provision",
+      entityId: id,
+      metadata: { verified }
+    });
+
+    revalidatePath("/library");
     return { success: true, provision };
   } catch {
     return { success: false, error: "Failed to toggle verify" };
@@ -262,10 +266,24 @@ export async function toggleVerify(id: string, verified: boolean) {
 
 export async function togglePin(id: string, pinned: boolean) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     const provision = await prisma.provision.update({
       where: { id },
       data: { pinned }
     });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "TOGGLE_PIN",
+      entityType: "Provision",
+      entityId: id,
+      metadata: { pinned }
+    });
+
+    revalidatePath("/library");
     return { success: true, provision };
   } catch {
     return { success: false, error: "Failed to toggle pin" };
@@ -274,7 +292,20 @@ export async function togglePin(id: string, pinned: boolean) {
 
 export async function deleteProvision(id: string) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     await prisma.provision.delete({ where: { id } });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "DELETE_PROVISION",
+      entityType: "Provision",
+      entityId: id
+    });
+
+    revalidatePath("/library");
     return { success: true };
   } catch {
     return { success: false, error: "Failed to delete" };
@@ -283,11 +314,23 @@ export async function deleteProvision(id: string) {
 
 export async function deleteProvisions(ids: string[]) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     await prisma.provision.deleteMany({
-      where: {
-        id: { in: ids }
-      }
+      where: { id: { in: ids } }
     });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "DELETE_PROVISIONS_BULK",
+      entityType: "Provision",
+      entityId: "bulk",
+      metadata: { count: ids.length }
+    });
+
+    revalidatePath("/library");
     return { success: true };
   } catch (error) {
     logger.error("Failed to bulk delete provisions", error);
@@ -296,36 +339,44 @@ export async function deleteProvisions(ids: string[]) {
 }
 
 export async function addComment(provisionId: string, body: string) {
-  // Mocking auth for now - in production use getServerSession
-  const userId = "temp-user-id"; 
-  
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
     const comment = await prisma.comment.create({
       data: {
-        body,
         provision_id: provisionId,
-        user_id: userId,
+        user_id: session.user.id,
+        body
       },
       include: {
         user: true
       }
     });
-    
-    // Map to frontend type
-    const formattedComment: Comment = {
+
+    const formattedComment = {
       id: comment.id,
       body: comment.body,
       parentId: comment.parent_id,
       createdAt: comment.created_at.toISOString(),
       user: {
-        id: comment.user.id,
-        name: comment.user.name,
-        email: comment.user.email,
-        image: comment.user.image,
-        role: comment.user.role,
-      }
+        id: comment.user?.id || "unknown",
+        name: comment.user?.name || "Deleted User",
+        email: comment.user?.email,
+        image: comment.user?.image,
+        role: comment.user?.role || "viewer",
+      },
     };
     
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "ADD_COMMENT",
+      entityType: "Provision",
+      entityId: provisionId,
+      metadata: { comment_id: comment.id }
+    });
+
     return { success: true, comment: formattedComment };
   } catch (err) {
     console.error(err);
@@ -337,12 +388,9 @@ export async function getLegislations() {
   try {
     const legislations = await prisma.legislation.findMany({
       include: {
-        provisions: {
-          select: { id: true }
-        }
+        provisions: { select: { id: true } }
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (legislations as any[]).map(l => ({
       id: l.id,
       frameworkId: l.framework_id,
@@ -366,15 +414,12 @@ export async function getFrameworks() {
       include: {
         legislations: {
           include: {
-            provisions: {
-              select: { id: true }
-            }
+            provisions: { select: { id: true } }
           }
         }
       },
       orderBy: { created_at: 'desc' }
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (frameworks as any[]).map(f => ({
       id: f.id,
       name: f.name,
@@ -398,12 +443,11 @@ export async function getFrameworks() {
   }
 }
 
-/** 
- * Hierarchical CRUD Actions 
- */
-
 export async function createFramework(data: { name: string; shortName: string; description?: string }) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     const framework = await prisma.framework.create({
       data: {
         name: data.name,
@@ -411,6 +455,16 @@ export async function createFramework(data: { name: string; shortName: string; d
         description: data.description,
       }
     });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "CREATE_FRAMEWORK",
+      entityType: "Framework",
+      entityId: framework.id
+    });
+
+    revalidatePath("/library");
     return { 
       success: true, 
       framework: {
@@ -421,15 +475,15 @@ export async function createFramework(data: { name: string; shortName: string; d
       } 
     };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to create framework" 
-    };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to create framework" };
   }
 }
 
 export async function updateFramework(id: string, data: { name?: string; shortName?: string; description?: string }) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     const framework = await prisma.framework.update({
       where: { id },
       data: {
@@ -438,6 +492,16 @@ export async function updateFramework(id: string, data: { name?: string; shortNa
         description: data.description,
       }
     });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "UPDATE_FRAMEWORK",
+      entityType: "Framework",
+      entityId: id
+    });
+
+    revalidatePath("/library");
     return { success: true, framework };
   } catch (error) {
     logger.error("Failed to update framework", error);
@@ -447,7 +511,20 @@ export async function updateFramework(id: string, data: { name?: string; shortNa
 
 export async function deleteFramework(id: string) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     await prisma.framework.delete({ where: { id } });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "DELETE_FRAMEWORK",
+      entityType: "Framework",
+      entityId: id
+    });
+
+    revalidatePath("/library");
     return { success: true };
   } catch (error) {
     logger.error("Failed to delete framework", error);
@@ -465,6 +542,9 @@ export async function createLegislation(data: {
   color?: string;
 }) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     const legislation = await prisma.legislation.create({
       data: {
         framework_id: data.frameworkId,
@@ -476,45 +556,38 @@ export async function createLegislation(data: {
         color: data.color
       }
     });
-    return { success: true, legislation };
-  } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Failed to create legislation" 
-    };
-  }
-}
 
-export async function updateLegislation(id: string, data: { 
-  name?: string; 
-  shortName?: string; 
-  type?: string; 
-  isRepealed?: boolean;
-  year?: number;
-  color?: string;
-}) {
-  try {
-    const legislation = await prisma.legislation.update({
-      where: { id },
-      data: {
-        name: data.name,
-        short_name: data.shortName,
-        type: data.type,
-        is_repealed: data.isRepealed,
-        year: data.year,
-        color: data.color
-      }
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "CREATE_LEGISLATION",
+      entityType: "Legislation",
+      entityId: legislation.id
     });
+
+    revalidatePath("/library");
     return { success: true, legislation };
   } catch (error) {
-    logger.error("Failed to update legislation", error);
-    return { success: false, error: "Failed to update legislation" };
+    return { success: false, error: error instanceof Error ? error.message : "Failed to create legislation" };
   }
 }
 
 export async function deleteLegislation(id: string) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!(await checkAdmin(session))) return { success: false, error: "Unauthorized" };
+
     await prisma.legislation.delete({ where: { id } });
+
+    await logActivity({
+      orgId: session?.user?.orgId || "system",
+      actorId: session?.user?.id || "system",
+      action: "DELETE_LEGISLATION",
+      entityType: "Legislation",
+      entityId: id
+    });
+
+    revalidatePath("/library");
     return { success: true };
   } catch (error) {
     logger.error("Failed to delete legislation", error);
