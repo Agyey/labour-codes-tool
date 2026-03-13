@@ -2,7 +2,8 @@
 
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
-import { FolderKanban, Scale, ChevronRight, Activity } from "lucide-react";
+import { FolderKanban, Scale, ChevronRight, Activity, Pencil, Trash2, PieChart } from "lucide-react";
+import toast from "react-hot-toast";
 
 export function FrameworkDashboard() {
   const { frameworks, loading } = useData();
@@ -49,11 +50,28 @@ export function FrameworkDashboard() {
                 <Scale className="w-32 h-32 rotate-12" />
               </div>
 
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
-                  <FolderKanban className="w-6 h-6" />
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                    <FolderKanban className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">Legal Container</span>
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">Legal Container</span>
+                
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toast.success("Analytics coming soon!"); }}
+                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    <PieChart className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toast.success("Edit Framework metadata!"); }}
+                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-3">

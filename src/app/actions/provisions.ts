@@ -281,6 +281,20 @@ export async function deleteProvision(id: string) {
   }
 }
 
+export async function deleteProvisions(ids: string[]) {
+  try {
+    await prisma.provision.deleteMany({
+      where: {
+        id: { in: ids }
+      }
+    });
+    return { success: true };
+  } catch (error) {
+    logger.error("Failed to bulk delete provisions", error);
+    return { success: false, error: "Failed to delete multiple provisions" };
+  }
+}
+
 export async function addComment(provisionId: string, body: string) {
   // Mocking auth for now - in production use getServerSession
   const userId = "temp-user-id"; 

@@ -61,8 +61,8 @@ export function LegislationTile({ legislation, onSelect, onDelete }: Legislation
         
         <div className="flex items-center gap-2">
             <button 
-              onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-              className="p-2 text-slate-300 hover:text-rose-500 dark:text-zinc-600 dark:hover:text-rose-400 transition-colors"
+              onClick={(e) => { e.stopPropagation(); if (confirm("Delete this legislation tile?")) onDelete?.(); }}
+              className="p-2.5 bg-slate-50 dark:bg-zinc-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-xl transition-all"
             >
               <Trash2 className="w-4 h-4" />
             </button>

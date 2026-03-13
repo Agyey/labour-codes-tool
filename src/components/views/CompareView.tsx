@@ -7,6 +7,7 @@ import { IMPACT_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
 import { GitCompare, ArrowLeftRight, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Breadcrumbs } from "../shared/Breadcrumbs";
 import toast from "react-hot-toast";
 
 export function CompareView() {
@@ -114,6 +115,7 @@ export function CompareView() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs />
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-black text-slate-800 dark:text-zinc-100 tracking-tight">
           Cross-Act Connector

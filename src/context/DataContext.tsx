@@ -14,6 +14,7 @@ import {
   getProvisions, 
   updateProvision, 
   deleteProvision as deleteProvisionAction,
+  deleteProvisions as deleteProvisionsAction,
   togglePin as togglePinAction,
   toggleVerify as toggleVerifyAction,
   getFrameworks,
@@ -46,6 +47,7 @@ interface DataState {
 interface DataActions {
   saveProvision: (p: Provision) => void;
   deleteProvision: (id: string) => void;
+  deleteProvisions: (ids: string[]) => void;
   togglePin: (id: string) => void;
   toggleVerify: (id: string) => void;
   setComplianceStatus: (id: string, status: string) => void;
@@ -147,6 +149,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const deleteProvisions = useCallback(async (ids: string[]) => {
+    const res = await deleteProvisionsAction(ids);
+    if (res.success) {
+      setProvisions((prev) => prev.filter((x) => !ids.includes(x.id)));
+      toast.success(`${ids.length} provisions deleted.`);
+    } else {
+      toast.error("Failed to delete provisions.");
+    }
+  }, []);
+
   const togglePin = useCallback(async (id: string) => {
     const prov = provisions.find((x) => x.id === id);
     if (!prov) return;
@@ -212,6 +224,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     users,
     saveProvision,
     deleteProvision,
+    deleteProvisions,
     togglePin,
     toggleVerify,
     setComplianceStatus,

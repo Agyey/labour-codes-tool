@@ -3,8 +3,10 @@
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { LegislationTile } from "./LegislationTile";
-import { ArrowLeft, Plus, LayoutGrid, Info, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, LayoutGrid, Info, AlertCircle, Pencil } from "lucide-react";
+import { Breadcrumbs } from "../shared/Breadcrumbs";
 import { useMemo } from "react";
+import toast from "react-hot-toast";
 
 export function BucketExplorer() {
   const { activeCode, setActiveView, setActiveCode } = useUI();
@@ -31,16 +33,21 @@ export function BucketExplorer() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+      <Breadcrumbs />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setActiveView('dashboard')}
-            className="p-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-zinc-400" />
-          </button>
           <div>
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{framework.name}</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{framework.name}</h2>
+              <button 
+                title="Edit Framework Metadata"
+                className="p-2 text-slate-300 hover:text-indigo-500 transition-colors"
+                onClick={() => toast.success("Framework Editor coming soon!")}
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            </div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Legislation Bucket • {framework.shortName}</p>
           </div>
         </div>

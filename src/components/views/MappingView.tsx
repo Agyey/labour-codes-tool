@@ -15,6 +15,7 @@ import { MOCK_PRIVATE_PLACEMENT } from "@/lib/mockData";
 import { PdfUploadWizard } from "@/components/parsers/PdfUploadWizard";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 
 export function MappingView() {
   const { activeCode, setEditingProvision } = useUI();
@@ -38,6 +39,8 @@ export function MappingView() {
   return (
     <div>
       {showPdfWizard && <PdfUploadWizard onClose={() => setShowPdfWizard(false)} />}
+      
+      <Breadcrumbs />
       
       <div className="flex items-center justify-between mb-4 mt-2">
         <MappingSubNav />
