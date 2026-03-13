@@ -49,7 +49,7 @@ export interface SubSection {
   text: string;
 }
 
-export type ProvisionType = 'section' | 'rule';
+export type ProvisionType = 'section' | 'rule' | 'form' | 'register';
 
 export type Impact = "Critical" | "High" | "Medium" | "Low";
 export type ComplianceStatus = "Not Started" | "In Progress" | "Compliant" | "N/A";

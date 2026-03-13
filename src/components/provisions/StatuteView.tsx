@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FileText, Eye, EyeOff, Scale, Gavel, Link2, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { FileText, Eye, EyeOff, Scale, Gavel, Link2, ChevronDown, ChevronRight, Trash2, Layers, BookOpen } from "lucide-react";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import type { Provision } from "@/types/provision";
@@ -111,18 +111,48 @@ export function StatuteView({ provision: p, codeShortName }: StatuteViewProps) {
         </div>
       )}
 
-      {/* Linked Rules */}
-      {(p.linkedRuleRefs || []).length > 0 && (
-        <div className="mt-4 p-3 bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-xl">
-          <div className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Gavel className="w-3 h-3" /> Implementing Rules
+      {/* Compliance Stack */}
+      {(!isRule && ((p.linkedRuleRefs || []).length > 0 || (p.forms || []).length > 0)) && (
+        <div className="mt-5 border-t border-slate-200/60 dark:border-zinc-800/80 pt-4">
+          <div className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5" /> Compliance Stack
           </div>
-          <div className="flex flex-wrap gap-2">
-            {p.linkedRuleRefs.map((ref, i) => (
-              <span key={i} className="text-xs font-semibold text-amber-800 dark:text-amber-200 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-700/30 shadow-sm">
-                {ref}
-              </span>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(p.linkedRuleRefs || []).length > 0 && (
+              <div className="p-3 bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-xl">
+                <div className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Gavel className="w-3 h-3" /> Implementing Rules
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {p.linkedRuleRefs.map((ref, i) => (
+                    <span key={i} className="text-xs font-semibold text-amber-800 dark:text-amber-200 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-700/30 shadow-sm">
+                      {ref}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {(p.forms || []).length > 0 && (
+              <div className="p-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-xl">
+                <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <FileText className="w-3 h-3" /> Forms & Registers
+                </div>
+                <div className="flex flex-col gap-2">
+                  {p.forms.map((form, i) => (
+                    <div key={i} className="bg-white dark:bg-zinc-800 px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-700/30 shadow-sm">
+                      <div className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 mb-0.5">
+                        {form.ref.toLowerCase().includes('register') ? <BookOpen className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                        {form.ref}
+                      </div>
+                      <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 leading-snug">
+                        {form.summary}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

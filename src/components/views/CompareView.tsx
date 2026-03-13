@@ -10,10 +10,19 @@ import { useMemo, useState } from "react";
 
 export function CompareView() {
   const { provisions } = useData();
+  const { comparePayload, setComparePayload } = useUI();
   const [codeA, setCodeA] = useState<string>("");
   const [codeB, setCodeB] = useState<string>("");
   const [provA, setProvA] = useState<string>("");
   const [provB, setProvB] = useState<string>("");
+
+  // Initialize from payload
+  useMemo(() => {
+    if (comparePayload?.sideA && !codeA && !provA) {
+      setCodeA(comparePayload.sideA.code);
+      setProvA(comparePayload.sideA.id);
+    }
+  }, [comparePayload]);
 
   // Local state for manually registered acts (that aren't in provisions yet)
   const [registeredActs, setRegisteredActs] = useState<Record<string, { n: string; s: string; c: string }>>({});
@@ -53,9 +62,27 @@ export function CompareView() {
   const provsB = useMemo(() => provisions.filter(p => p.code === codeB), [provisions, codeB]);
 
   const a = useMemo(() => provsA.find(p => p.id === provA), [provsA, provA]);
-  const b = useMemo(() => provsB.find(p => p.id === provB), [provsB, provB]);
+  const b = useMemo(() => {
+    if (provB) return provsB.find(p => p.id === provB);
+    if (!codeB && !provB && comparePayload?.sideB) {
+      return {
+        id: "custom",
+        sec: comparePayload.sideB.code,
+        sub: "",
+        title: comparePayload.sideB.title,
+        impact: "High",
+        provisionType: "repealed",
+        summary: comparePayload.sideB.summary,
+        code: "REPEALED",
+      };
+    }
+    return undefined;
+  }, [provsB, provB, codeB, comparePayload]);
 
-  const getMeta = (code: string) => CODES[code as keyof typeof CODES] || { c: "#64748b", n: code };
+  const getMeta = (code: string) => {
+    if (code === "REPEALED") return { c: "#e11d48", n: "Repealed Law" };
+    return CODES[code as keyof typeof CODES] || { c: "#64748b", n: code };
+  };
 
   return (
     <div className="space-y-6">
@@ -182,7 +209,17 @@ export function CompareView() {
         </div>
 
         {/* SIDE B */}
-        <div className="space-y-4 p-6 bg-white dark:bg-zinc-900/50 rounded-[32px] border border-slate-200 dark:border-zinc-800/80 shadow-sm">
+        <div className="space-y-4 p-6 bg-white dark:bg-zinc-900/50 rounded-[32px] border border-slate-200 dark:border-zinc-800/80 shadow-sm relative">
+          {comparePayload?.sideB && !codeB && !provB && (
+            <button 
+               onClick={() => setComparePayload(null)} 
+               className="absolute top-6 right-6 p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-500 rounded-full transition-colors"
+               title="Clear comparison"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+
           <div className="space-y-3">
              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Act / Code</label>
              <select
@@ -203,7 +240,11 @@ export function CompareView() {
                 disabled={!codeB}
                 className="w-full px-4 py-3 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs bg-slate-50 dark:bg-zinc-900 font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50"
              >
-                <option value="">Select Section/Rule</option>
+                {(comparePayload?.sideB && !codeB) ? (
+                   <option value="">[Pre-loaded] {comparePayload.sideB.title}</option>
+                ) : (
+                   <option value="">Select Section/Rule</option>
+                )}
                 {provsB.map(p => (
                   <option key={p.id} value={p.id}>[S.{p.sec}{p.sub}] {p.title}</option>
                 ))}

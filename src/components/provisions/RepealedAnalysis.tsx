@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScrollText, AlertTriangle, Eye, EyeOff, Pencil, Check, X, Scale, ChevronDown, ChevronRight } from "lucide-react";
+import { ScrollText, AlertTriangle, Eye, EyeOff, Pencil, Check, X, Scale, ChevronDown, ChevronRight, GitCompare } from "lucide-react";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { Badge } from "@/components/shared/Badge";
@@ -20,7 +20,7 @@ interface EditableMapping {
 }
 
 export function RepealedAnalysis({ provision: p }: RepealedAnalysisProps) {
-  const { showTextMap, toggleShowText } = useUI();
+  const { showTextMap, toggleShowText, setComparePayload, setActiveView } = useUI();
   const { canEdit, saveProvision } = useData();
   const [editing, setEditing] = useState<EditableMapping | null>(null);
   const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
@@ -43,6 +43,19 @@ export function RepealedAnalysis({ provision: p }: RepealedAnalysisProps) {
     updated.oldMappings = mappings;
     await saveProvision(updated);
     setEditing(null);
+  };
+
+  const handleCompare = (m: OldMapping) => {
+    setComparePayload({
+      sideA: p,
+      sideB: {
+        code: m.act,
+        title: m.sec ? `Section ${m.sec}` : "Complete Provision",
+        summary: m.summary,
+        fullText: m.fullText,
+      }
+    });
+    setActiveView("compare");
   };
 
   return (
@@ -98,15 +111,24 @@ export function RepealedAnalysis({ provision: p }: RepealedAnalysisProps) {
                     <div className="p-4 bg-slate-50/50 dark:bg-zinc-950/50">
                       <div className="flex items-center justify-between mb-2">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Old Provision Summary</div>
-                        {canEdit && !isEditing && (
+                        <div className="flex items-center gap-2">
                           <button 
-                            onClick={() => setEditing({ idx: i, summary: m.summary, change: m.change })}
-                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-all"
-                            title="Edit"
+                            onClick={() => handleCompare(m)}
+                            className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all shadow-sm"
+                            title="Compare Side-by-Side"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <GitCompare className="w-3 h-3" /> Quick Compare
                           </button>
-                        )}
+                          {canEdit && !isEditing && (
+                            <button 
+                              onClick={() => setEditing({ idx: i, summary: m.summary, change: m.change })}
+                              className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-all"
+                              title="Edit"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       
                       {isEditing ? (

@@ -22,8 +22,10 @@ interface UIState {
   expandedProvisionId: string | null;
   editingProvision: Provision | null;
   showTextMap: Record<string, boolean>;
-  compareA: string | null;
-  compareB: string | null;
+  comparePayload: {
+    sideA: Provision | null;
+    sideB: { code: string; title: string; summary: string; fullText?: string } | null;
+  } | null;
   sidebarOpen: boolean;
   pdfBlobUrl: string | null;
   isGeneratingPDF: boolean;
@@ -37,8 +39,10 @@ interface UIActions {
   setExpandedProvision: (id: string | null) => void;
   setEditingProvision: (p: Provision | null) => void;
   toggleShowText: (key: string) => void;
-  setCompareA: (id: string | null) => void;
-  setCompareB: (id: string | null) => void;
+  setComparePayload: (payload: {
+    sideA: Provision | null;
+    sideB: { code: string; title: string; summary: string; fullText?: string } | null;
+  } | null) => void;
   setSidebarOpen: (open: boolean) => void;
   setPdfBlobUrl: (url: string | null) => void;
   setIsGeneratingPDF: (generating: boolean) => void;
@@ -54,8 +58,10 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [expandedProvisionId, setExpandedProvision] = useState<string | null>(null);
   const [editingProvision, setEditingProvision] = useState<Provision | null>(null);
   const [showTextMap, setShowTextMap] = useState<Record<string, boolean>>({});
-  const [compareA, setCompareA] = useState<string | null>(null);
-  const [compareB, setCompareB] = useState<string | null>(null);
+  const [comparePayload, setComparePayload] = useState<{
+    sideA: Provision | null;
+    sideB: { code: string; title: string; summary: string; fullText?: string } | null;
+  } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -72,8 +78,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     expandedProvisionId,
     editingProvision,
     showTextMap,
-    compareA,
-    compareB,
+    comparePayload,
     sidebarOpen,
     pdfBlobUrl,
     isGeneratingPDF,
@@ -84,8 +89,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setExpandedProvision,
     setEditingProvision,
     toggleShowText,
-    setCompareA,
-    setCompareB,
+    setComparePayload,
     setSidebarOpen,
     setPdfBlobUrl,
     setIsGeneratingPDF,
@@ -97,8 +101,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     expandedProvisionId,
     editingProvision, 
     showTextMap, 
-    compareA, 
-    compareB, 
+    comparePayload, 
     sidebarOpen,
     pdfBlobUrl, 
     isGeneratingPDF, 
