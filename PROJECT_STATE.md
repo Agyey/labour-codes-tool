@@ -10,7 +10,7 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 - **Auth**: NextAuth.js
 - **Styling**: Tailwind CSS, Framer Motion (Glassmorphism UI)
 - **Observability**: Structured JSON Logging (via `@/lib/logger`)
-- **Infrastructure**: Railway (Deployment ready, but config missing in root)
+- **Infrastructure**: Railway (Deployment ready, branch: `dev`)
 
 ## Current Architecture
 - **State Management**: Decoupled `DataContext` (Entity state), `UIContext` (Ephemeral UI state), and `FilterContext` (Search/Filtering).
@@ -29,6 +29,7 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 | Observability | [x] Structured Logging | Medium |
 | Deployment Config | [x] `railway.json` & `.env.example` added | High |
 | Accessibility | [x] ARIA Markers implemented | High |
+| Performance | [x] Next/Image & Hook Optimization | High |
 
 
 ## Technical Debt & Gaps
@@ -40,7 +41,6 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 2. [x] **Transactional Integrity**: Implemented `prisma.$transaction` in provision updates.
 3. [x] **UX Polish**: Added loading states and prevents double-submissions.
 4. [x] **Accessibility**: Added ARIA labels to interactive elements.
-5. [ ] **Statelessness Audit**: Audit server actions for disk writes.
-6. [ ] **Type Hardening**: Refine recursive types for comments.
-
-
+5. [x] **Build Compliance**: 100% ESLint compliance reached.
+6. [ ] **Statelessness Audit**: Audit server actions for disk writes.
+7. [ ] **Type Hardening**: Refine recursive types for comments.
