@@ -58,11 +58,11 @@ export default async function MattersIndex() {
             <div className="text-slate-400 font-bold">No active matters found. Create a new matter to start collaborating.</div>
           </div>
         ) : (
-          matters.map(matter => {
-            const completedTasks = matter.tasks.filter(t => t.status === 'Completed').length;
+          matters.map((matter: any) => {
+            const completedTasks = (matter.tasks as any[]).filter((t: any) => t.status === 'Completed').length;
             const totalTasks = matter.tasks.length;
             const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-            const latestTaskWithDate = matter.tasks.sort((a, b) => (b.due_date?.getTime() || 0) - (a.due_date?.getTime() || 0))[0];
+            const latestTaskWithDate = (matter.tasks as any[]).sort((a: any, b: any) => (b.due_date?.getTime() || 0) - (a.due_date?.getTime() || 0))[0];
 
             return (
               <Link href={`/matters/${matter.id}`} key={matter.id} className="group bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-[240px]">
@@ -90,9 +90,9 @@ export default async function MattersIndex() {
                     {latestTaskWithDate?.due_date ? `Due ${format(latestTaskWithDate.due_date, 'MMM d')}` : 'No deadline'}
                   </div>
                   <div className="flex -space-x-2">
-                    {matter.members.slice(0, 3).map((m, i) => (
+                    {matter.members.slice(0, 3).map((m: any, i: number) => (
                       <div key={i} title={m.user.name || ""} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-zinc-800 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-black text-slate-600 dark:text-zinc-300">
-                        {m.user.name?.split(' ').map(n => n[0]).join('').toUpperCase() || "?"}
+                        {m.user.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || "?"}
                       </div>
                     ))}
                     {matter.members.length > 3 && (
