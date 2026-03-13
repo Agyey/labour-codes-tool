@@ -5,24 +5,25 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
 import { CommandPalette } from "../shared/CommandPalette";
 import { Scale, User, LogOut, Pencil, Eye, Menu } from "lucide-react";
+import { ThemeToggle } from "../shared/ThemeToggle";
 
 export function AppHeader() {
   const { mode, setMode, sidebarOpen, setSidebarOpen } = useUI();
   const { data: session } = useSession();
 
   return (
-    <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-slate-200/50 shadow-sm transition-all duration-300">
+    <header className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm transition-all duration-300">
       <div className="max-w-[1400px] mx-auto px-4 py-3.5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shadow-lg shadow-slate-900/10">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center shadow-lg shadow-slate-900/10 dark:shadow-blue-900/20">
               <Scale className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-extrabold tracking-tight text-slate-900 leading-tight">
+              <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
                 India Labour Code Reform
               </h1>
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">
                 Legal Intelligence Platform
               </p>
             </div>
@@ -32,7 +33,12 @@ export function AppHeader() {
             {/* Global Search */}
             <CommandPalette />
 
-            <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
 
             {/* Mode toggle - Only visible to Admins/Editors */}
             {(session?.user?.role === "admin" || session?.user?.role === "editor") && (
@@ -40,8 +46,8 @@ export function AppHeader() {
                 onClick={() => setMode(mode === "read" ? "admin" : "read")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
                   mode === "admin"
-                    ? "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm shadow-indigo-100"
-                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                    ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/50 shadow-sm shadow-indigo-100 dark:shadow-none"
+                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600"
                 }`}
               >
                 {mode === "admin" ? (
@@ -60,8 +66,8 @@ export function AppHeader() {
             {session?.user ? (
               <div className="flex items-center gap-3 ml-2">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900 leading-tight">{session.user.name || session.user.email}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{session.user.name || session.user.email}</p>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">
                     {session.user.role || "Viewer"}
                   </p>
                 </div>
@@ -72,19 +78,19 @@ export function AppHeader() {
                       alt="Avatar" 
                       width={32}
                       height={32}
-                      className="w-8 h-8 rounded-full ring-2 ring-slate-100 shadow-sm object-cover" 
+                      className="w-8 h-8 rounded-full ring-2 ring-slate-100 dark:ring-slate-800 shadow-sm object-cover" 
                       unoptimized
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center ring-2 ring-slate-200">
-                      <User className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center ring-2 ring-slate-200 dark:ring-slate-700">
+                      <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     </div>
                   )}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                 </div>
                 <button
                   onClick={() => signOut()}
-                  className="p-2 rounded-xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -93,7 +99,7 @@ export function AppHeader() {
             ) : (
               <button
                 onClick={() => signIn()}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-md"
+                className="px-4 py-2 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-colors shadow-md"
               >
                 Sign In
               </button>
@@ -103,7 +109,7 @@ export function AppHeader() {
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-              className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer shadow-sm"
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer shadow-sm"
             >
               <Menu className="w-4 h-4" />
             </button>

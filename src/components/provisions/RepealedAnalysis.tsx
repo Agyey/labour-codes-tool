@@ -26,22 +26,22 @@ export function RepealedAnalysis({ provision: p }: RepealedAnalysisProps) {
         {p.oldMappings.map((m, i) => (
           <div
             key={i}
-            className="bg-white border border-rose-100 rounded-2xl overflow-hidden shadow-sm"
+            className="bg-white dark:bg-slate-900 border border-rose-100 dark:border-rose-900/30 rounded-2xl overflow-hidden shadow-sm"
           >
-            <div className="p-4 bg-rose-50/50 border-b border-rose-100/50">
+            <div className="p-4 bg-rose-50/50 dark:bg-rose-900/10 border-b border-rose-100/50 dark:border-rose-900/20">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[13px] font-bold text-rose-700 flex items-center gap-1.5 mb-1.5">
-                    <span className="bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-[4px] text-[10px] tracking-wider uppercase">Repealed</span>
+                  <div className="text-[13px] font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5 mb-1.5">
+                    <span className="bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-[4px] text-[10px] tracking-wider uppercase">Repealed</span>
                     {m.act} — {m.sec}
                   </div>
-                  <div className="text-sm text-slate-700 font-medium leading-relaxed">
+                  <div className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
                     {m.summary}
                   </div>
                 </div>
                 <button
                   onClick={() => toggleShowText(`o-${p.id}-${i}`)}
-                  className="flex-shrink-0 px-2.5 py-1.5 bg-white border border-rose-100 rounded-lg text-[10px] font-bold text-rose-600 cursor-pointer hover:bg-rose-50 transition-colors shadow-sm"
+                  className="flex-shrink-0 px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-rose-100 dark:border-rose-900/30 rounded-lg text-[10px] font-bold text-rose-600 dark:text-rose-400 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors shadow-sm"
                 >
                   {showTextMap[`o-${p.id}-${i}`] ? "Hide Text" : "Read Text"}
                 </button>
@@ -53,18 +53,18 @@ export function RepealedAnalysis({ provision: p }: RepealedAnalysisProps) {
                   animate={{ opacity: 1, height: "auto" }}
                   className="mt-3"
                 >
-                  <pre className="p-3 bg-white border border-rose-100 rounded-xl text-xs text-slate-600 whitespace-pre-wrap font-serif leading-relaxed max-h-[250px] overflow-auto shadow-inner">
+                  <pre className="p-3 bg-white dark:bg-slate-950 border border-rose-100 dark:border-rose-900/20 rounded-xl text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap font-serif leading-relaxed max-h-[250px] overflow-auto shadow-inner">
                     {m.fullText}
                   </pre>
                 </motion.div>
               )}
             </div>
-            <div className="p-4 bg-white">
+            <div className="p-4 bg-white dark:bg-slate-900">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
                 Key Changes
               </div>
-              <div className="text-[14px] text-slate-800 leading-relaxed font-medium">
+              <div className="text-[14px] text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
                 {m.change}
               </div>
               {(m.changeTags || []).length > 0 && (

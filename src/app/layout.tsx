@@ -5,6 +5,8 @@ import { AppProvider } from "@/context/AppContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Toaster } from "react-hot-toast";
 
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -31,11 +33,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={jakarta.variable}>
-      <body className="antialiased bg-slate-50 text-slate-900 selection:bg-blue-500/30">
-        <AuthProvider>
-          <AppProvider>{children}</AppProvider>
-        </AuthProvider>
+    <html lang="en" className={jakarta.variable} suppressHydrationWarning>
+      <body className="antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-blue-500/30 transition-colors duration-300">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>
+            <AppProvider>{children}</AppProvider>
+          </AuthProvider>
+        </ThemeProvider>
         <Toaster
           position="bottom-right"
           toastOptions={{

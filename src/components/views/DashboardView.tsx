@@ -48,10 +48,10 @@ export function DashboardView() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h2 className="text-2xl font-extrabold text-slate-800 mb-1.5 tracking-tight">
+        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 mb-1.5 tracking-tight">
           Executive Dashboard — {cObj.n}
         </h2>
-        <p className="text-sm text-slate-500 font-medium">
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
           Overall compliance posture and real-time mapping progress
         </p>
       </motion.div>
@@ -71,10 +71,10 @@ export function DashboardView() {
                 ease: [0.23, 1, 0.32, 1]
               }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="p-5 rounded-[24px] text-center border border-white/60 shadow-premium hover:shadow-premium-hover backdrop-blur-md transition-all duration-300 group overflow-hidden"
+              className="p-5 rounded-[24px] text-center border border-white/60 dark:border-slate-800 shadow-premium hover:shadow-premium-hover backdrop-blur-md transition-all duration-300 group overflow-hidden"
               style={{ background: `linear-gradient(135deg, ${s.bg}80 0%, ${s.bg}40 100%)` }}
             >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <div className="absolute inset-0 bg-white/10 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               <Icon
                 className="w-5 h-5 mx-auto mb-3 opacity-60 group-hover:opacity-100 transition-opacity"
                 style={{ color: s.color }}
@@ -98,13 +98,13 @@ export function DashboardView() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-        className="p-8 bg-white/60 backdrop-blur-xl rounded-[32px] border border-white/80 shadow-premium relative overflow-hidden"
+        className="p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[32px] border border-white/80 dark:border-slate-800 shadow-premium relative overflow-hidden"
       >
         <div className="flex items-center gap-3 mb-6 relative z-10">
-          <div className="p-2 bg-emerald-100/50 rounded-xl border border-emerald-200/50">
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
+          <div className="p-2 bg-emerald-100/50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200/50 dark:border-emerald-800/50">
+            <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-[11px] font-black text-slate-800 uppercase tracking-widest">
+          <span className="text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">
             System Compliance Health
           </span>
         </div>
@@ -114,7 +114,7 @@ export function DashboardView() {
             max={stats.totalCompItems}
           />
         </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       </motion.div>
 
       {/* All Codes overview */}
@@ -124,8 +124,8 @@ export function DashboardView() {
         transition={{ delay: 0.4 }}
       >
         <div className="flex items-center gap-2 mb-6 ml-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-          <h3 className="text-[11px] font-black text-slate-400 subtitle uppercase tracking-widest">
+          <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+          <h3 className="text-[11px] font-black text-slate-400 dark:text-slate-500 subtitle uppercase tracking-widest">
             Legal Code Repository
           </h3>
         </div>
@@ -144,16 +144,17 @@ export function DashboardView() {
                     setActiveView("mapping");
                   }}
                   whileHover={{ y: -5 }}
-                  className="p-8 rounded-[32px] border border-white/60 text-left transition-all shadow-premium hover:shadow-premium-hover cursor-pointer group relative overflow-hidden"
+                  className="p-8 rounded-[32px] border border-white/60 dark:border-slate-800 text-left transition-all shadow-premium hover:shadow-premium-hover cursor-pointer group relative overflow-hidden"
                   style={{
-                    background: `linear-gradient(135deg, ${code.bg} 0%, white 100%)`,
+                    background: `linear-gradient(135deg, ${code.bg} 0%, white 100%)`, // We need to handle this gradient carefully for dark mode
                   }}
                 >
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-white/40 rounded-full -translate-y-1/3 translate-x-1/3 blur-2xl" />
+                  <div className="absolute inset-0 bg-white/20 dark:bg-black/20 opacity-0 dark:opacity-40" />
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-white/40 dark:bg-white/5 rounded-full -translate-y-1/3 translate-x-1/3 blur-2xl" />
                   
                   <div className="flex items-center justify-between relative z-10">
                     <span
-                      className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-xl backdrop-blur-md shadow-sm border border-white/40"
+                      className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-xl backdrop-blur-md shadow-sm border border-white/40 dark:border-slate-700"
                       style={{ color: code.c, backgroundColor: `${code.c}15` }}
                     >
                       {code.s}
@@ -165,16 +166,16 @@ export function DashboardView() {
                       <ArrowRight className="w-5 h-5" />
                     </div>
                   </div>
-                  <h4 className="text-xl font-black text-slate-900 mt-6 mb-2 leading-tight relative z-10 tracking-tight">
+                  <h4 className="text-xl font-black text-slate-900 dark:text-white mt-6 mb-2 leading-tight relative z-10 tracking-tight">
                     {code.n}
                   </h4>
-                  <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 relative z-10 uppercase tracking-wide">
+                  <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 dark:text-slate-500 relative z-10 uppercase tracking-wide">
                     <span>{code.secs} sections</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-200" />
+                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-800" />
                     <span>{codeProvs.length} Mapped</span>
                   </div>
                 </motion.button>
-              );
+               );
             }
           )}
         </div>
