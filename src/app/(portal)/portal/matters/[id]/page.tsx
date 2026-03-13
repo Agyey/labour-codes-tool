@@ -10,10 +10,13 @@ import {
   ShieldCheck,
   FileText,
   UploadCloud,
-  MessageSquare
+  MessageSquare,
+  ChevronLeft
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ClientMatterView({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "documents">("overview");
 
   const matter = {
@@ -36,8 +39,17 @@ export default function ClientMatterView({ params }: { params: { id: string } })
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       
+      {/* Back button */}
+      <button 
+        onClick={() => router.push('/portal/dashboard')}
+        className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors group"
+      >
+        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back to Portal Dashboard
+      </button>
+
       {/* Matter Header */}
       <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
         <div>

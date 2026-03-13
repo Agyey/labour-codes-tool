@@ -34,15 +34,15 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-zinc-800/50 shadow-sm transition-all duration-300">
       <div className="max-w-[1400px] mx-auto px-4 py-3.5">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 dark:from-zinc-100 dark:to-zinc-300 flex items-center justify-center shadow-lg shadow-slate-900/10 dark:shadow-zinc-950/50">
-              <Scale className="w-5 h-5 text-white dark:text-zinc-900" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 dark:from-zinc-100 dark:to-zinc-300 flex items-center justify-center shadow-lg shadow-slate-900/10 dark:shadow-zinc-950/50 flex-shrink-0">
+              <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-zinc-900" />
             </div>
-            <div>
-              <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 leading-tight">
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 leading-tight truncate">
                 {title}
               </h1>
-              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-widest mt-0.5">
+              <p className="text-[8px] sm:text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-widest mt-0.5 truncate">
                 {subtitle}
               </p>
             </div>
@@ -71,11 +71,11 @@ export function AppHeader() {
               >
                 {mode === "admin" ? (
                   <>
-                    <Pencil className="w-3.5 h-3.5" /> EDITOR
+                    <Pencil className="w-3.5 h-3.5" /> <span className="hidden sm:inline">EDITOR</span>
                   </>
                 ) : (
                   <>
-                    <Eye className="w-3.5 h-3.5" /> READER
+                    <Eye className="w-3.5 h-3.5" /> <span className="hidden sm:inline">READER</span>
                   </>
                 )}
               </button>

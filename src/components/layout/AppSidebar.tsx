@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUI } from "@/context/UIContext";
 import { 
   BookOpen, 
   Layers,
@@ -16,6 +17,7 @@ import {
 
 export function AppSidebar() {
   const pathname = usePathname() || "";
+  const { sidebarOpen, setSidebarOpen } = useUI();
 
   // Helper render function for buttons
   const renderNavButton = (prod: { href: string; label: string; icon: LucideIcon; desc: string; color: string; textHover: string }) => {
@@ -48,34 +50,51 @@ export function AppSidebar() {
   };
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 min-h-[calc(100vh-120px)] overflow-y-auto transition-colors duration-300">
-      <div className="p-4">
-        
-        {/* SECTION 1: CORE OS */}
-        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-4 px-2">
-          Legal OS
-        </h3>
+    <>
+      {/* Mobile Overlay */}
+      <div 
+        className={`fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 transition-opacity lg:hidden ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
-        <div className="space-y-1 mb-8">
-          {renderNavButton({ href: "/dashboard", label: "Home Dashboard", icon: Home, desc: "Firm overview & alerts", color: "bg-blue-600", textHover: "group-hover:text-blue-600" })}
-          {renderNavButton({ href: "/library", label: "Knowledge Library", icon: BookOpen, desc: "Structured legal databases", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" })}
-          {renderNavButton({ href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" })}
-          {renderNavButton({ href: "/matters", label: "Active Matters", icon: Layers, desc: "Collaborative workspaces & tasks", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" })}
-          {renderNavButton({ href: "/entities", label: "Entity Database", icon: Building2, desc: "Manage client jurisdictions", color: "bg-cyan-600", textHover: "group-hover:text-cyan-600" })}
+      <aside className={`fixed lg:sticky top-0 lg:top-[73px] left-0 z-50 lg:z-30 w-64 h-full lg:h-[calc(100vh-73px)] border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-y-auto transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}`}>
+        <div className="p-4">
+          
+          {/* SECTION 1: CORE OS */}
+          <h3 className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-4 px-2 truncate transition-opacity ${!sidebarOpen && 'lg:opacity-0'}`}>
+            Legal OS
+          </h3>
+
+          <div className="space-y-1 mb-8">
+            {navItems.map(item => renderNavButton(item))}
+          </div>
+
+          {/* SECTION 2: MANAGEMENT */}
+          <h3 className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-4 px-2 mt-8 truncate transition-opacity ${!sidebarOpen && 'lg:opacity-0'}`}>
+            Management
+          </h3>
+
+          <div className="space-y-1">
+            {mgmtItems.map(item => renderNavButton(item))}
+          </div>
+
         </div>
-
-        {/* SECTION 2: MANAGEMENT */}
-        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-4 px-2 mt-8">
-          Management
-        </h3>
-
-        <div className="space-y-1">
-          {renderNavButton({ href: "/org-settings", label: "Firm Settings", icon: Settings, desc: "Team & Subscriptions", color: "bg-rose-600", textHover: "group-hover:text-rose-600" })}
-          {renderNavButton({ href: "/admin", label: "Super Admin", icon: ShieldAlert, desc: "Platform Control Center", color: "bg-slate-800", textHover: "group-hover:text-slate-900" })}
-          {renderNavButton({ href: "/admin/knowledge-base", label: "AI Verification", icon: Database, desc: "Review Extracted Scenarios", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" })}
-        </div>
-
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
+
+// Grouped items for mapping
+const navItems = [
+  { href: "/dashboard", label: "Home Dashboard", icon: Home, desc: "Firm overview & alerts", color: "bg-blue-600", textHover: "group-hover:text-blue-600" },
+  { href: "/library", label: "Knowledge Library", icon: BookOpen, desc: "Structured legal databases", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" },
+  { href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" },
+  { href: "/matters", label: "Active Matters", icon: Layers, desc: "Collaborative workspaces & tasks", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" },
+  { href: "/entities", label: "Entity Database", icon: Building2, desc: "Manage client jurisdictions", color: "bg-cyan-600", textHover: "group-hover:text-cyan-600" },
+];
+
+const mgmtItems = [
+  { href: "/org-settings", label: "Firm Settings", icon: Settings, desc: "Team & Subscriptions", color: "bg-rose-600", textHover: "group-hover:text-rose-600" },
+  { href: "/admin", label: "Super Admin", icon: ShieldAlert, desc: "Platform Control Center", color: "bg-slate-800", textHover: "group-hover:text-slate-900" },
+  { href: "/admin/knowledge-base", label: "AI Verification", icon: Database, desc: "Review Extracted Scenarios", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" },
+];

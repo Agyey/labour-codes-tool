@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FileText, Eye, EyeOff, Scale, Gavel, Link2, ChevronDown, ChevronRight } from "lucide-react";
+import { FileText, Eye, EyeOff, Scale, Gavel, Link2, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 import type { Provision } from "@/types/provision";
 import { useState } from "react";
 
@@ -12,11 +13,24 @@ interface StatuteViewProps {
 }
 
 export function StatuteView({ provision: p, codeShortName }: StatuteViewProps) {
-  const { showTextMap, toggleShowText } = useUI();
+  const { mode, showTextMap, toggleShowText } = useUI();
+  const { saveProvision } = useData();
   const [showSubSections, setShowSubSections] = useState(false);
 
   const isRule = p.provisionType === 'rule';
   const TypeIcon = isRule ? Gavel : Scale;
+
+  const handleDeleteSubSection = async (index: number) => {
+    if (!confirm("Are you sure you want to delete this sub-section/clause?")) return;
+    
+    const updatedSubSections = [...(p.subSections || [])];
+    updatedSubSections.splice(index, 1);
+    
+    await saveProvision({
+      ...p,
+      subSections: updatedSubSections
+    });
+  };
 
   return (
     <div className="p-5 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-slate-100 dark:border-zinc-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
@@ -76,9 +90,20 @@ export function StatuteView({ provision: p, codeShortName }: StatuteViewProps) {
               className="space-y-2 pl-3 border-l-2 border-indigo-200 dark:border-indigo-800"
             >
               {p.subSections.map((sub, i) => (
-                <div key={i} className="py-2 text-sm text-slate-700 dark:text-zinc-300">
-                  <span className="font-bold text-indigo-600 dark:text-indigo-400 mr-1.5">{sub.marker}</span>
-                  <span className="leading-relaxed">{sub.text}</span>
+                <div key={i} className="py-2 text-sm text-slate-700 dark:text-zinc-300 flex items-start justify-between group/sub">
+                  <div className="flex-1">
+                    <span className="font-bold text-indigo-600 dark:text-indigo-400 mr-1.5">{sub.marker}</span>
+                    <span className="leading-relaxed">{sub.text}</span>
+                  </div>
+                  {mode === 'admin' && (
+                    <button 
+                      onClick={() => handleDeleteSubSection(i)}
+                      className="opacity-0 group-hover/sub:opacity-100 p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all ml-2"
+                      title="Delete Clause"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
             </motion.div>

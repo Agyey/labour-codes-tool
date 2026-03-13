@@ -117,11 +117,13 @@ export function LibraryTable({ data }: LibraryTableProps) {
       cell: ({ row }) => {
         const impact = row.getValue("impact") as string;
         return (
-          <Badge 
-            text={impact} 
-            color={IMPACT_COLORS[impact] || "#6b7280"} 
-            className="text-[10px]"
-          />
+          <div className="hidden md:block">
+            <Badge 
+              text={impact} 
+              color={IMPACT_COLORS[impact] || "#6b7280"} 
+              className="text-[10px]"
+            />
+          </div>
         );
       },
     },
@@ -130,10 +132,10 @@ export function LibraryTable({ data }: LibraryTableProps) {
       header: "Workflow Tags",
       cell: ({ row }) => {
         const tags = row.getValue("workflowTags") as string[] || [];
-        if (tags.length === 0) return <span className="text-xs text-slate-400">-</span>;
+        if (tags.length === 0) return <span className="text-xs text-slate-400 hidden md:inline">-</span>;
         
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 hidden md:flex">
             {tags.slice(0, 2).map(tag => (
               <Badge 
                 key={tag} 
@@ -205,11 +207,14 @@ export function LibraryTable({ data }: LibraryTableProps) {
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
-                {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-4 py-3 text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
+                {headerGroup.headers.map(header => {
+                  const hideOnMobile = header.id === 'impact' || header.id === 'workflowTags';
+                  return (
+                    <th key={header.id} className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap ${hideOnMobile ? 'hidden md:table-cell' : ''}`}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  );
+                })}
               </tr>
             ))}
           </thead>
@@ -220,11 +225,14 @@ export function LibraryTable({ data }: LibraryTableProps) {
                 return (
                   <React.Fragment key={row.id}>
                     <tr className={`transition-colors hover:bg-slate-50/80 dark:hover:bg-zinc-800/30 ${isExpanded ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
-                      {row.getVisibleCells().map(cell => (
-                        <td key={cell.id} className="px-4 py-3 align-middle">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
+                      {row.getVisibleCells().map(cell => {
+                        const hideOnMobile = cell.column.id === 'impact' || cell.column.id === 'workflowTags';
+                        return (
+                          <td key={cell.id} className={`px-4 py-3 align-middle ${hideOnMobile ? 'hidden md:table-cell' : ''}`}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
                     </tr>
                     {isExpanded && (
                       <tr className="bg-slate-50 dark:bg-zinc-950/20">

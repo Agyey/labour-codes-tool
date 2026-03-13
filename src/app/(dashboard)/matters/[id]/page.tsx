@@ -12,12 +12,15 @@ import {
   MoreHorizontal,
   CheckCircle2,
   AlertCircle,
-  Clock3
+  Clock3,
+  ChevronLeft
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function MatterDealRoom({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState<"board" | "vdr" | "timeline">("board");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"board" | "vdr" | "timeline">( "board");
 
   // Mock Matter Data
   const matter = {
@@ -46,6 +49,13 @@ export default function MatterDealRoom({ params }: { params: { id: string } }) {
     <div className="flex flex-col h-[calc(100vh-120px)] max-w-[1600px] mx-auto">
       {/* Matter Header */}
       <div className="bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 p-6 flex-shrink-0">
+        <button 
+          onClick={() => router.push('/matters')}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-4 group"
+        >
+          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          Back to All Matters
+        </button>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-3 mb-1">
