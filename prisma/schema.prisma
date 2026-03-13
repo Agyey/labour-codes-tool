@@ -115,32 +115,36 @@ model ClientAccess {
 }
 
 model Provision {
-  id             String    @id @default(cuid())
-  org_id         String?
-  framework_id   String?
-  code           String
-  chapter        String
-  chapter_name   String
-  section        String
-  sub_section    String
-  title          String
-  summary        String
-  full_text      String    @db.Text
-  impact         String
-  rule_authority String
-  change_tags    String[]
-  workflow_tags  String[]
-  penalty_old    String?
-  penalty_new    String?
-  notes          String?
-  assignee       String?
-  due_date       DateTime?
-  verified       Boolean   @default(false)
-  pinned         Boolean   @default(false)
-  version        Int       @default(1)
-  status         String    @default("active") // active, revoked, amended
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @default(now())
+  id               String    @id @default(cuid())
+  org_id           String?
+  framework_id     String?
+  code             String
+  chapter          String
+  chapter_name     String
+  section          String
+  sub_section      String
+  title            String
+  provision_type   String    @default("section") // section | rule
+  parent_section   String?   // For rules: which section this rule implements
+  sub_sections     Json      @default("[]")      // SubSection[] as JSON
+  linked_rule_refs String[]  @default([])        // For sections: rule refs that implement this
+  summary          String
+  full_text        String    @db.Text
+  impact           String
+  rule_authority   String
+  change_tags      String[]
+  workflow_tags    String[]
+  penalty_old      String?
+  penalty_new      String?
+  notes            String?
+  assignee         String?
+  due_date         DateTime?
+  verified         Boolean   @default(false)
+  pinned           Boolean   @default(false)
+  version          Int       @default(1)
+  status           String    @default("active") // active, revoked, amended
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @default(now())
 
   // Relations
   organization    Organization?    @relation(fields: [org_id], references: [id])

@@ -44,6 +44,13 @@ export interface TimelineDate {
   label: string;
 }
 
+export interface SubSection {
+  marker: string;    // "(1)", "(2)(a)", "Proviso", "Explanation"
+  text: string;
+}
+
+export type ProvisionType = 'section' | 'rule';
+
 export type Impact = "Critical" | "High" | "Medium" | "Low";
 export type ComplianceStatus = "Not Started" | "In Progress" | "Compliant" | "N/A";
 export type RuleAuthority =
@@ -61,6 +68,10 @@ export interface Provision {
   sec: string;
   sub: string;
   title: string;
+  provisionType: ProvisionType;
+  parentSection?: string;
+  subSections: SubSection[];
+  linkedRuleRefs: string[];
   ruleAuth: RuleAuthority;
   summary: string;
   fullText: string;

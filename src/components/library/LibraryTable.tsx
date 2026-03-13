@@ -15,7 +15,7 @@ import { Provision } from "@/types/provision";
 import { CODES } from "@/config/codes";
 import { IMPACT_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
-import { ChevronDown, ChevronRight, ChevronUp, FileText, ArrowUpDown, ExternalLink, Pencil, Trash2, CheckCircle, Pin } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, FileText, ArrowUpDown, ExternalLink, Pencil, Trash2, CheckCircle, Pin, Scale, Gavel } from "lucide-react";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { StatuteView } from "@/components/provisions/StatuteView";
@@ -55,6 +55,23 @@ export function LibraryTable({ data }: LibraryTableProps) {
               {cObj?.s || row.original.code}
             </span>
           </div>
+        );
+      },
+    },
+    {
+      id: "type",
+      header: "Type",
+      cell: ({ row }) => {
+        const isRule = row.original.provisionType === 'rule';
+        return (
+          <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+            isRule 
+              ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+              : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300'
+          }`}>
+            {isRule ? <Gavel className="w-3 h-3 inline mr-0.5 -mt-0.5" /> : <Scale className="w-3 h-3 inline mr-0.5 -mt-0.5" />}
+            {isRule ? 'Rule' : 'Section'}
+          </span>
         );
       },
     },

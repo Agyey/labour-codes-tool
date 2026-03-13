@@ -7,7 +7,7 @@ import type { Provision } from "@/types/provision";
 export const SEED_PROVISIONS: Provision[] = [
   // ===== CODE ON WAGES (CoW) =====
   {
-    id: "CoW-2y", code: "CoW", ch: "I", chName: "Preliminary", sec: "2", sub: "(y)", title: "Definition — 'wages'", ruleAuth: "Central Government",
+    id: "CoW-2y", code: "CoW", ch: "I", chName: "Preliminary", sec: "2", sub: "(y)", title: "Definition — 'wages'", provisionType: "section", subSections: [], linkedRuleRefs: ["Draft CoW Rules 2025 — R.3", "Draft CoW Rules 2025 — R.4"], ruleAuth: "Central Government",
     summary: "UNIFIED DEFINITION replacing 4 different definitions. Wages = Basic Pay + DA + Retaining Allowance. Excludes: bonus, HRA, conveyance, OT, commission, gratuity, retrenchment compensation, employer PF/pension. THE 50% RULE: if total exclusions exceed 50% of all remuneration, excess deemed wages. For equal pay & payment of wages: conveyance, HRA, awards, OT are INCLUDED (broader base). Remuneration in kind capped at 15%.",
     fullText: "\"wages\" means all remuneration whether by way of salaries, allowances or otherwise... includes (i) basic pay; (ii) dearness allowance; (iii) retaining allowance, if any, but does not include— (a) bonus not part of employment terms; (b) house-accommodation/amenities; (c) employer PF/pension; (d) conveyance allowance; (e) special expenses; (f) HRA; (g) award/settlement remuneration; (h) OT allowance; (i) commission; (j) gratuity; (k) retrenchment compensation/retirement benefit. Proviso 1: If exclusions (a)-(i) exceed 50% of total remuneration, excess deemed wages. Proviso 2: For equal pay and payment of wages, (d),(f),(g),(h) included. Explanation: Remuneration in kind ≤15% deemed part of wages.",
     oldMappings: [
@@ -41,7 +41,7 @@ export const SEED_PROVISIONS: Provision[] = [
   },
 
   {
-    id: "CoW-2k", code: "CoW", ch: "I", chName: "Preliminary", sec: "2", sub: "(k)", title: "Definition — 'employee'", ruleAuth: "Appropriate Government",
+    id: "CoW-2k", code: "CoW", ch: "I", chName: "Preliminary", sec: "2", sub: "(k)", title: "Definition — 'employee'", provisionType: "section", subSections: [], linkedRuleRefs: ["Draft CoW Rules 2025 — R.2"], ruleAuth: "Appropriate Government",
     summary: "UNIFIED: Any person (except apprentices) employed on wages for skilled, semi-skilled, unskilled, manual, operational, supervisory, managerial, administrative, technical or clerical work. NO WAGE CEILING. Includes persons declared by Govt. Excludes only Armed Forces.",
     fullText: "\"employee\" means any person (other than an apprentice under the Apprentices Act, 1961) employed on wages by an establishment to do any skilled, semi-skilled or unskilled, manual, operational, supervisory, managerial, administrative, technical or clerical work for hire or reward, whether express or implied, and includes a person declared to be an employee by the appropriate Government, but does not include any member of the Armed Forces of the Union.",
     oldMappings: [
@@ -67,7 +67,7 @@ export const SEED_PROVISIONS: Provision[] = [
   },
 
   {
-    id: "CoW-17", code: "CoW", ch: "III", chName: "Payment of Wages", sec: "17", sub: "", title: "Time limit for payment of wages", ruleAuth: "Appropriate Government",
+    id: "CoW-17", code: "CoW", ch: "III", chName: "Payment of Wages", sec: "17", sub: "", title: "Time limit for payment of wages", provisionType: "section", subSections: [], linkedRuleRefs: [], ruleAuth: "Appropriate Government",
     summary: "Specific timelines: Daily — end of shift. Weekly — last working day. Fortnightly — 2nd day after fortnight. Monthly — 7th of succeeding month. ON SEPARATION (removal/dismissal/retrenchment/resignation/closure): within 2 WORKING DAYS. Appropriate Govt may prescribe different limits.",
     fullText: "(1) Employer shall pay wages: (i) daily — end of shift; (ii) weekly — last working day of week; (iii) fortnightly — before end of 2nd day after fortnight; (iv) monthly — before 7th of succeeding month. (2) Where employee removed/dismissed/retrenched/resigned or unemployed due to closure — wages paid within 2 working days. (3) Appropriate Govt may provide other time limit. (4) Does not affect other laws.",
     oldMappings: [
@@ -92,7 +92,7 @@ export const SEED_PROVISIONS: Provision[] = [
 
   // ===== INDUSTRIAL RELATIONS CODE (IRC) =====
   {
-    id: "IRC-2l", code: "IRC", ch: "I", chName: "Preliminary", sec: "2", sub: "(l)", title: "Definition — 'employee' (replaces 'workman')", ruleAuth: "Not Applicable",
+    id: "IRC-2l", code: "IRC", ch: "I", chName: "Preliminary", sec: "2", sub: "(l)", title: "Definition — 'employee' (replaces 'workman')", provisionType: "section", subSections: [], linkedRuleRefs: ["Draft IR(C) Rules 2025 — R.2"], ruleAuth: "Not Applicable",
     summary: "'Employee' replaces 'workman'. Includes: manual, unskilled, skilled, technical, operational, supervisory, managerial, administrative, clerical. Supervisory exclusion threshold RAISED from ₹10,000 to ₹18,000/month. Explicitly includes working journalists and sales promotion employees.",
     fullText: "\"employee\" means any person (not being an apprentice) employed on wages in an industry for manual, unskilled, skilled, technical, operational, supervisory, managerial, administrative or clerical work. Excludes: Armed Forces, police, prison officers, managerial/admin capacity, supervisory drawing >₹18,000/month.",
     oldMappings: [
@@ -114,7 +114,7 @@ export const SEED_PROVISIONS: Provision[] = [
   },
 
   {
-    id: "IRC-77", code: "IRC", ch: "IX", chName: "Lay-off, Retrenchment & Closure", sec: "77", sub: "", title: "Prior permission for lay-off/retrenchment (300+ workers)", ruleAuth: "Appropriate Government",
+    id: "IRC-77", code: "IRC", ch: "IX", chName: "Lay-off, Retrenchment & Closure", sec: "77", sub: "", title: "Prior permission for lay-off/retrenchment (300+ workers)", provisionType: "section", subSections: [], linkedRuleRefs: [], ruleAuth: "Appropriate Government",
     summary: "THRESHOLD RAISED: Prior Govt permission for lay-off/retrenchment now required only for 300+ workers (was 100+). Establishments with 100-299 workers: NO prior permission needed — only notice + compensation. Govt may change threshold by notification. Deemed permission if no Govt response in 60 days.",
     fullText: "No employer of an industrial establishment in which 300 or more workers are employed shall lay-off or retrench any worker until prior permission obtained from appropriate Government. Application decided within 60 days — deemed granted if no response.",
     oldMappings: [
@@ -140,7 +140,7 @@ export const SEED_PROVISIONS: Provision[] = [
   },
 
   {
-    id: "IRC-62", code: "IRC", ch: "VIII", chName: "Strikes & Lock-outs", sec: "62", sub: "", title: "Prohibition of strikes and lock-outs", ruleAuth: "Appropriate Government",
+    id: "IRC-62", code: "IRC", ch: "VIII", chName: "Strikes & Lock-outs", sec: "62", sub: "", title: "Prohibition of strikes and lock-outs", provisionType: "section", subSections: [], linkedRuleRefs: [], ruleAuth: "Appropriate Government",
     summary: "14-day advance notice NOW MANDATORY for ALL establishments (was only public utility services). Strike prohibited: without 60-day notice, within 14 days of notice, before specified date, during conciliation/tribunal + 7 days after, during arbitration + 60 days after. Mass casual leave by 50%+ workers = strike.",
     fullText: "No person employed shall go on strike without giving notice within 60 days before striking, within 14 days of giving such notice, before the date of strike specified in the notice, and during any period in which conciliation/tribunal/arbitration proceedings are pending.",
     oldMappings: [
@@ -165,7 +165,7 @@ export const SEED_PROVISIONS: Provision[] = [
 
   // ===== CODE ON SOCIAL SECURITY (CoSS) =====
   {
-    id: "CoSS-53", code: "CoSS", ch: "V", chName: "Gratuity", sec: "53", sub: "", title: "Payment of gratuity", ruleAuth: "Appropriate Government",
+    id: "CoSS-53", code: "CoSS", ch: "V", chName: "Gratuity", sec: "53", sub: "", title: "Payment of gratuity", provisionType: "section", subSections: [], linkedRuleRefs: ["Draft CoSS Rules 2025"], ruleAuth: "Appropriate Government",
     summary: "Regular employees: gratuity after 5 years continuous service (same). FIXED TERM EMPLOYEES: eligible for pro-rata gratuity after just 1 YEAR (major change). Calculation: 15 days' wages × years of service — but 'wages' now per new unified definition. Working journalists: 15 days × 3 × years. Gratuity on: termination, superannuation, resignation, death, disablement, FTE contract expiry.",
     fullText: "Gratuity payable to every employee on termination after not less than 5 years continuous service. For fixed-term: payable on a pro-rata basis after completion of one year. Rate: 15 days' wages for every completed year of service or part thereof in excess of six months.",
     oldMappings: [
@@ -193,7 +193,7 @@ export const SEED_PROVISIONS: Provision[] = [
   },
 
   {
-    id: "CoSS-109", code: "CoSS", ch: "IX", chName: "Unorganised, Gig & Platform Workers", sec: "109-114", sub: "", title: "Social security for gig and platform workers", ruleAuth: "Central Government",
+    id: "CoSS-109", code: "CoSS", ch: "IX", chName: "Unorganised, Gig & Platform Workers", sec: "109-114", sub: "", title: "Social security for gig and platform workers", provisionType: "section", subSections: [], linkedRuleRefs: ["Draft CoSS Rules 2025"], ruleAuth: "Central Government",
     summary: "TRANSFORMATIONAL: (1) Gig workers and platform workers formally recognized for first time. (2) Central Govt may frame SS schemes for: life/disability insurance, health, maternity, old age, education, housing, food. (3) Aggregators to contribute 1-2% of annual turnover (max 5% of payments to workers). (4) Self-registration on portal. (5) Aadhaar-based identity. (6) Draft Rules prescribe minimum engagement thresholds.",
     fullText: "S.109-114: Central Government may frame welfare schemes for unorganised, gig and platform workers. Aggregators required to contribute 1-2% of annual turnover. National/State Social Security Boards. Workers self-register on designated portal.",
     oldMappings: [
@@ -218,7 +218,7 @@ export const SEED_PROVISIONS: Provision[] = [
 
   // ===== OSH & WORKING CONDITIONS CODE (OSHW) =====
   {
-    id: "OSHW-6", code: "OSHW", ch: "II", chName: "Registration & Duties", sec: "6", sub: "", title: "Appointment letters mandatory + employer duties", ruleAuth: "Appropriate Government",
+    id: "OSHW-6", code: "OSHW", ch: "II", chName: "Registration & Duties", sec: "6", sub: "", title: "Appointment letters mandatory + employer duties", provisionType: "section", subSections: [], linkedRuleRefs: ["Draft OSHW Rules 2025"], ruleAuth: "Appropriate Government",
     summary: "MANDATORY appointment letters for ALL employees with prescribed details (name, DOB, nature of employment, wages, social security info etc.) before commencement or within 3 months of rules. Employers must: ensure hazard-free workplace, provide safe systems, free annual health check-ups for employees aged 40+ within 120 days of calendar year.",
     fullText: "Every employer shall issue appointment letter to every employee before commencement of employment containing prescribed particulars. Employer to ensure workplace free from hazards, provide safe work systems, conduct annual health check-ups for employees aged 40+.",
     oldMappings: [
@@ -251,7 +251,7 @@ export const SEED_PROVISIONS: Provision[] = [
   },
 
   {
-    id: "OSHW-57", code: "OSHW", ch: "VIII", chName: "Contract Labour & Migrant Workers", sec: "57", sub: "", title: "Contract labour in core activities — prohibition", ruleAuth: "Appropriate Government",
+    id: "OSHW-57", code: "OSHW", ch: "VIII", chName: "Contract Labour & Migrant Workers", sec: "57", sub: "", title: "Contract labour in core activities — prohibition", provisionType: "section", subSections: [], linkedRuleRefs: ["Draft OSHW Rules 2025"], ruleAuth: "Appropriate Government",
     summary: "Contract labour PROHIBITED in core activities of establishment. Exceptions: (1) work customarily done by contractors, (2) does not require full-time workers, (3) temporary increase in workload. Appropriate Govt to define 'core activities'. Regular contractor employees with agreed conditions, increments, SS coverage EXCLUDED from contract labour definition. New: 2% minimum annual increment for regular contractor employees. Pan-India single license for contractors.",
     fullText: "No contract labour shall be employed in core activities. Exceptions: customary contractor work, not requiring full-time, temporary surge. Appropriate Government to define core activities. Contractors may obtain single pan-India license.",
     oldMappings: [

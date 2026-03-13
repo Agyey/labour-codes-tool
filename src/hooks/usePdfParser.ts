@@ -1,12 +1,29 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+export interface ParsedSubSection {
+  marker: string;
+  text: string;
+}
+
+export interface ParsedSection {
+  ch: string;
+  chName: string;
+  sec: string;
+  title: string;
+  text: string;
+  type: 'section' | 'rule';
+  parentSection?: string;
+  subSections: ParsedSubSection[];
+}
+
 export interface ParsedData {
-  metadata: { title: string; year: string };
+  metadata: { title: string; year: string; documentType: 'act' | 'rules' | 'unknown' };
   chapters: { num: string; title: string }[];
-  sections: { ch: string; chName: string; sec: string; title: string; text: string }[];
+  sections: ParsedSection[];
   penalties: string[];
   repealedActs: string[];
+  stats: { duplicatesRemoved: number; totalRawMatches: number };
 }
 
 export function usePdfParser() {
@@ -38,7 +55,11 @@ export function usePdfParser() {
       }
 
       setParsedResult(json.data);
-      toast.success(`Successfully parsed document! Extracted ${json.data.sections.length} sections.`);
+      const stats = json.data.stats;
+      const statsMsg = stats.duplicatesRemoved > 0 
+        ? ` (${stats.duplicatesRemoved} index duplicates removed)` 
+        : '';
+      toast.success(`Parsed ${json.data.sections.length} ${json.data.metadata.documentType === 'rules' ? 'rules' : 'sections'}${statsMsg}`);
       return json.data;
     } catch (error: any) {
       console.error(error);
