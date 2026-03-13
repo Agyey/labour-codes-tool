@@ -7,14 +7,15 @@ import {
   FileText, 
   Briefcase,
   LayoutDashboard,
-  Layers
+  Layers,
+  LucideIcon
 } from "lucide-react";
 
 export function AppSidebar() {
   const { activeProduct, setActiveProduct } = useLegalOS();
 
   // Helper render function for buttons
-  const renderNavButton = (prod: { id: string; label: string; icon: any; desc: string; color: string; textHover: string }) => {
+  const renderNavButton = (prod: { id: string; label: string; icon: LucideIcon; desc: string; color: string; textHover: string }) => {
     const Icon = prod.icon;
     const isActive = activeProduct === prod.id;
 
