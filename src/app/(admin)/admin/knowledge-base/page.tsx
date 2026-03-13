@@ -94,7 +94,12 @@ export default function KnowledgeBaseVerification() {
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6">
                 <div>
                   <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-2">{activeDoc.title}</h2>
-                  <a href="#" className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                  <a 
+                    href={activeDoc.source === 'TaxGuru.in' ? "https://taxguru.in/company-law/private-placement-procedure-companies-act-2013.html" : "https://cleartax.in/s/gst-registration"} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
                     View Original Source Article <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>

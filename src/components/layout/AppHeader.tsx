@@ -16,7 +16,7 @@ export function AppHeader() {
   let title = "Knowledge Library";
   let subtitle = "Structured Legal Databases";
 
-  if (pathname.startsWith("/home")) {
+  if (pathname.startsWith("/dashboard")) {
     title = "Home Dashboard";
     subtitle = "Legal OS Command Center";
   } else if (pathname.startsWith("/matters")) {
@@ -25,6 +25,9 @@ export function AppHeader() {
   } else if (pathname.startsWith("/scenarios")) {
     title = "Scenario Engine";
     subtitle = "Automated Compliance Generation";
+  } else if (pathname.startsWith("/entities")) {
+    title = "Entity Database";
+    subtitle = "Corporate Hygiene Management";
   }
 
   return (

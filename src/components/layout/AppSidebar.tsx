@@ -10,6 +10,7 @@ import {
   Settings,
   ShieldAlert,
   Database,
+  Building2,
   LucideIcon
 } from "lucide-react";
 
@@ -60,6 +61,7 @@ export function AppSidebar() {
           {renderNavButton({ href: "/library", label: "Knowledge Library", icon: BookOpen, desc: "Structured legal databases", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" })}
           {renderNavButton({ href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" })}
           {renderNavButton({ href: "/matters", label: "Active Matters", icon: Layers, desc: "Collaborative workspaces & tasks", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" })}
+          {renderNavButton({ href: "/entities", label: "Entity Database", icon: Building2, desc: "Manage client jurisdictions", color: "bg-cyan-600", textHover: "group-hover:text-cyan-600" })}
         </div>
 
         {/* SECTION 2: MANAGEMENT */}

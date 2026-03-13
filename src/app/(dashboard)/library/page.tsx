@@ -3,6 +3,7 @@
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { useLegalOS } from "@/context/LegalOSContext";
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { AppShell } from "@/components/layout/AppShell";
@@ -52,7 +53,13 @@ function ViewRouter() {
 
 export default function Home() {
   const { loading } = useData();
-  const { activeProduct } = useLegalOS();
+  const { activeProduct, setActiveProduct } = useLegalOS();
+  const { setActiveView } = useUI();
+
+  useEffect(() => {
+    setActiveProduct("MAPPING");
+    setActiveView("mapping");
+  }, []);
 
   if (loading) {
     return (

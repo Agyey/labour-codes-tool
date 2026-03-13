@@ -36,10 +36,10 @@ export default function MatterDealRoom({ params }: { params: { id: string } }) {
   ];
 
   const tasks = [
-    { id: 1, title: "Draft Board Resolution for Issue of Shares", col: "in_progress", assignee: "SK", due: "Tomorrow", priority: "High" },
-    { id: 2, title: "Client Signature: Valuation Report", col: "review", assignee: "Client", due: "Today", priority: "Urgent", overdue: true },
-    { id: 3, title: "File Form PAS-3 with ROC", col: "todo", assignee: "AM", due: "Next Week", priority: "Medium" },
-    { id: 4, title: "Dispatch Offer Letter (PAS-4)", col: "done", assignee: "SK", due: "Completed", priority: "High" },
+    { id: 1, title: "Draft Board Resolution for Issue of Shares", col: "in_progress", assignee: "SK", due: "Tomorrow", priority: "High", ref: "Sec 42(1)" },
+    { id: 2, title: "Client Signature: Valuation Report", col: "review", assignee: "Client", due: "Today", priority: "Urgent", overdue: true, ref: "PAS-4 Rule 14" },
+    { id: 3, title: "File Form PAS-3 with ROC", col: "todo", assignee: "AM", due: "Next Week", priority: "Medium", ref: "Sec 42(8)" },
+    { id: 4, title: "Dispatch Offer Letter (PAS-4)", col: "done", assignee: "SK", due: "Completed", priority: "High", ref: "Rule 14(3)" },
   ];
 
   return (
@@ -130,7 +130,12 @@ export default function MatterDealRoom({ params }: { params: { id: string } }) {
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug mb-4">{task.title}</h4>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug mb-2">{task.title}</h4>
+                      <div className="flex items-center gap-1.5 mb-4">
+                        <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                          {task.ref}
+                        </span>
+                      </div>
                       <div className="flex items-center justify-between border-t border-slate-100 dark:border-zinc-800/50 pt-3">
                         <div className={`flex items-center gap-1.5 text-xs font-medium ${(task as any).overdue ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-zinc-400'}`}>
                           {(task as any).overdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock3 className="w-3.5 h-3.5" />}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, Layers, Network, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, BookOpen, Layers, Network, ShieldCheck, Zap, CheckCircle2 } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -68,6 +68,55 @@ export default function LandingPage() {
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Deal Rooms</h3>
             <p className="text-slate-600 dark:text-zinc-400 text-sm leading-relaxed">Convert checklists into collaborative Kanban boards. Assign tasks, track dependencies, loop in clients via the secure portal, and finalize VDR documents in one place.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* SOLUTIONS SECTION */}
+      <section id="solutions" className="max-w-7xl mx-auto px-6 py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8">
+            <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Enterprise Scaling for <br/> Global Counsel.</h2>
+            <div className="space-y-6">
+              {[
+                { title: "For Tier-1 Law Firms", desc: "Manage multi-jurisdictional compliance across 100+ entities with zero manual tracking." },
+                { title: "For In-House Counsel", desc: "Convert board mandates into executable task flows with automated alerting." },
+                { title: "For FinTech & Compliance", desc: "Native API support for KYC and regulatory reporting directly from the knowledge engine." }
+              ].map((s, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white">{s.title}</h4>
+                    <p className="text-sm text-slate-500 dark:text-zinc-400">{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-slate-100 dark:bg-zinc-800 rounded-[2.5rem] p-12 aspect-square flex items-center justify-center relative overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-cyan-500/20" />
+             <div className="w-full h-full border-4 border-white/50 dark:border-zinc-700/50 rounded-3xl shadow-2xl relative z-10 flex flex-col p-8 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-rose-400" />
+                    <div className="w-3 h-3 rounded-full bg-amber-400" />
+                    <div className="w-3 h-3 rounded-full bg-emerald-400" />
+                  </div>
+                  <div className="px-3 py-1 bg-indigo-500 text-white text-[10px] font-bold rounded-full uppercase tracking-widest">Live Execution</div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-4 w-3/4 bg-slate-200 dark:bg-zinc-800 rounded-full animate-pulse" />
+                  <div className="h-4 w-full bg-slate-100 dark:bg-zinc-800/80 rounded-full animate-pulse" />
+                  <div className="h-4 w-5/6 bg-slate-100 dark:bg-zinc-800/80 rounded-full animate-pulse" />
+                </div>
+                <div className="mt-12 grid grid-cols-2 gap-4">
+                  <div className="h-24 bg-indigo-500/10 rounded-2xl border border-indigo-500/20" />
+                  <div className="h-24 bg-cyan-500/10 rounded-2xl border border-cyan-500/20" />
+                </div>
+                <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-indigo-500/30 blur-[80px]" />
+             </div>
           </div>
         </div>
       </section>
