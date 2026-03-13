@@ -52,6 +52,10 @@ model User {
 
   last_login   DateTime?
   TaskInstance TaskInstance[]
+
+  // Legal OS Relations
+  matterMembers MatterMember[]
+  assignedTasks Task[]
 }
 
 model VerificationToken {
@@ -395,4 +399,138 @@ model TaskInstance {
   workspace Workspace  @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   master    TaskMaster @relation(fields: [master_id], references: [id])
   assignee  User?      @relation(fields: [assignee_id], references: [id])
+}
+
+// ==============================================================================
+// 🌟 LEGAL OS PIVOT: NEW 4-LAYER ARCHITECTURE MODELS
+// ==============================================================================
+
+// ---------------------------------------------------------
+// LAYER 1: KNOWLEDGE LIBRARY
+// ---------------------------------------------------------
+model Act {
+  id          String       @id @default(cuid())
+  name        String // e.g., "Code on Wages, 2019"
+  description String?      @db.Text
+  enacted_at  DateTime?
+  sections    ActSection[]
+}
+
+model ActSection {
+  id          String                 @id @default(cuid())
+  act_id      String
+  number      String // e.g., "S.18"
+  title       String
+  content     String                 @db.Text
+  act         Act                    @relation(fields: [act_id], references: [id], onDelete: Cascade)
+  obligations ComplianceObligation[]
+}
+
+model ComplianceObligation {
+  id                String  @id @default(cuid())
+  section_id        String
+  title             String
+  description       String  @db.Text
+  trigger_event     String?
+  applicable_entity String?
+  authority         String?
+  required_form     String?
+  filing_timeline   String?
+  penalty_desc      String?
+
+  section        ActSection     @relation(fields: [section_id], references: [id], onDelete: Cascade)
+  scenario_rules ScenarioRule[]
+  task_templates TaskTemplate[]
+}
+
+// ---------------------------------------------------------
+// LAYER 2: SCENARIO ENGINE
+// ---------------------------------------------------------
+model ScenarioTemplate {
+  id          String         @id @default(cuid())
+  name        String // e.g., "Private Placement", "Factory Setup"
+  description String?        @db.Text
+  rules       ScenarioRule[]
+  matters     Matter[]
+}
+
+model ScenarioRule {
+  id            String @id @default(cuid())
+  scenario_id   String
+  obligation_id String
+
+  scenario   ScenarioTemplate     @relation(fields: [scenario_id], references: [id], onDelete: Cascade)
+  obligation ComplianceObligation @relation(fields: [obligation_id], references: [id], onDelete: Cascade)
+
+  @@unique([scenario_id, obligation_id])
+}
+
+// ---------------------------------------------------------
+// LAYER 3 & 4: WORKFLOW ENGINE & COLLABORATION (MATTERS)
+// ---------------------------------------------------------
+model Matter {
+  id          String   @id @default(cuid())
+  name        String // e.g., "Reliance - Q3 Private Placement"
+  description String?  @db.Text
+  scenario_id String?
+  status      String   @default("Active")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  scenario  ScenarioTemplate? @relation(fields: [scenario_id], references: [id])
+  tasks     Task[]
+  members   MatterMember[]
+  documents MatterDocument[]
+}
+
+model MatterMember {
+  id        String @id @default(cuid())
+  matter_id String
+  user_id   String
+  role      String // Partner, Associate, Paralegal, Client
+
+  matter Matter @relation(fields: [matter_id], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([matter_id, user_id])
+}
+
+model TaskTemplate {
+  id            String  @id @default(cuid())
+  obligation_id String?
+  name          String
+  description   String? @db.Text
+  stage         String  @default("Structuring") // Structuring, Documentation, Approvals, Filings, Closing
+
+  obligation ComplianceObligation? @relation(fields: [obligation_id], references: [id])
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  matter_id     String
+  name          String
+  description   String?   @db.Text
+  stage         String    @default("Structuring")
+  status        String    @default("To Do") // To Do, In Progress, Under Review, Filed, Completed
+  due_date      DateTime?
+  assignee_id   String?
+  dependency_id String? // ID of a task this depends on
+
+  matter     Matter           @relation(fields: [matter_id], references: [id], onDelete: Cascade)
+  assignee   User?            @relation(fields: [assignee_id], references: [id])
+  dependency Task?            @relation("TaskDependencies", fields: [dependency_id], references: [id])
+  dependents Task[]           @relation("TaskDependencies")
+  documents  MatterDocument[]
+}
+
+model MatterDocument {
+  id          String   @id @default(cuid())
+  matter_id   String
+  task_id     String?
+  name        String
+  file_url    String
+  uploaded_at DateTime @default(now())
+
+  matter Matter @relation(fields: [matter_id], references: [id], onDelete: Cascade)
+  task   Task?  @relation(fields: [task_id], references: [id])
 }

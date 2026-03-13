@@ -1,28 +1,31 @@
 "use client";
 
 import { useUI } from "@/context/UIContext";
-import { useLegalOS } from "@/context/LegalOSContext";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { CommandPalette } from "../shared/CommandPalette";
 import { Scale, User, LogOut, Pencil, Eye, Menu } from "lucide-react";
 import { ThemeToggle } from "../shared/ThemeToggle";
 
 export function AppHeader() {
   const { mode, setMode, sidebarOpen, setSidebarOpen } = useUI();
-  const { activeProduct } = useLegalOS();
+  const pathname = usePathname() || "";
   const { data: session } = useSession();
 
-  const productTitles: Record<typeof activeProduct, { title: string, subtitle: string }> = {
-    MAPPING: { title: "Legal Frameworks", subtitle: "Universal Provision Mapping" },
-    COMPLIANCE: { title: "Compliance Tracker", subtitle: "Entity-Level Applicability" },
-    AGREEMENTS: { title: "Template Vault", subtitle: "Modular Agreement Generation" },
-    DILIGENCE: { title: "Due Diligence", subtitle: "Master Hygiene Checklists" },
-    WORKFLOW_DASH: { title: "Workflow Execution", subtitle: "Firm Operations Overview" },
-    WORKSPACE: { title: "Active Deal Room", subtitle: "VC/PE Workflow Execution" },
-  };
+  let title = "Knowledge Library";
+  let subtitle = "Structured Legal Databases";
 
-  const currentProduct = productTitles[activeProduct];
+  if (pathname.startsWith("/home")) {
+    title = "Home Dashboard";
+    subtitle = "Legal OS Command Center";
+  } else if (pathname.startsWith("/matters")) {
+    title = "Active Matters";
+    subtitle = "Collaborative Execution Workspaces";
+  } else if (pathname.startsWith("/scenarios")) {
+    title = "Scenario Engine";
+    subtitle = "Automated Compliance Generation";
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-2xl border-b border-slate-200/50 dark:border-zinc-800/50 shadow-sm transition-all duration-300">
@@ -34,10 +37,10 @@ export function AppHeader() {
             </div>
             <div>
               <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 leading-tight">
-                {currentProduct.title}
+                {title}
               </h1>
               <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-widest mt-0.5">
-                {currentProduct.subtitle}
+                {subtitle}
               </p>
             </div>
           </div>
