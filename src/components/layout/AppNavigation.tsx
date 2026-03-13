@@ -10,13 +10,16 @@ import {
   Map,
   Globe,
   AlertTriangle,
+  History,
+  GitCompare
 } from "lucide-react";
 
 const VIEWS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "mapping", label: "Mapping", icon: Map },
-  { id: "stateTracker", label: "States", icon: Globe },
+  { id: "timeline", label: "Timeline", icon: History },
   { id: "penalties", label: "Penalties", icon: AlertTriangle },
+  { id: "compare", label: "Compare", icon: GitCompare },
 ] as const;
 
 export function AppNavigation() {

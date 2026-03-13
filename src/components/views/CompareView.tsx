@@ -5,7 +5,7 @@ import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import { IMPACT_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
-import { GitCompare, ArrowLeftRight } from "lucide-react";
+import { GitCompare, ArrowLeftRight, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export function CompareView() {
@@ -15,11 +15,30 @@ export function CompareView() {
   const [provA, setProvA] = useState<string>("");
   const [provB, setProvB] = useState<string>("");
 
-  // Dynamically derive available codes from provisions + static config
+  // Local state for manually registered acts (that aren't in provisions yet)
+  const [registeredActs, setRegisteredActs] = useState<Record<string, { n: string; s: string; c: string }>>({});
+  const [showAddAct, setShowAddAct] = useState(false);
+  const [newActName, setNewActName] = useState("");
+  const [newActShort, setNewActShort] = useState("");
+
+  const handleRegisterAct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newActName || !newActShort) return;
+    const id = newActShort.toUpperCase().replace(/\s+/g, '_');
+    setRegisteredActs(prev => ({
+      ...prev,
+      [id]: { n: newActName, s: newActShort, c: "#94a3b8" }
+    }));
+    setNewActName("");
+    setNewActShort("");
+    setShowAddAct(false);
+  };
+
+  // Dynamically derive available codes from provisions + static config + manual registrations
   const availableCodes = useMemo(() => {
-    const codesInData = new Set(provisions.map(p => p.code));
+    const codesInData = new Set([...provisions.map(p => p.code), ...Object.keys(registeredActs)]);
     const all = Array.from(codesInData).map(c => {
-      const meta = CODES[c as keyof typeof CODES];
+      const meta = CODES[c as keyof typeof CODES] || registeredActs[c];
       return {
         id: c,
         name: meta?.n || c,
@@ -28,7 +47,7 @@ export function CompareView() {
       };
     }).sort((a, b) => a.name.localeCompare(b.name));
     return all;
-  }, [provisions]);
+  }, [provisions, registeredActs]);
 
   const provsA = useMemo(() => provisions.filter(p => p.code === codeA), [provisions, codeA]);
   const provsB = useMemo(() => provisions.filter(p => p.code === codeB), [provisions, codeB]);
@@ -44,10 +63,65 @@ export function CompareView() {
         <h2 className="text-2xl font-black text-slate-800 dark:text-zinc-100 tracking-tight">
           Cross-Act Comparison
         </h2>
-        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-zinc-800/50 px-3 py-1 rounded-full">
-          <GitCompare className="w-3 h-3" /> Side-by-Side Analysis
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowAddAct(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-400 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add New Act
+          </button>
+          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-zinc-800/50 px-3 py-1 rounded-full">
+            <GitCompare className="w-3 h-3" /> Side-by-Side Analysis
+          </div>
         </div>
       </div>
+
+      {/* Add Act Modal */}
+      {showAddAct && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] shadow-2xl border border-slate-200 dark:border-zinc-800 p-8 relative overflow-hidden">
+            <button 
+              onClick={() => setShowAddAct(false)}
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Register New Act</h3>
+            <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6">Create a framework container to start comparing provisions.</p>
+
+            <form onSubmit={handleRegisterAct} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Act Name</label>
+                <input 
+                  autoFocus
+                  required
+                  value={newActName}
+                  onChange={e => setNewActName(e.target.value)}
+                  placeholder="e.g. Companies Act, 2013"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Short Code</label>
+                <input 
+                  required
+                  value={newActShort}
+                  onChange={e => setNewActShort(e.target.value)}
+                  placeholder="e.g. CA13"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+              <button 
+                type="submit"
+                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 font-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20 mt-4"
+              >
+                Register Framework
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:flex w-10 h-10 rounded-full bg-white dark:bg-zinc-800 border-4 border-slate-50 dark:border-zinc-950 items-center justify-center z-10 shadow-sm">
