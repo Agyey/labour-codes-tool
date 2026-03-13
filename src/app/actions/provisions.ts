@@ -122,6 +122,7 @@ const parseDateSafely = (d: string | null | undefined) => {
 export async function updateProvision(id: string, rawUpdates: Provision, userId?: string) {
   try {
     // Validate inputs via Zod
+    console.log(`[UPDATE_PROVISION_START] ID: ${id}`);
     const validatedData = ProvisionUpdateSchema.parse(rawUpdates);
 
     const result = await prisma.$transaction(async (tx: TransactionClient) => {
@@ -142,8 +143,6 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         workflow_tags: validatedData.workflowTags,
         penalty_old: validatedData.penaltyOld,
         penalty_new: validatedData.penaltyNew,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        timeline_dates: validatedData.timelineDates as any,
         notes: validatedData.notes,
         assignee: validatedData.assignee,
         due_date: parseDateSafely(validatedData.dueDate),
@@ -225,8 +224,11 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
     });
 
     return { success: true, provision: result };
-  } catch (error) {
+  } catch (error: any) {
     console.error("[UPDATE_PROVISION_ERROR]", error);
+    if (error.errors) {
+       console.error("[ZOD_VALIDATION_ERRORS]", JSON.stringify(error.errors, null, 2));
+    }
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Failed to update provision" 
