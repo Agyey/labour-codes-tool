@@ -3,9 +3,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileUp, FileText, CheckCircle2, ShieldAlert, BookX, ArrowRight, Loader2, X } from "lucide-react";
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
+import { createBlankProvision } from "@/lib/utils";
+import toast from "react-hot-toast";
+import { CODES } from "@/config/codes";
+import { CodeKey } from "@/types/code";
 import { usePdfParser, ParsedData } from "@/hooks/usePdfParser";
 import { Badge } from "@/components/shared/Badge";
-import { useUI } from "@/context/UIContext";
 
 interface PdfUploadWizardProps {
   onClose: () => void;
@@ -14,11 +19,55 @@ interface PdfUploadWizardProps {
 export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
   const { isParsing, parsedResult, uploadAndParse, resetParser } = usePdfParser();
   const { activeCode } = useUI();
+  const { saveProvision } = useData();
+  const [isInjecting, setIsInjecting] = useState(false);
+  const [injectionProgress, setInjectionProgress] = useState({ current: 0, total: 0 });
+  const [selectedCode, setSelectedCode] = useState<CodeKey>(activeCode as CodeKey);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       await uploadAndParse(file);
+    }
+  };
+
+  const handleInjectData = async () => {
+    if (!parsedResult || parsedResult.sections.length === 0) return;
+    
+    setIsInjecting(true);
+    setInjectionProgress({ current: 0, total: parsedResult.sections.length });
+
+    try {
+      // Process sequentially to be safe with SQLite/Postgres connections locally
+      for (let i = 0; i < parsedResult.sections.length; i++) {
+        const extractedSec = parsedResult.sections[i];
+        
+        const newProv = createBlankProvision(selectedCode);
+        newProv.ch = extractedSec.ch || "";
+        newProv.chName = extractedSec.chName || "";
+        newProv.sec = extractedSec.sec || "";
+        newProv.title = extractedSec.title || "";
+        newProv.fullText = extractedSec.text || "";
+        
+        // Inherit document-wide penalties if explicitly found (storing in generic new penalty string)
+        if (parsedResult.penalties.length > 0) {
+          newProv.penaltyNew = parsedResult.penalties[0];
+        }
+
+        // Generate a pseudo-random ID for the injected provision
+        newProv.id = `inserted-${Date.now()}-${i}`;
+
+        await saveProvision(newProv);
+        setInjectionProgress({ current: i + 1, total: parsedResult.sections.length });
+      }
+
+      toast.success(`Successfully injected ${parsedResult.sections.length} sections into the Library!`);
+      onClose();
+    } catch (err: any) {
+      console.error(err);
+      toast.error("An error occurred during bulk injection.");
+    } finally {
+      setIsInjecting(false);
     }
   };
 
@@ -37,9 +86,18 @@ export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
               <FileUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               AI Document Parser
             </h2>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-              Upload Official Gazette PDFs to instantly extract structured compliance data.
-            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-500">Injecting explicitly into:</span>
+              <select 
+                value={selectedCode}
+                onChange={(e) => setSelectedCode(e.target.value as CodeKey)}
+                className="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded px-2 py-1 outline-none cursor-pointer"
+              >
+                {(Object.entries(CODES) as [CodeKey, any][]).map(([key, obj]) => (
+                  <option key={key} value={key}>{obj.n}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <button 
             onClick={onClose}
@@ -114,7 +172,7 @@ export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
                       <p className="text-sm text-slate-500 italic">No explicit penalties detected in text.</p>
                     ) : (
                       <ul className="space-y-3">
-                        {parsedResult.penalties.map((pen, i) => (
+                        {parsedResult.penalties.map((pen: string, i: number) => (
                            <li key={i} className="text-xs text-slate-600 dark:text-zinc-400 pb-3 border-b border-slate-100 dark:border-zinc-800 last:border-0 last:pb-0">
                              "{pen}"
                            </li>
@@ -137,7 +195,7 @@ export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
                       <p className="text-sm text-slate-500 italic">No repealed acts found in 'Savings & Repeal' clause.</p>
                     ) : (
                       <ul className="space-y-3">
-                        {parsedResult.repealedActs.map((act, i) => (
+                        {parsedResult.repealedActs.map((act: string, i: number) => (
                            <li key={i} className="text-xs font-medium text-slate-700 dark:text-zinc-300 flex items-center gap-2">
                              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" /> {act}
                            </li>
@@ -152,7 +210,7 @@ export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
               <div>
                 <h4 className="font-bold text-slate-800 dark:text-zinc-100 mb-3 px-1">Raw Section Output (Preview)</h4>
                 <div className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 max-h-[300px] overflow-y-auto space-y-4">
-                   {parsedResult.sections.slice(0, 5).map((sec, i) => (
+                   {parsedResult.sections.slice(0, 5).map((sec: any, i: number) => (
                      <div key={i} className="bg-white dark:bg-zinc-900 p-4 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Chapter {sec.ch || "?"}</span>
@@ -179,25 +237,31 @@ export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
              <>
               <button 
                 onClick={resetParser}
-                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl transition-colors"
-                disabled={isParsing}
+                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl transition-colors disabled:opacity-50"
+                disabled={isParsing || isInjecting}
               >
                 Start Over
               </button>
-              <button 
-                onClick={() => {
-                  alert("Phase 4 Pipeline Active: Under construction, but this data will directly hydrate the Postgres Knowledge Graph!");
-                  onClose();
-                }}
-                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/20"
-              >
-                Inject into Library <ArrowRight className="w-4 h-4" />
-              </button>
+              
+              {isInjecting ? (
+                 <div className="flex items-center gap-3 px-6 py-2.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-bold">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Injecting {injectionProgress.current} / {injectionProgress.total}...
+                 </div>
+              ) : (
+                <button 
+                  onClick={handleInjectData}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/20"
+                >
+                  Inject into Library <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
              </>
            ) : (
              <button 
                 onClick={onClose}
-                className="px-6 py-2 ml-auto text-sm font-bold text-slate-600 hover:bg-slate-200 dark:text-zinc-400 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+                className="px-6 py-2 ml-auto text-sm font-bold text-slate-600 hover:bg-slate-200 dark:text-zinc-400 dark:hover:bg-zinc-800 rounded-xl transition-colors disabled:opacity-50"
+                disabled={isParsing}
               >
                 Cancel
               </button>
