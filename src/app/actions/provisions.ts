@@ -107,6 +107,14 @@ export async function getProvisions(): Promise<Provision[]> {
   }
 }
 
+/** Helper to prevent Prisma crashes from invalid date strings like "" or "Pre-Meeting" */
+const parseDateSafely = (d: string | null | undefined) => {
+  if (!d) return null;
+  const parsed = new Date(d);
+  if (isNaN(parsed.getTime())) return null;
+  return parsed;
+};
+
 /**
  * Server action to update a provision with transactional integrity.
  * Ensures that nested updates (oldMappings, complianceItems) are atomic.
@@ -138,7 +146,7 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         timeline_dates: validatedData.timelineDates as any,
         notes: validatedData.notes,
         assignee: validatedData.assignee,
-        due_date: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
+        due_date: parseDateSafely(validatedData.dueDate),
         verified: validatedData.verified,
         pinned: validatedData.pinned,
       };
@@ -167,7 +175,7 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
             task: c.task,
             assignee: c.assignee,
             status: 'Not Started',
-            due_date: c.due ? new Date(c.due) : null,
+            due_date: parseDateSafely(c.due),
           }))
         };
       }
