@@ -1,0 +1,267 @@
+"use client";
+
+import React, { useMemo, useState } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  flexRender,
+  ColumnDef,
+  SortingState,
+} from "@tanstack/react-table";
+import { Provision } from "@/types/provision";
+import { CODES } from "@/config/codes";
+import { IMPACT_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
+import { Badge } from "@/components/shared/Badge";
+import { ChevronDown, ChevronRight, ChevronUp, FileText, ArrowUpDown, ExternalLink } from "lucide-react";
+import { useUI } from "@/context/UIContext";
+
+interface LibraryTableProps {
+  data: Provision[];
+}
+
+export function LibraryTable({ data }: LibraryTableProps) {
+  const { setExpandedProvision } = useUI();
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (id: string) => {
+    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const columns = useMemo<ColumnDef<Provision>[]>(() => [
+    {
+      accessorKey: "code",
+      header: "Framework",
+      cell: ({ row }) => {
+        const cObj = CODES[row.original.code as keyof typeof CODES];
+        return (
+          <div className="flex items-center gap-2">
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: cObj?.c || "#94a3b8" }}
+            />
+            <span className="font-semibold text-slate-700 dark:text-zinc-200 text-xs">
+              {cObj?.s || row.original.code}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorFn: (row) => `${row.ch} ${row.sec}`,
+      id: "reference",
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Reference
+            <ArrowUpDown className="w-3 h-3" />
+          </button>
+        )
+      },
+      cell: ({ row }) => {
+        return (
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-slate-500 dark:text-zinc-400">
+              Ch {row.original.ch}
+            </span>
+            <span className="text-sm font-bold text-slate-800 dark:text-zinc-100">
+              Sec {row.original.sec}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "title",
+      header: "Provision Title",
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate font-medium text-sm text-slate-700 dark:text-zinc-200">
+          {row.getValue("title")}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "impact",
+      header: "Impact",
+      cell: ({ row }) => {
+        const impact = row.getValue("impact") as string;
+        return (
+          <Badge 
+            text={impact} 
+            color={IMPACT_COLORS[impact] || "#6b7280"} 
+            className="text-[10px]"
+          />
+        );
+      },
+    },
+    {
+      accessorKey: "workflowTags",
+      header: "Workflow Tags",
+      cell: ({ row }) => {
+        const tags = row.getValue("workflowTags") as string[] || [];
+        if (tags.length === 0) return <span className="text-xs text-slate-400">-</span>;
+        
+        return (
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 2).map(tag => (
+              <Badge 
+                key={tag} 
+                text={tag} 
+                color={WORKFLOW_TAG_COLORS[tag] || "#6b7280"} 
+                className="text-[9px] py-0.5 px-1.5"
+              />
+            ))}
+            {tags.length > 2 && (
+              <span className="text-[10px] text-slate-500 font-medium ml-1">
+                +{tags.length - 2}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const isExpanded = expandedRows[row.original.id];
+        return (
+          <div className="flex items-center justify-end gap-2 pr-2">
+            <button
+              onClick={() => setExpandedProvision(row.original.id)}
+              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"
+              title="Open full view"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => toggleExpand(row.original.id)}
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg transition-colors"
+            >
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+        );
+      },
+    },
+  ], [expandedRows]);
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 15,
+      },
+    },
+  });
+
+  return (
+    <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
+                {headerGroup.headers.map(header => (
+                  <th key={header.id} className="px-4 py-3 text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/50">
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map(row => {
+                const isExpanded = expandedRows[row.original.id];
+                return (
+                  <React.Fragment key={row.id}>
+                    <tr className={`transition-colors hover:bg-slate-50/80 dark:hover:bg-zinc-800/30 ${isExpanded ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id} className="px-4 py-3 align-middle">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={columns.length} className="p-0 border-b-2 border-indigo-100 dark:border-indigo-900">
+                          <div className="p-6 bg-slate-50/80 dark:bg-zinc-950/50 shadow-inner">
+                            <div className="flex items-start gap-4">
+                              <FileText className="w-5 h-5 text-indigo-500 mt-1 flex-shrink-0" />
+                              <div>
+                                <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-100 mb-2">Summary</h4>
+                                <p className="text-sm text-slate-600 dark:text-zinc-400 mb-4 leading-relaxed">
+                                  {row.original.summary || "No summary provided."}
+                                </p>
+                                
+                                {row.original.notes && (
+                                  <>
+                                    <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-100 mb-2">Internal Notes</h4>
+                                    <p className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 p-3 rounded-lg border border-amber-200/50 dark:border-amber-500/20">
+                                      {row.original.notes}
+                                    </p>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-12 text-center text-slate-500 dark:text-zinc-400">
+                  No provisions found matching these filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
+        <div className="text-xs text-slate-500 dark:text-zinc-400">
+          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
+          {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length)} of{' '}
+          {table.getFilteredRowModel().rows.length} provisions
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

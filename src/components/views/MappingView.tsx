@@ -8,9 +8,9 @@ import { FilterBar } from "@/components/shared/FilterBar";
 import { ProvisionCard } from "@/components/provisions/ProvisionCard";
 import { MappingSubNav } from "@/components/layout/MappingSubNav";
 import { createBlankProvision } from "@/lib/utils";
-import { Plus, BookOpen, ChevronRight } from "lucide-react";
-import { useMemo } from "react";
+import { Plus, BookOpen, Database } from "lucide-react";
 import { motion } from "framer-motion";
+import { LibraryTable } from "@/components/library/LibraryTable";
 
 export function MappingView() {
   const { activeCode, setEditingProvision } = useUI();
@@ -19,26 +19,14 @@ export function MappingView() {
 
   const cObj = CODES[activeCode];
 
-  // Group by chapter
-  const chapters = useMemo(() => {
-    const map: Record<string, { name: string; items: typeof filteredProvisions }> = {};
-    filteredProvisions.forEach((p) => {
-      if (!map[p.ch]) map[p.ch] = { name: p.chName, items: [] };
-      map[p.ch].items.push(p);
-    });
-    return Object.entries(map).sort(
-      ([a], [b]) => (parseInt(a) || 999) - (parseInt(b) || 999)
-    );
-  }, [filteredProvisions]);
-
   return (
     <div>
       <MappingSubNav />
       <FilterBar />
 
-      {chapters.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <BookOpen className="w-12 h-12 text-slate-300 dark:text-zinc-700 mb-4" />
+      {filteredProvisions.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm mt-4">
+          <Database className="w-12 h-12 text-slate-300 dark:text-zinc-700 mb-4" />
           <h3 className="text-lg font-semibold text-slate-400 dark:text-zinc-500 mb-2">
             No provisions mapped for {cObj.s} yet
           </h3>
@@ -57,50 +45,15 @@ export function MappingView() {
             </button>
           )}
         </div>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4"
+        >
+          <LibraryTable data={filteredProvisions} />
+        </motion.div>
       )}
-
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-4"
-      >
-        {chapters.map(([chNum, ch], i) => (
-          <motion.details 
-            key={chNum} 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.05 }}
-            open={chapters.length <= 5} 
-            className="group bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800/60 rounded-2xl shadow-sm overflow-hidden 
-                       [&_summary::-webkit-details-marker]:hidden"
-          >
-            <summary
-              className="py-4 px-6 text-sm font-extrabold cursor-pointer select-none flex items-center gap-3 bg-slate-50/50 dark:bg-zinc-800/50 hover:bg-slate-100/60 dark:hover:bg-zinc-800/80 transition-colors border-b border-transparent group-open:border-slate-100 dark:group-open:border-zinc-800"
-            >
-              <div 
-                className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] shadow-sm transform group-open:rotate-90 transition-transform duration-200"
-                style={{ backgroundColor: cObj.c }}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </div>
-              <span className="text-slate-900 dark:text-zinc-100 tracking-tight">
-                {ch.name} <span className="text-slate-400 dark:text-zinc-500 font-medium ml-1">Chapter {chNum}</span>
-              </span>
-              <span className="ml-auto bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-semibold px-2 py-0.5 rounded-md text-[10px]">
-                {ch.items.length} {ch.items.length === 1 ? 'Provision' : 'Provisions'}
-              </span>
-            </summary>
-            
-            <div className="p-4 bg-slate-50/30 dark:bg-zinc-950/20">
-              <div className="space-y-4 pl-1 pb-2">
-                {ch.items.map((p) => (
-                  <ProvisionCard key={p.id} provision={p} />
-                ))}
-              </div>
-            </div>
-          </motion.details>
-        ))}
-      </motion.div>
     </div>
   );
 }
