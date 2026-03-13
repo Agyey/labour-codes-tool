@@ -26,16 +26,25 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async session({ session, user }) {
-      if (session?.user && user) {
-        // Expose the custom ID & role
-        session.user.id = user.id;
-        // In reality, you'd fetch user role from db
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.id = user.id;
+        // Fetch role from DB on initial sign in
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
           select: { role: true },
         });
-        session.user.role = dbUser?.role || "viewer";
+        token.role = dbUser?.role || "viewer";
+      }
+      if (trigger === "update" && session?.role) {
+        token.role = session.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session?.user && token) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
       return session;
     },
@@ -55,7 +64,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
   pages: {
     signIn: "/login",

@@ -54,8 +54,9 @@ model User {
   TaskInstance TaskInstance[]
 
   // Legal OS Relations
-  matterMembers MatterMember[]
-  assignedTasks Task[]
+  matterMembers  MatterMember[]
+  assignedTasks  Task[]
+  clientAccesses ClientAccess[]
 }
 
 model VerificationToken {
@@ -70,11 +71,47 @@ model VerificationToken {
 model Organization {
   id         String   @id @default(cuid())
   name       String
-  plan       String
+  plan       String   @default("Free")
   settings   Json?
   created_at DateTime @default(now())
 
-  provisions Provision[]
+  provisions   Provision[]
+  subscription Subscription?
+  users        OrganizationUser[]
+  matters      Matter[]
+}
+
+model OrganizationUser {
+  id      String @id @default(cuid())
+  org_id  String
+  user_id String
+  role    String @default("Member") // Admin, Member, Guest
+
+  organization Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  // We skip relation to User here temporarily or just rely on manual mapping if needed
+}
+
+model Subscription {
+  id                 String    @id @default(cuid())
+  org_id             String    @unique
+  stripe_cust_id     String?
+  plan_tier          String    @default("Free")
+  status             String    @default("Active")
+  current_period_end DateTime?
+
+  organization Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+}
+
+model ClientAccess {
+  id         String  @id @default(cuid())
+  user_id    String // The external client user
+  matter_id  String? // Granted access to specific matters
+  company_id String? // Granted access to specific entity hygiene
+  role       String  @default("ClientViewer")
+
+  user    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  matter  Matter?  @relation(fields: [matter_id], references: [id], onDelete: Cascade)
+  company Company? @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 model Provision {
@@ -212,6 +249,7 @@ model Company {
   hygieneLogs       CorporateHygieneLog[]
   licenses          License[]
   businessContracts BusinessContract[]
+  ClientAccess      ClientAccess[]
 }
 
 model CompanyCompliance {
@@ -470,6 +508,7 @@ model ScenarioRule {
 // ---------------------------------------------------------
 model Matter {
   id          String   @id @default(cuid())
+  org_id      String?
   name        String // e.g., "Reliance - Q3 Private Placement"
   description String?  @db.Text
   scenario_id String?
@@ -477,10 +516,12 @@ model Matter {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  scenario  ScenarioTemplate? @relation(fields: [scenario_id], references: [id])
-  tasks     Task[]
-  members   MatterMember[]
-  documents MatterDocument[]
+  organization   Organization?     @relation(fields: [org_id], references: [id])
+  scenario       ScenarioTemplate? @relation(fields: [scenario_id], references: [id])
+  tasks          Task[]
+  members        MatterMember[]
+  documents      MatterDocument[]
+  clientAccesses ClientAccess[]
 }
 
 model MatterMember {
