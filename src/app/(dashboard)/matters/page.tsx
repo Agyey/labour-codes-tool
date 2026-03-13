@@ -3,6 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export default async function MattersIndex() {
   const mattersData = await prisma.matter.findMany({
     orderBy: { created_at: "desc" },

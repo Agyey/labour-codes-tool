@@ -14,6 +14,8 @@ import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function EntitiesPage() {
   const entities = await prisma.entity.findMany({
     orderBy: { created_at: "desc" },

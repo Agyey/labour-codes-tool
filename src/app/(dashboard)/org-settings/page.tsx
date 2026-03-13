@@ -5,6 +5,8 @@ import { getOrganizationData, getOrgMembers } from "@/app/actions/organizations"
 import { OrgSettingsClient } from "@/components/shared/OrgSettingsClient";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function OrganizationSettings() {
   const session = await getServerSession(authOptions);
   

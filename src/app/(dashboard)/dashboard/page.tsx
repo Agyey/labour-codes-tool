@@ -13,6 +13,8 @@ import { formatDistanceToNow } from "date-fns";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function FirmDashboard() {
   const session = await getServerSession(authOptions);
 
