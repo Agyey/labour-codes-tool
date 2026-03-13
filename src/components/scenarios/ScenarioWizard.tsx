@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Building2, Briefcase, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Play } from "lucide-react";
+import { Globe, Building2, Briefcase, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Play, Scale, Landmark } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { createMatterFromScenario } from "@/app/actions/matters";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -27,32 +28,57 @@ const SCENARIOS = [
 ];
 
 export function ScenarioWizard() {
-  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [jurisdiction, setJurisdiction] = useState("");
   const [entity, setEntity] = useState("");
   const [scenario, setScenario] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const router = useRouter();
 
   const handleNext = () => {
-    if (step === 3) {
-      setIsGenerating(true);
-      setTimeout(() => {
-        setIsGenerating(false);
-        setStep(4);
-      }, 1500); // Simulate AI generation delay
-    } else {
-      setStep((s) => (s + 1) as Step);
+    if (step < 4) {
+      if (step === 3) {
+        setIsGenerating(true);
+        setTimeout(() => {
+          setIsGenerating(false);
+          setStep(4);
+        }, 3000);
+      } else {
+        setStep((s) => (s + 1) as Step);
+      }
     }
   };
 
-  const handleBack = () => {
-    setStep((s) => (s - 1) as Step);
-  };
+  const handleBack = () => setStep((s) => (s - 1) as Step);
 
-  const createMatter = () => {
-    // Navigate to matters directory or create one logically
-    router.push("/matters");
+  const createMatter = async () => {
+    setIsGenerating(true);
+    // Hardcoded mock scenario checklist based on current wizard mock result
+    const checklist = [
+      { title: "Prerequisite Approvals", type: "Docs", priority: "High", due: "Today" },
+      { title: "Valuation Documents", type: "Review", priority: "High", due: "Tomorrow" },
+      { title: "Government Filings (PAS-3, MGT-14)", type: "Compliance", priority: "Urgent", due: "In 3 days" },
+      { title: "Board & Shareholder Resolutions", type: "Docs", priority: "High", due: "In 2 days" }
+    ];
+
+    try {
+      const res = await createMatterFromScenario({
+        orgId: "org_alpha", // In reality, this would be fetched from the user's current session or org context
+        matterName: "Private Placement - Series A",
+        clientName: ENTITIES.find(e => e.id === entity)?.name || "New Client",
+        tasks: checklist
+      });
+      
+      if (res.success && res.matterId) {
+        router.push(`/matters/${res.matterId}`);
+      } else {
+        alert("Failed to create Matter. Check logs.");
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (

@@ -138,8 +138,9 @@ model Provision {
   verified       Boolean   @default(false)
   pinned         Boolean   @default(false)
   version        Int       @default(1)
+  status         String    @default("active") // active, revoked, amended
   created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt
+  updated_at     DateTime  @default(now())
 
   // Relations
   organization    Organization?    @relation(fields: [org_id], references: [id])
