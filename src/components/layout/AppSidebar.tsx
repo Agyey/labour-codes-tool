@@ -7,6 +7,8 @@ import {
   Layers,
   Network,
   Home,
+  Settings,
+  ShieldAlert,
   LucideIcon
 } from "lucide-react";
 
@@ -57,6 +59,16 @@ export function AppSidebar() {
           {renderNavButton({ href: "/library", label: "Knowledge Library", icon: BookOpen, desc: "Structured legal databases", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" })}
           {renderNavButton({ href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" })}
           {renderNavButton({ href: "/matters", label: "Active Matters", icon: Layers, desc: "Collaborative workspaces & tasks", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" })}
+        </div>
+
+        {/* SECTION 2: MANAGEMENT */}
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-4 px-2 mt-8">
+          Management
+        </h3>
+
+        <div className="space-y-1">
+          {renderNavButton({ href: "/org-settings", label: "Firm Settings", icon: Settings, desc: "Team & Subscriptions", color: "bg-rose-600", textHover: "group-hover:text-rose-600" })}
+          {renderNavButton({ href: "/admin", label: "Super Admin", icon: ShieldAlert, desc: "Platform Control Center", color: "bg-slate-800", textHover: "group-hover:text-slate-900" })}
         </div>
 
       </div>
