@@ -34,12 +34,12 @@ export function DashboardView() {
   }, [provisions]);
 
   const statCards = [
-    { label: "Provisions", value: stats.totalProvisions, icon: FileText, color: cObj.c, bg: cObj.bg },
-    { label: "Verified", value: stats.verified, icon: CheckCircle, color: "#10b981", bg: "#10b98115" },
-    { label: "Compliance Items", value: stats.totalCompItems, icon: ClipboardList, color: "#71717a", bg: "#71717a15" },
-    { label: "Compliant", value: stats.compliant, icon: CheckCheck, color: "#10b981", bg: "#10b98115" },
-    { label: "In Progress", value: stats.inProgress, icon: Clock, color: "#f59e0b", bg: "#f59e0b15" },
-    { label: "Not Started", value: stats.notStarted, icon: Circle, color: "#71717a", bg: "#71717a15" },
+    { label: "Provisions", value: stats.totalProvisions, icon: FileText, color: cObj.c },
+    { label: "Verified", value: stats.verified, icon: CheckCircle, color: "#10b981" },
+    { label: "Compliance Items", value: stats.totalCompItems, icon: ClipboardList, color: "#a1a1aa" },
+    { label: "Compliant", value: stats.compliant, icon: CheckCheck, color: "#10b981" },
+    { label: "In Progress", value: stats.inProgress, icon: Clock, color: "#f59e0b" },
+    { label: "Not Started", value: stats.notStarted, icon: Circle, color: "#71717a" },
   ];
 
   return (
@@ -48,7 +48,7 @@ export function DashboardView() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-zinc-100 mb-1.5 tracking-tight">
+        <h2 className="text-2xl font-black text-slate-800 dark:text-zinc-100 mb-1.5 tracking-tight">
           Executive Dashboard — {cObj.n}
         </h2>
         <p className="text-sm text-slate-500 dark:text-zinc-500 font-medium">
@@ -71,12 +71,16 @@ export function DashboardView() {
                 ease: [0.23, 1, 0.32, 1]
               }}
               whileHover={{ y: -4, scale: 1.02 }}
-              className="p-5 rounded-[24px] text-center border border-white/60 dark:border-zinc-800/60 shadow-premium hover:shadow-premium-hover backdrop-blur-md transition-all duration-300 group overflow-hidden relative"
-              style={{ background: `linear-gradient(135deg, ${s.bg} 0%, transparent 100%)` }}
+              className="p-5 rounded-[24px] text-center border border-white/60 dark:border-zinc-800/60 shadow-premium hover:shadow-premium-hover backdrop-blur-md transition-all duration-300 group overflow-hidden relative bg-white/40 dark:bg-zinc-900/40"
             >
-              <div className="absolute inset-0 bg-white/10 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <div 
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                style={{ 
+                  background: `radial-gradient(circle at center, ${s.color}10 0%, transparent 70%)` 
+                }}
+              />
               <Icon
-                className="w-5 h-5 mx-auto mb-3 opacity-60 group-hover:opacity-100 transition-opacity"
+                className="w-5 h-5 mx-auto mb-3 opacity-40 group-hover:opacity-100 transition-all duration-300"
                 style={{ color: s.color }}
               />
               <div
@@ -85,7 +89,7 @@ export function DashboardView() {
               >
                 {s.value}
               </div>
-              <div className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-50 group-hover:opacity-80 transition-opacity" style={{ color: s.color }}>
+              <div className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-40 group-hover:opacity-100 transition-all duration-300" style={{ color: s.color }}>
                 {s.label}
               </div>
             </motion.div>
@@ -98,11 +102,18 @@ export function DashboardView() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-        className="p-8 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl rounded-[32px] border border-white/80 dark:border-zinc-800 shadow-premium relative overflow-hidden"
+        className="p-8 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl rounded-[32px] border border-white/80 dark:border-zinc-800 shadow-premium relative overflow-hidden group"
       >
         <div className="flex items-center gap-3 mb-6 relative z-10">
-          <div className="p-2 bg-emerald-100/50 dark:bg-emerald-500/10 rounded-xl border border-emerald-200/50 dark:border-emerald-500/20">
-            <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <div 
+            className="p-2 rounded-xl border transition-all duration-500"
+            style={{ 
+              backgroundColor: `${cObj.c}08`, 
+              borderColor: `${cObj.c}20`,
+              color: cObj.c 
+            }}
+          >
+            <TrendingUp className="w-4 h-4" />
           </div>
           <span className="text-[11px] font-black text-slate-800 dark:text-zinc-100 uppercase tracking-widest">
             System Compliance Health
@@ -112,9 +123,13 @@ export function DashboardView() {
           <ProgressBar
             value={stats.compliant + stats.notApplicable}
             max={stats.totalCompItems}
+            color={cObj.c}
           />
         </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div 
+          className="absolute top-0 right-0 w-64 h-64 opacity-10 dark:opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 transition-all duration-1000 group-hover:opacity-40" 
+          style={{ backgroundColor: cObj.c }}
+        />
       </motion.div>
 
       {/* All Codes overview */}
@@ -133,6 +148,8 @@ export function DashboardView() {
           {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
             ([key, code], index) => {
               const codeProvs = provisionsByCode[key] || [];
+              const isActive = activeCode === key;
+              
               return (
                 <motion.button
                   key={key}
@@ -144,36 +161,55 @@ export function DashboardView() {
                     setActiveView("mapping");
                   }}
                   whileHover={{ y: -5 }}
-                  className="p-8 rounded-[32px] border border-white/60 dark:border-zinc-800 text-left transition-all shadow-premium hover:shadow-premium-hover cursor-pointer group relative overflow-hidden bg-white dark:bg-zinc-900"
-                  style={{
-                    backgroundImage: `linear-gradient(135deg, ${code.bg} 0%, transparent 100%)`,
-                  }}
+                  className={`p-8 rounded-[32px] border text-left transition-all shadow-premium hover:shadow-premium-hover cursor-pointer group relative overflow-hidden bg-white/40 dark:bg-zinc-900/40 ${
+                    isActive 
+                      ? "border-white dark:border-zinc-600 ring-2 ring-white/10" 
+                      : "border-white/60 dark:border-zinc-800/60"
+                  }`}
                 >
-                  <div className="absolute inset-0 bg-white/20 dark:bg-black/20 opacity-0 dark:opacity-40" />
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-white/40 dark:bg-white/5 rounded-full -translate-y-1/3 translate-x-1/3 blur-2xl" />
+                  <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                    style={{ 
+                      background: `radial-gradient(circle at 100% 0%, ${code.c}10 0%, transparent 70%)` 
+                    }}
+                  />
                   
                   <div className="flex items-center justify-between relative z-10">
                     <span
-                      className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-xl backdrop-blur-md shadow-sm border border-white/40 dark:border-slate-700"
-                      style={{ color: code.c, backgroundColor: `${code.c}15` }}
+                      className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-xl backdrop-blur-md shadow-sm border"
+                      style={{ 
+                        color: code.c, 
+                        backgroundColor: `${code.c}10`,
+                        borderColor: `${code.c}20`
+                      }}
                     >
                       {code.s}
                     </span>
                     <div 
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0 shadow-lg shadow-black/5"
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0 shadow-lg"
                       style={{ backgroundColor: code.c, color: "white" }}
                     >
                       <ArrowRight className="w-5 h-5" />
                     </div>
                   </div>
+
                   <h4 className="text-xl font-black text-slate-900 dark:text-white mt-6 mb-2 leading-tight relative z-10 tracking-tight">
                     {code.n}
                   </h4>
-                  <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 dark:text-slate-500 relative z-10 uppercase tracking-wide">
+                  
+                  <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 dark:text-zinc-500 relative z-10 uppercase tracking-wide">
                     <span>{code.secs} sections</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-800" />
+                    <span className="w-1 h-1 rounded-full bg-slate-200 dark:bg-zinc-800" />
                     <span>{codeProvs.length} Mapped</span>
                   </div>
+
+                  {isActive && (
+                    <motion.div 
+                      layoutId="active-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-1.5"
+                      style={{ backgroundColor: code.c }}
+                    />
+                  )}
                 </motion.button>
                );
             }
