@@ -40,4 +40,7 @@ export const ProvisionUpdateSchema = z.object({
     due: z.string().optional().nullable(),
     status: z.string().optional(),
   })).optional(),
+  stateNotes: z.record(z.string(), z.string()).optional(),
+  stateRuleText: z.record(z.string(), z.string()).optional(),
+  stateCompStatus: z.record(z.string(), z.string()).optional(),
 });

@@ -29,7 +29,8 @@ export async function getProvisions(): Promise<Provision[]> {
           orderBy: {
             created_at: 'desc'
           }
-        }
+        },
+        stateData: true
       }
     });
 
@@ -70,9 +71,12 @@ export async function getProvisions(): Promise<Provision[]> {
       draftRules: [],
       repealedRules: [],
       forms: [],
-      stateNotes: {},
-      stateRuleText: {},
-      stateCompStatus: {},
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stateNotes: (p.stateData || []).reduce((acc: any, s: any) => ({ ...acc, [s.state]: s.notes || "" }), {}),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stateRuleText: (p.stateData || []).reduce((acc: any, s: any) => ({ ...acc, [s.state]: s.rule_text || "" }), {}),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      stateCompStatus: (p.stateData || []).reduce((acc: any, s: any) => ({ ...acc, [s.state]: s.compliance_status || "Not Started" }), {}),
       penaltyOld: p.penalty_old || "",
       penaltyNew: p.penalty_new || "",
       timelineDates: [],
@@ -163,6 +167,29 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
             due_date: c.due ? new Date(c.due) : null,
           }))
         };
+      }
+      
+      // Handle StateData Sync (Mapping Record objects back to flat StateData list)
+      if (validatedData.stateNotes || validatedData.stateRuleText || validatedData.stateCompStatus) {
+        await tx.stateData.deleteMany({ where: { provision_id: id } });
+        
+        // Merge keys from all state objects to ensure coverage
+        const stateKeys = Array.from(new Set([
+          ...Object.keys(validatedData.stateNotes || {}),
+          ...Object.keys(validatedData.stateRuleText || {}),
+          ...Object.keys(validatedData.stateCompStatus || {})
+        ]));
+
+        if (stateKeys.length > 0) {
+          updateData.stateData = {
+            create: stateKeys.map(s => ({
+              state: s,
+              notes: validatedData.stateNotes?.[s] || "",
+              rule_text: validatedData.stateRuleText?.[s] || "",
+              compliance_status: validatedData.stateCompStatus?.[s] || "Not Started"
+            }))
+          };
+        }
       }
 
       // 2. Perform the update
