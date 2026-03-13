@@ -57,6 +57,18 @@ export async function createMatterFromScenario(data: {
 
     await Promise.all(taskPromises);
 
+    // 4. Create Notification
+    await prisma.notification.create({
+      data: {
+        user_id: session.user.id,
+        org_id: data.orgId,
+        title: "New Matter Created",
+        message: `Successfully generated matter "${data.matterName}" with ${data.tasks.length} tasks and deadlines.`,
+        type: "SUCCESS",
+        link: `/matters/${matter.id}`
+      }
+    });
+
     return { success: true, matterId: matter.id };
   } catch (error: any) {
     console.error("[createMatterFromScenario] Error:", error);

@@ -58,6 +58,22 @@ model User {
   assignedTasks     Task[]
   clientAccesses    ClientAccess[]
   organizationUsers OrganizationUser[]
+  notifications     Notification[]
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  user_id     String
+  org_id      String?
+  title       String
+  message     String   @db.Text
+  type        String   // INFO, WARNING, SUCCESS, URGENT
+  link        String?  // Optional URL to navigate to
+  read        Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [org_id], references: [id])
 }
 
 model VerificationToken {
@@ -78,6 +94,7 @@ model Organization {
 
   provisions   Provision[]
   subscription Subscription?
+  notifications Notification[]
   users        OrganizationUser[]
   matters      Matter[]
 }

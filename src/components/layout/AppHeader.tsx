@@ -1,5 +1,3 @@
-"use client";
-
 import { useUI } from "@/context/UIContext";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
@@ -7,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { CommandPalette } from "../shared/CommandPalette";
 import { Scale, User, LogOut, Pencil, Eye, Menu } from "lucide-react";
 import { ThemeToggle } from "../shared/ThemeToggle";
+import { NotificationPopover } from "../shared/NotificationPopover";
 
 export function AppHeader() {
   const { mode, setMode, sidebarOpen, setSidebarOpen } = useUI();
@@ -51,6 +50,9 @@ export function AppHeader() {
           <div className="flex items-center gap-4">
             {/* Global Search */}
             <CommandPalette />
+
+            {/* Notification Hub */}
+            {session?.user?.id && <NotificationPopover userId={session.user.id} />}
 
             <div className="h-6 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
 

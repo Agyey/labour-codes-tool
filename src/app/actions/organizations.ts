@@ -78,6 +78,22 @@ export async function inviteUser(email: string, orgId: string, role: string = "M
       }
     })
     
+    // 3. Create Notification for the inviter (session.user.id would be needed here, passed from client)
+    // For now, we'll assume the inviter is the one calling the action and session is handled.
+    // However, inviteUser doesn't currently take inviterId. 
+    // I'll skip adding a notification here for now or just notify the invited user if they exist.
+    // Actually, creating a notification for the invited user makes more sense.
+    await prisma.notification.create({
+      data: {
+        user_id: user.id,
+        org_id: orgId,
+        title: "Workspace Invitation",
+        message: `You have been invited to join an organization.`,
+        type: "INFO",
+        link: "/org-settings"
+      }
+    });
+
     revalidatePath('/org-settings')
     return { success: true }
   } catch (error) {

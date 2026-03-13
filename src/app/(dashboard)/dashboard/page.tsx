@@ -10,40 +10,73 @@ import {
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function FirmDashboard() {
+  const session = await getServerSession(authOptions);
+
   // 1. Fetch real data
-  const matters = await prisma.matter.findMany({
-    include: {
-      tasks: true,
-      entity: true,
-    }
-  });
+  const [matters, entities, overdueTasks, notifications] = await Promise.all([
+    prisma.matter.findMany({
+      include: {
+        tasks: true,
+        entity: true,
+      }
+    }),
+    prisma.entity.findMany({
+      orderBy: { health_score: "asc" },
+      take: 5
+    }),
+    prisma.task.findMany({
+      where: {
+        status: { not: "Completed" },
+        due_date: { lt: new Date() }
+      },
+      include: {
+        matter: true
+      },
+      take: 5
+    }),
+    prisma.notification.findMany({
+      where: {
+        user_id: session?.user?.id,
+        read: false
+      },
+      orderBy: { created_at: "desc" },
+      take: 5
+    })
+  ]);
 
-  const entities = await prisma.entity.findMany({
-    orderBy: { health_score: "asc" },
-    take: 5
-  });
-
-  const overdueTasks = await prisma.task.findMany({
-    where: {
-      status: { not: "Completed" },
-      due_date: { lt: new Date() }
-    },
-    include: {
-      matter: true
-    },
-    take: 5
-  });
+  // Combine and sort for the inbox
+  const inboxItems = [
+    ...(overdueTasks || []).map((t: any) => ({ 
+      id: t.id, 
+      title: t.name, 
+      subtitle: t.matter?.name || "Independent Task",
+      type: 'TASK' as const,
+      date: t.due_date,
+      urgent: true,
+      link: `/matters/${t.id}`
+    })),
+    ...(notifications || []).map((n: any) => ({
+      id: n.id,
+      title: n.title,
+      subtitle: n.message,
+      type: 'NOTIFICATION' as const,
+      date: n.created_at,
+      urgent: n.type === 'URGENT',
+      link: n.link
+    }))
+  ].sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return dateB - dateA;
+  }).slice(0, 8);
 
   // 2. Calculate metrics
   const activeDeals = matters.filter(m => m.status === "Active").length;
-  const overdueCount = await prisma.task.count({
-    where: {
-      status: { not: "Completed" },
-      due_date: { lt: new Date() }
-    }
-  });
+  const overdueCount = overdueTasks.length;
   
   const completedLast7Days = await prisma.task.count({
     where: {
@@ -118,35 +151,39 @@ export default async function FirmDashboard() {
           </div>
 
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-            {overdueTasks.length === 0 ? (
+            {inboxItems.length === 0 ? (
               <div className="p-12 text-center">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4 opacity-20" />
-                <p className="text-sm font-bold text-slate-400">Zero urgent tasks. You're all caught up!</p>
+                <p className="text-sm font-bold text-slate-400">Zero urgent items. You're all caught up!</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-                {overdueTasks.map((task) => (
-                  <div key={task.id} className="p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group cursor-pointer">
-                    <div className="flex items-start gap-3">
-                      <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 bg-rose-500`} />
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white text-sm mb-1">{task.name}</div>
-                        <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 flex items-center gap-2">
-                          <Briefcase className="w-3 h-3" /> {task.matter?.name || "Independent Task"}
+                {inboxItems.map((item) => (
+                  <div key={item.id} className="p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group cursor-pointer">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${item.urgent ? 'bg-rose-500' : 'bg-indigo-500'}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.type}</span>
+                          <div className="font-bold text-slate-900 dark:text-white text-sm truncate">{item.title}</div>
+                        </div>
+                        <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 truncate">
+                          {item.subtitle}
                         </div>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-4 sm:w-1/3 justify-between sm:justify-end border-t border-slate-100 sm:border-0 pt-3 sm:pt-0">
                       <div className="flex flex-col items-start sm:items-end">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400`}>
-                          {task.due_date ? formatDistanceToNow(task.due_date, { addSuffix: true }) : "No date"}
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${item.urgent ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : 'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-400'}`}>
+                          {item.date ? formatDistanceToNow(new Date(item.date), { addSuffix: true }) : "Always"}
                         </span>
-                        <span className="text-xs text-slate-400 mt-1">{task.stage}</span>
                       </div>
-                      <Link href={`/matters/${task.matter_id}`} className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg">
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
+                      {item.link && (
+                        <Link href={item.link} className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg">
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))}
