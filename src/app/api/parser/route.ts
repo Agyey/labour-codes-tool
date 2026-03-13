@@ -92,16 +92,16 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Safely require pdf-parse dynamically to avoid Next.js edge runtime issues parsing CommonJS modules
+    // Safely require pdf-parse-fork dynamically to avoid Next.js edge runtime issues parsing CommonJS modules
     let pdfParseFn;
     try {
-      pdfParseFn = require("pdf-parse");
+      pdfParseFn = require("pdf-parse-fork");
       // Handle potential default export unwrapping
       if (pdfParseFn && pdfParseFn.default) {
         pdfParseFn = pdfParseFn.default;
       }
     } catch (reqErr: any) {
-      console.error("Failed to require pdf-parse:", reqErr);
+      console.error("Failed to require pdf-parse-fork:", reqErr);
       return NextResponse.json({ error: "Failed to load PDF parsing library: " + reqErr.message }, { status: 500 });
     }
 
