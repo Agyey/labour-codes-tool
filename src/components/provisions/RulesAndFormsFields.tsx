@@ -23,8 +23,8 @@ export function RulesAndFormsFields({
   return (
     <>
       {(["draftRules", "repealedRules", "forms"] as const).map((key) => {
-        const titles = { draftRules: "Draft Central Rules", repealedRules: "Repealed Central Rules", forms: "Forms / Registers" };
-        const placeholders = { draftRules: ["Rule ref", "Summary"], repealedRules: ["Repealed rule", "Summary"], forms: ["Form ref", "Description"] };
+        const titles = { draftRules: "New Rules", repealedRules: "Old Rules", forms: "Forms / Registers" };
+        const placeholders = { draftRules: ["Rule ref", "Summary"], repealedRules: ["Old rule", "Summary"], forms: ["Form ref", "Description"] };
         return (
           <div key={key} className={sectionCls}>
             <h3 className="text-xs font-bold text-gray-700">{titles[key]}</h3>

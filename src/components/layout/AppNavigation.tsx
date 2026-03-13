@@ -18,9 +18,7 @@ const VIEWS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "mapping", label: "Mapping", icon: Map },
   { id: "stateTracker", label: "States", icon: Globe },
-  { id: "timeline", label: "Timeline", icon: Clock },
   { id: "penalties", label: "Penalties", icon: AlertTriangle },
-  { id: "compare", label: "Compare", icon: GitCompare },
 ] as const;
 
 export function AppNavigation() {
@@ -64,36 +62,30 @@ export function AppNavigation() {
 
         <div className="flex-1" />
 
-        {/* Code tabs */}
-        <div className="flex items-center gap-2 py-1.5">
-          {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
-            ([key, code]) => (
-              <button
-                key={key}
-                onClick={() => {
-                  setActiveCode(key);
-                  setExpandedProvision(null);
-                  setFilter("chapter", "All");
-                }}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer border border-transparent ${
-                  activeCode === key
-                    ? "shadow-sm border-opacity-20"
-                    : "text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800"
-                }`}
-                style={
-                  activeCode === key
-                    ? {
-                        borderColor: code.c,
-                        color: code.c,
-                        backgroundColor: `${code.c}20`,
-                      }
-                    : undefined
-                }
-              >
-                {code.s}
-              </button>
-            )
-          )}
+        {/* Code Select Dropdown */}
+        <div className="flex items-center gap-2 py-1.5 relative w-64">
+          <select
+            value={activeCode}
+            onChange={(e) => {
+              setActiveCode(e.target.value as typeof activeCode);
+              setExpandedProvision(null);
+              setFilter("chapter", "All");
+            }}
+            className="w-full appearance-none px-4 py-2 pr-10 text-sm font-bold rounded-xl bg-white dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-sm transition-all"
+          >
+            {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
+              ([key, code]) => (
+                <option key={key} value={key} className="font-medium text-slate-700 dark:text-zinc-200">
+                  {code.n}
+                </option>
+              )
+            )}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+            <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </div>
     </nav>

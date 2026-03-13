@@ -30,11 +30,11 @@ export function RepealedMappingFields({
 }: RepealedMappingFieldsProps) {
   return (
     <div className={sectionCls}>
-      <h3 className="text-xs font-bold text-gray-700">Per-Act Change Analysis (Repealed Provisions)</h3>
+      <h3 className="text-xs font-bold text-gray-700">Per-Act Change Analysis (Old Provisions)</h3>
       {(form.oldMappings || []).map((m, i) => (
         <div key={i} className="border border-red-200 rounded-xl p-3 bg-red-50/50 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-red-600">Repealed Act #{i + 1}</span>
+            <span className="text-[10px] font-bold text-red-600">Old Act #{i + 1}</span>
             <button onClick={() => removeOldMapping(i)} className="text-xs text-red-500 hover:text-red-700 cursor-pointer flex items-center gap-0.5"><Trash2 className="w-3 h-3" /> Remove</button>
           </div>
           <div className="grid grid-cols-[2fr_1fr] gap-2">
@@ -55,7 +55,7 @@ export function RepealedMappingFields({
         </div>
       ))}
       <button onClick={addOldMapping} className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-semibold hover:bg-red-200 transition-colors cursor-pointer">
-        <Plus className="w-3 h-3" /> Add Repealed Act Mapping
+        <Plus className="w-3 h-3" /> Add Old Act Mapping
       </button>
     </div>
   );
