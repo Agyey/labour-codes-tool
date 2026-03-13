@@ -79,7 +79,8 @@ export async function getProvisions(): Promise<Provision[]> {
       stateCompStatus: (p.stateData || []).reduce((acc: any, s: any) => ({ ...acc, [s.state]: s.compliance_status || "Not Started" }), {}),
       penaltyOld: p.penalty_old || "",
       penaltyNew: p.penalty_new || "",
-      timelineDates: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      timelineDates: (p.timeline_dates as any) || [],
       notes: p.notes || "",
       verified: p.verified,
       pinned: p.pinned,
@@ -133,6 +134,8 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
         workflow_tags: validatedData.workflowTags,
         penalty_old: validatedData.penaltyOld,
         penalty_new: validatedData.penaltyNew,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        timeline_dates: validatedData.timelineDates as any,
         notes: validatedData.notes,
         assignee: validatedData.assignee,
         due_date: validatedData.dueDate ? new Date(validatedData.dueDate) : null,

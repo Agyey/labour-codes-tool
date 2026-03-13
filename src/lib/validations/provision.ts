@@ -43,4 +43,8 @@ export const ProvisionUpdateSchema = z.object({
   stateNotes: z.record(z.string(), z.string()).optional(),
   stateRuleText: z.record(z.string(), z.string()).optional(),
   stateCompStatus: z.record(z.string(), z.string()).optional(),
+  timelineDates: z.array(z.object({
+    date: z.string(),
+    label: z.string(),
+  })).optional(),
 });
