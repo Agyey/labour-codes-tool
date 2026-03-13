@@ -291,12 +291,36 @@ function extractPenaltiesAndRepeals(lines: string[], startFrom: number) {
   };
 }
 
+// ---- PASS 0.5: Filter non-English (Hindi/Devanagari) content ----
+function filterNonEnglishContent(lines: string[]): string[] {
+  return lines.filter(line => {
+    // Fast check: if empty, keep it (used for paragraph breaks)
+    if (!line.trim()) return true;
+    
+    // Count Devanagari characters (Unicode block 0900-097F)
+    let hindiChars = 0;
+    const len = Math.min(line.length, 100); // Check first 100 chars
+    for (let i = 0; i < len; i++) {
+      const code = line.charCodeAt(i);
+      if (code >= 0x0900 && code <= 0x097F) {
+        hindiChars++;
+      }
+    }
+    
+    // If more than 10% of the sample is Hindi, drop the line
+    return hindiChars / len < 0.1;
+  });
+}
+
 // ---- MAIN: Multi-pass pipeline ----
 const extractLegalStructure = (text: string): ParsedData => {
-  const lines = text.split('\n').map(l => l.trim());
+  let lines = text.split('\n').map(l => l.trim());
   
-  // Pass 0: Detect document type
+  // Pass 0: Detect document type BEFORE stripping languages (in case title is mixed)
   const documentType = detectDocumentType(text);
+
+  // Pass 0.5: Strip Hindi/bilingual content
+  lines = filterNonEnglishContent(lines);
 
   // Pass 1: Find where the index/TOC ends
   const bodyStart = findIndexBoundary(lines);
