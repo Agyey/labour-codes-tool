@@ -57,20 +57,26 @@ export function DashboardView() {
       </motion.div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {statCards.map((s, index) => {
           const Icon = s.icon;
           return (
             <motion.div
               key={s.label}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              className="p-5 rounded-[20px] text-center border border-white border-opacity-50 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-              style={{ background: s.bg }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                delay: index * 0.05,
+                duration: 0.5,
+                ease: [0.23, 1, 0.32, 1]
+              }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="p-5 rounded-[24px] text-center border border-white/60 shadow-premium hover:shadow-premium-hover backdrop-blur-md transition-all duration-300 group overflow-hidden"
+              style={{ background: `linear-gradient(135deg, ${s.bg}80 0%, ${s.bg}40 100%)` }}
             >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               <Icon
-                className="w-5 h-5 mx-auto mb-3 opacity-70"
+                className="w-5 h-5 mx-auto mb-3 opacity-60 group-hover:opacity-100 transition-opacity"
                 style={{ color: s.color }}
               />
               <div
@@ -79,7 +85,7 @@ export function DashboardView() {
               >
                 {s.value}
               </div>
-              <div className="text-[11px] font-bold uppercase tracking-widest mt-1 opacity-70" style={{ color: s.color }}>
+              <div className="text-[10px] font-black uppercase tracking-widest mt-2 opacity-50 group-hover:opacity-80 transition-opacity" style={{ color: s.color }}>
                 {s.label}
               </div>
             </motion.div>
@@ -89,23 +95,26 @@ export function DashboardView() {
 
       {/* Progress */}
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="p-6 bg-white rounded-[24px] border border-slate-100 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)]"
+        transition={{ delay: 0.3, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+        className="p-8 bg-white/60 backdrop-blur-xl rounded-[32px] border border-white/80 shadow-premium relative overflow-hidden"
       >
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="p-1.5 bg-emerald-50 rounded-lg">
+        <div className="flex items-center gap-3 mb-6 relative z-10">
+          <div className="p-2 bg-emerald-100/50 rounded-xl border border-emerald-200/50">
             <TrendingUp className="w-4 h-4 text-emerald-600" />
           </div>
-          <span className="text-sm font-extrabold text-slate-800 uppercase tracking-widest">
-            Overall Compliance Progress
+          <span className="text-[11px] font-black text-slate-800 uppercase tracking-widest">
+            System Compliance Health
           </span>
         </div>
-        <ProgressBar
-          value={stats.compliant + stats.notApplicable}
-          max={stats.totalCompItems}
-        />
+        <div className="relative z-10">
+          <ProgressBar
+            value={stats.compliant + stats.notApplicable}
+            max={stats.totalCompItems}
+          />
+        </div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       </motion.div>
 
       {/* All Codes overview */}
@@ -114,51 +123,56 @@ export function DashboardView() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-          All Codes Overview
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex items-center gap-2 mb-6 ml-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+          <h3 className="text-[11px] font-black text-slate-400 subtitle uppercase tracking-widest">
+            Legal Code Repository
+          </h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
             ([key, code], index) => {
               const codeProvs = provisionsByCode[key] || [];
               return (
                 <motion.button
                   key={key}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
+                  transition={{ delay: 0.5 + index * 0.1, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
                   onClick={() => {
                     setActiveCode(key);
                     setActiveView("mapping");
                   }}
-                  className="p-6 rounded-[24px] border border-white text-left transition-all hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-1 cursor-pointer group relative overflow-hidden"
+                  whileHover={{ y: -5 }}
+                  className="p-8 rounded-[32px] border border-white/60 text-left transition-all shadow-premium hover:shadow-premium-hover cursor-pointer group relative overflow-hidden"
                   style={{
                     background: `linear-gradient(135deg, ${code.bg} 0%, white 100%)`,
                   }}
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/40 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-white/40 rounded-full -translate-y-1/3 translate-x-1/3 blur-2xl" />
                   
                   <div className="flex items-center justify-between relative z-10">
                     <span
-                      className="text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md"
-                      style={{ color: code.c, backgroundColor: `${code.c}20` }}
+                      className="text-[10px] font-black tracking-widest uppercase px-3 py-1.5 rounded-xl backdrop-blur-md shadow-sm border border-white/40"
+                      style={{ color: code.c, backgroundColor: `${code.c}15` }}
                     >
                       {code.s}
                     </span>
                     <div 
-                      className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0"
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0 shadow-lg shadow-black/5"
                       style={{ backgroundColor: code.c, color: "white" }}
                     >
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-5 h-5" />
                     </div>
                   </div>
-                  <h4 className="text-lg font-black text-slate-900 mt-4 mb-1.5 leading-tight relative z-10">
+                  <h4 className="text-xl font-black text-slate-900 mt-6 mb-2 leading-tight relative z-10 tracking-tight">
                     {code.n}
                   </h4>
-                  <p className="text-xs font-semibold text-slate-500 relative z-10">
-                    {code.secs} Sections · {code.acts.length} Repealed Acts ·{" "}
-                    {codeProvs.length} Mapped
-                  </p>
+                  <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 relative z-10 uppercase tracking-wide">
+                    <span>{code.secs} sections</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-200" />
+                    <span>{codeProvs.length} Mapped</span>
+                  </div>
                 </motion.button>
               );
             }

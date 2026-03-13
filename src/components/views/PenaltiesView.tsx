@@ -3,7 +3,8 @@
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
-import { AlertTriangle, ArrowRight, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/shared/Badge";
+import { ArrowRight, ShieldAlert } from "lucide-react";
 
 import { useMemo } from "react";
 
@@ -31,33 +32,35 @@ export function PenaltiesView() {
         penaltyProvisions.map((p) => (
           <div
             key={p.id}
-            className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            className="group border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
           >
             <div
-              className="px-4 py-2.5 font-bold text-sm flex items-center gap-2"
-              style={{ color: cObj.c, background: cObj.bg }}
+              className="px-5 py-3 font-bold text-sm flex items-center justify-between border-b border-slate-100"
+              style={{ background: `color-mix(in srgb, ${cObj.c}, transparent 95%)` }}
             >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              S.{p.sec}
-              {p.sub} — {p.title}
+              <div className="flex items-center gap-2.5" style={{ color: cObj.c }}>
+                <ShieldAlert className="w-4 h-4 opacity-80" />
+                <span className="tracking-tight">S.{p.sec}{p.sub} — {p.title}</span>
+              </div>
+              <Badge text={cObj.s} color={cObj.c} className="opacity-80" />
             </div>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-stretch">
-              <div className="p-4 bg-red-50">
-                <div className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2">
+            <div className="grid grid-cols-[1fr_40px_1fr] items-stretch">
+              <div className="p-5 bg-red-50/30">
+                <div className="text-[10px] font-extrabold text-red-600/70 uppercase tracking-wider mb-2.5">
                   Old Penalty
                 </div>
-                <div className="text-sm text-gray-700 leading-relaxed">
+                <div className="text-sm text-slate-600 leading-relaxed font-medium">
                   {p.penaltyOld || "—"}
                 </div>
               </div>
-              <div className="flex items-center px-2 bg-gray-50">
-                <ArrowRight className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center justify-center bg-slate-50 border-x border-slate-100/50">
+                <ArrowRight className="w-4 h-4 text-slate-300" />
               </div>
-              <div className="p-4 bg-emerald-50">
-                <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2">
+              <div className="p-5 bg-emerald-50/30">
+                <div className="text-[10px] font-extrabold text-emerald-600/70 uppercase tracking-wider mb-2.5">
                   New Penalty
                 </div>
-                <div className="text-sm text-gray-700 leading-relaxed">
+                <div className="text-sm text-slate-600 leading-relaxed font-medium">
                   {p.penaltyNew || "—"}
                 </div>
               </div>

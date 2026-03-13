@@ -22,14 +22,37 @@ export function StateTrackerView() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-extrabold mb-1" style={{ color: cObj.c }}>
-          {cObj.n} — State Tracker
-        </h2>
-        <p className="text-xs text-gray-500">
-          Each state may amend Central provisions. Track state-specific rules,
-          variations, and compliance status.
-        </p>
+      <div className="mb-8 p-6 rounded-3xl border border-slate-200/60 bg-white shadow-sm overflow-hidden relative group">
+        <div 
+          className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.05]" 
+          style={{ backgroundColor: cObj.c }} 
+        />
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div 
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-slate-900/5 transition-transform group-hover:scale-105"
+              style={{ backgroundColor: cObj.c }}
+            >
+              <Globe className="w-7 h-7" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge color={cObj.c}>{cObj.s}</Badge>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">State Compliance Hub</span>
+              </div>
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none">
+                State Tracker
+              </h1>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-slate-50/80 p-1.5 rounded-2xl border border-slate-100">
+            <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-slate-100">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">States Impacted</p>
+              <p className="text-xl font-black text-slate-900 leading-none">{stateProvisions.length}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {stateProvisions.length === 0 ? (
@@ -43,51 +66,52 @@ export function StateTrackerView() {
         stateProvisions.map((p) => (
           <div
             key={p.id}
-            className="border border-gray-200 rounded-xl overflow-hidden shadow-sm"
+            className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm"
           >
             <div
-              className="px-4 py-2.5 font-bold text-sm flex items-center gap-2"
-              style={{ color: cObj.c, background: cObj.bg }}
+              className="px-5 py-3 font-bold text-sm flex items-center justify-between border-b border-slate-100"
+              style={{ background: `color-mix(in srgb, ${cObj.c}, transparent 95%)` }}
             >
-              <MapPin className="w-3.5 h-3.5" />
-              S.{p.sec}
-              {p.sub} — {p.title}
+              <div className="flex items-center gap-2.5" style={{ color: cObj.c }}>
+                <MapPin className="w-4 h-4 opacity-80" />
+                <span className="tracking-tight">S.{p.sec}{p.sub} — {p.title}</span>
+              </div>
+              <Badge text={cObj.s} color={cObj.c} className="opacity-80" />
             </div>
-            <table className="w-full text-xs border-collapse">
-              <tbody>
-                {STATES.filter(
-                  (s) =>
-                    (p.stateNotes || {})[s] || (p.stateRuleText || {})[s]
-                ).map((s) => (
-                  <tr key={s} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-2 font-semibold w-24 text-gray-700">
-                      {s}
-                    </td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {(p.stateNotes || {})[s]}
-                    </td>
-                    <td className="px-4 py-2 italic text-gray-400">
-                      {(p.stateRuleText || {})[s]}
-                    </td>
-                    <td className="px-4 py-2 w-24">
-                      <Badge
-                        text={(p.stateCompStatus || {})[s] || "Not Started"}
-                        bgColor={
-                          (p.stateCompStatus || {})[s] === "Compliant"
-                            ? "#d1fae5"
-                            : "#fef3c7"
-                        }
-                        color={
-                          (p.stateCompStatus || {})[s] === "Compliant"
-                            ? "#065f46"
-                            : "#92400e"
-                        }
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <tbody>
+                  {STATES.filter(
+                    (s) =>
+                      (p.stateNotes || {})[s] || (p.stateRuleText || {})[s]
+                  ).map((s) => (
+                    <tr key={s} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/30 transition-colors">
+                      <td className="px-5 py-3 font-extrabold w-32 text-slate-700 uppercase tracking-tight">
+                        {s}
+                      </td>
+                      <td className="px-5 py-3 text-slate-600 font-medium leading-relaxed">
+                        {(p.stateNotes || {})[s]}
+                      </td>
+                      <td className="px-5 py-3 italic text-slate-400 font-normal">
+                        {(p.stateRuleText || {})[s]}
+                      </td>
+                      <td className="px-5 py-3 w-32 text-right">
+                        <Badge
+                          text={(p.stateCompStatus || {})[s] || "Not Started"}
+                          color={
+                            (p.stateCompStatus || {})[s] === "Compliant"
+                              ? "#10b981"
+                              : (p.stateCompStatus || {})[s] === "In Progress"
+                              ? "#f59e0b"
+                              : "#64748b"
+                          }
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ))
       )}
