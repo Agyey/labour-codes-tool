@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, Edit3, Settings } from "lucide-react";
+import { Check, Edit3, Settings, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface VariableFormProps {

@@ -61,7 +61,7 @@ export function TemplateUpload({ onTemplateProcessed }: TemplateUploadProps) {
           Upload Master Template
         </h2>
         <p className="text-slate-500 dark:text-zinc-400 max-w-md mx-auto">
-          Drag and drop your firm's standard <code className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-purple-600 dark:text-purple-400">.docx</code> template containing bracketed <code className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-purple-600 dark:text-purple-400">{"{{Variables}}"}</code>.
+          Drag and drop your firm&apos;s standard <code className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-purple-600 dark:text-purple-400">.docx</code> template containing bracketed <code className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-purple-600 dark:text-purple-400">{"{{Variables}}"}</code>.
         </p>
       </div>
 
@@ -122,7 +122,7 @@ export function TemplateUpload({ onTemplateProcessed }: TemplateUploadProps) {
           <FileText className="w-4 h-4" /> Document Rules
         </h4>
         <ul className="text-sm text-slate-600 dark:text-zinc-400 space-y-2 list-disc pl-4 marker:text-slate-300">
-          <li>For dynamic text, use double curly braces: <span className="font-mono bg-white dark:bg-zinc-900 px-1 border border-slate-200 dark:border-zinc-700 rounded text-purple-600">{{Effective_Date}}</span></li>
+          <li>For dynamic text, use double curly braces: <span className="font-mono bg-white dark:bg-zinc-900 px-1 border border-slate-200 dark:border-zinc-700 rounded text-purple-600">{"{{Effective_Date}}"}</span></li>
           <li>Spaces in variables are allowed but underscores are recommended.</li>
           <li>Formatting like bold or italics applied to variables handles perfectly.</li>
         </ul>
