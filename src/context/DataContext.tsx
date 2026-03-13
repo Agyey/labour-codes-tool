@@ -217,7 +217,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       toast.success("Framework created.");
       return true;
     }
-    toast.error("Failed to create framework.");
+    toast.error(res.error || "Failed to create framework.");
     return false;
   }, []);
 
@@ -241,7 +241,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       toast.success("Legislation created.");
       return true;
     }
-    toast.error("Failed to create legislation.");
+    toast.error(res.error || "Failed to create legislation.");
     return false;
   }, []);
 
