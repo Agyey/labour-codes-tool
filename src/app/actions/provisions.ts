@@ -411,10 +411,20 @@ export async function createFramework(data: { name: string; shortName: string; d
         description: data.description,
       }
     });
-    return { success: true, framework };
+    return { 
+      success: true, 
+      framework: {
+        id: framework.id,
+        name: framework.name,
+        shortName: framework.short_name,
+        description: framework.description
+      } 
+    };
   } catch (error) {
-    logger.error("Failed to create framework", error);
-    return { success: false, error: "Failed to create framework" };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to create framework" 
+    };
   }
 }
 
@@ -468,8 +478,10 @@ export async function createLegislation(data: {
     });
     return { success: true, legislation };
   } catch (error) {
-    logger.error("Failed to create legislation", error);
-    return { success: false, error: "Failed to create legislation" };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to create legislation" 
+    };
   }
 }
 

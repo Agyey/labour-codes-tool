@@ -61,33 +61,7 @@ export function AppNavigation() {
           })}
         </div>
 
-        <div className="flex-1" />
 
-        {/* Code Select Dropdown */}
-        <div className="flex items-center gap-2 py-1.5 relative w-64">
-          <select
-            value={activeCode}
-            onChange={(e) => {
-              setActiveCode(e.target.value as typeof activeCode);
-              setExpandedProvision(null);
-              setFilter("chapter", "All");
-            }}
-            className="w-full appearance-none px-4 py-2 pr-10 text-sm font-bold rounded-xl bg-white dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-sm transition-all"
-          >
-            {(Object.entries(CODES) as [CodeKey, typeof CODES[CodeKey]][]).map(
-              ([key, code]) => (
-                <option key={key} value={key} className="font-medium text-slate-700 dark:text-zinc-200">
-                  {code.n}
-                </option>
-              )
-            )}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-            <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
       </div>
     </nav>
   );
