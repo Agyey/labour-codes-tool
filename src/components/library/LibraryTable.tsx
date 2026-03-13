@@ -15,15 +15,23 @@ import { Provision } from "@/types/provision";
 import { CODES } from "@/config/codes";
 import { IMPACT_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
-import { ChevronDown, ChevronRight, ChevronUp, FileText, ArrowUpDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, FileText, ArrowUpDown, ExternalLink, Pencil, Trash2, CheckCircle, Pin } from "lucide-react";
 import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
+import { StatuteView } from "@/components/provisions/StatuteView";
+import { RepealedAnalysis } from "@/components/provisions/RepealedAnalysis";
+import { PenaltyInfo } from "@/components/provisions/PenaltyInfo";
+import { RulesAndForms } from "@/components/provisions/RulesAndForms";
+import { StateNotesTable } from "@/components/provisions/StateNotesTable";
+import { ComplianceItemsList } from "@/components/provisions/ComplianceItemsList";
 
 interface LibraryTableProps {
   data: Provision[];
 }
 
 export function LibraryTable({ data }: LibraryTableProps) {
-  const { setExpandedProvision } = useUI();
+  const { setExpandedProvision, setEditingProvision } = useUI();
+  const { canEdit, deleteProvision, toggleVerify, togglePin } = useData();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
@@ -164,6 +172,9 @@ export function LibraryTable({ data }: LibraryTableProps) {
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     initialState: {
+      sorting: [
+        { id: "reference", desc: false }
+      ],
       pagination: {
         pageSize: 15,
       },
@@ -199,26 +210,44 @@ export function LibraryTable({ data }: LibraryTableProps) {
                       ))}
                     </tr>
                     {isExpanded && (
-                      <tr>
-                        <td colSpan={columns.length} className="p-0 border-b-2 border-indigo-100 dark:border-indigo-900">
+                      <tr className="bg-slate-50 dark:bg-zinc-950/20">
+                        <td colSpan={columns.length} className="p-0 border-b-2 border-indigo-100 dark:border-indigo-900 overflow-hidden">
                           <div className="p-6 bg-slate-50/80 dark:bg-zinc-950/50 shadow-inner">
-                            <div className="flex items-start gap-4">
-                              <FileText className="w-5 h-5 text-indigo-500 mt-1 flex-shrink-0" />
-                              <div>
-                                <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-100 mb-2">Summary</h4>
-                                <p className="text-sm text-slate-600 dark:text-zinc-400 mb-4 leading-relaxed">
-                                  {row.original.summary || "No summary provided."}
-                                </p>
-                                
-                                {row.original.notes && (
-                                  <>
-                                    <h4 className="font-bold text-sm text-slate-800 dark:text-zinc-100 mb-2">Internal Notes</h4>
-                                    <p className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 p-3 rounded-lg border border-amber-200/50 dark:border-amber-500/20">
-                                      {row.original.notes}
-                                    </p>
-                                  </>
-                                )}
+                            {/* Original ProvisionCard Data Layout */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-4">
+                              <StatuteView provision={row.original} codeShortName={CODES[row.original.code as keyof typeof CODES]?.n} />
+                              <RepealedAnalysis provision={row.original} />
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 border-t border-slate-200/60 dark:border-zinc-800/80">
+                              <PenaltyInfo provision={row.original} />
+                              <RulesAndForms provision={row.original} />
+                              <ComplianceItemsList provision={row.original} />
+                            </div>
+
+                            <StateNotesTable provision={row.original} />
+
+                            {/* Actions Bar */}
+                            <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-zinc-800/80 flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <button onClick={() => toggleVerify(row.original.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${row.original.verified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20' : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700 hover:text-slate-900 border border-slate-200 dark:border-zinc-700'}`}>
+                                  <CheckCircle className="w-4 h-4" /> {row.original.verified ? "Verified" : "Verify Content"}
+                                </button>
+                                <button onClick={() => togglePin(row.original.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${row.original.pinned ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20' : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700 hover:text-slate-900 border border-slate-200 dark:border-zinc-700'}`}>
+                                  <Pin className="w-4 h-4" /> {row.original.pinned ? "Unpinned" : "Pin for Review"}
+                                </button>
                               </div>
+
+                              {canEdit && (
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => setEditingProvision(row.original)} className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 border border-transparent hover:border-amber-200 dark:hover:border-amber-700/30 rounded-xl transition-all shadow-sm">
+                                    <Pencil className="w-4 h-4" />
+                                  </button>
+                                  <button onClick={() => { if (confirm("Delete this provision?")) deleteProvision(row.original.id); }} className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 border border-transparent hover:border-rose-200 dark:hover:border-rose-700/30 rounded-xl transition-all shadow-sm">
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
