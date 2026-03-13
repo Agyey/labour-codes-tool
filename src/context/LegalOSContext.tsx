@@ -6,9 +6,11 @@ export type ProductType =
   | "MAPPING" 
   | "COMPLIANCE" 
   | "AGREEMENTS" 
-  | "DILIGENCE";
+  | "DILIGENCE"
+  | "WORKFLOW_DASH"
+  | "WORKSPACE";
 
-// For tracking specific organizations or companies (Product 2, 3, 4)
+// For tracking specific organizations or companies (Product 2, 3, 4, 5)
 export interface EntityContext {
   activeCompanyId: string | null;
   activeFrameworkId: string | null;

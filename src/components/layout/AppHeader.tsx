@@ -16,8 +16,10 @@ export function AppHeader() {
   const productTitles: Record<typeof activeProduct, { title: string, subtitle: string }> = {
     MAPPING: { title: "Legal Frameworks", subtitle: "Universal Provision Mapping" },
     COMPLIANCE: { title: "Compliance Tracker", subtitle: "Entity-Level Applicability" },
-    AGREEMENTS: { title: "Drafting Studio", subtitle: "Modular Agreement Generation" },
-    DILIGENCE: { title: "Due Diligence", subtitle: "Corporate Hygiene & Capital" }
+    AGREEMENTS: { title: "Template Vault", subtitle: "Modular Agreement Generation" },
+    DILIGENCE: { title: "Due Diligence", subtitle: "Master Hygiene Checklists" },
+    WORKFLOW_DASH: { title: "Workflow Execution", subtitle: "Firm Operations Overview" },
+    WORKSPACE: { title: "Active Deal Room", subtitle: "VC/PE Workflow Execution" },
   };
 
   const currentProduct = productTitles[activeProduct];

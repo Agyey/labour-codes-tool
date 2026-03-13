@@ -10,6 +10,8 @@ import { MappingView } from "@/components/views/MappingView";
 import { ComplianceProductView } from "@/components/views/ComplianceProductView";
 import { AgreementsProductView } from "@/components/views/AgreementsProductView";
 import { DiligenceProductView } from "@/components/views/DiligenceProductView";
+import { WorkflowDashboardView } from "@/components/views/WorkflowDashboardView";
+import { WorkspaceView } from "@/components/views/WorkspaceView";
 
 const DashboardView = dynamic(() => import("@/components/views/DashboardView").then(m => m.DashboardView), { ssr: false });
 const StateTrackerView = dynamic(() => import("@/components/views/StateTrackerView").then(m => m.StateTrackerView), { ssr: false });
@@ -69,6 +71,8 @@ export default function Home() {
       {activeProduct === "COMPLIANCE" && <ComplianceProductView />}
       {activeProduct === "AGREEMENTS" && <AgreementsProductView />}
       {activeProduct === "DILIGENCE" && <DiligenceProductView />}
+      {activeProduct === "WORKFLOW_DASH" && <WorkflowDashboardView />}
+      {activeProduct === "WORKSPACE" && <WorkspaceView />}
     </AppShell>
   );
 }

@@ -10,18 +10,18 @@ datasource db {
 
 // NextAuth.js essential models
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -45,12 +45,13 @@ model User {
   role          String    @default("viewer") // custom role: admin, editor, reviewer, viewer
   accounts      Account[]
   sessions      Session[]
-  
+
   // Custom domains
   provisionEdits ProvisionEdit[]
   comments       Comment[]
-  
-  last_login    DateTime?
+
+  last_login   DateTime?
+  TaskInstance TaskInstance[]
 }
 
 model VerificationToken {
@@ -68,12 +69,12 @@ model Organization {
   plan       String
   settings   Json?
   created_at DateTime @default(now())
-  
+
   provisions Provision[]
 }
 
 model Provision {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   org_id         String?
   framework_id   String?
   code           String
@@ -83,7 +84,7 @@ model Provision {
   sub_section    String
   title          String
   summary        String
-  full_text      String   @db.Text
+  full_text      String    @db.Text
   impact         String
   rule_authority String
   change_tags    String[]
@@ -93,78 +94,78 @@ model Provision {
   notes          String?
   assignee       String?
   due_date       DateTime?
-  verified       Boolean  @default(false)
-  pinned         Boolean  @default(false)
-  version        Int      @default(1)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
-  
+  verified       Boolean   @default(false)
+  pinned         Boolean   @default(false)
+  version        Int       @default(1)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
   // Relations
-  organization     Organization? @relation(fields: [org_id], references: [id])
-  framework        Framework?    @relation(fields: [framework_id], references: [id])
-  oldMappings      OldMapping[]
-  complianceItems  ComplianceItem[]
-  stateData        StateData[]
-  edits            ProvisionEdit[]
-  comments         Comment[]
+  organization    Organization?    @relation(fields: [org_id], references: [id])
+  framework       Framework?       @relation(fields: [framework_id], references: [id])
+  oldMappings     OldMapping[]
+  complianceItems ComplianceItem[]
+  stateData       StateData[]
+  edits           ProvisionEdit[]
+  comments        Comment[]
 }
 
 model OldMapping {
-  id                  String   @id @default(cuid())
-  provision_id        String
-  act_name            String
-  section             String
-  summary             String
-  full_text           String   @db.Text
-  change_description  String
-  change_tags         String[]
-  
+  id                 String   @id @default(cuid())
+  provision_id       String
+  act_name           String
+  section            String
+  summary            String
+  full_text          String   @db.Text
+  change_description String
+  change_tags        String[]
+
   provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
 }
 
 model ComplianceItem {
-  id            String   @id @default(cuid())
-  provision_id  String
-  task          String
-  assignee      String?
-  status        String   @default("Not Started")
-  due_date      DateTime?
-  completed_at  DateTime?
-  
+  id           String    @id @default(cuid())
+  provision_id String
+  task         String
+  assignee     String?
+  status       String    @default("Not Started")
+  due_date     DateTime?
+  completed_at DateTime?
+
   provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
 }
 
 model StateData {
-  id                String   @id @default(cuid())
+  id                String  @id @default(cuid())
   provision_id      String
   state             String
   notes             String?
-  rule_text         String?  @db.Text
+  rule_text         String? @db.Text
   compliance_status String?
-  
+
   provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
 }
 
 model ProvisionEdit {
-  id            String   @id @default(cuid())
-  provision_id  String
-  user_id       String
-  diff          Json
-  edit_type     String
-  created_at    DateTime @default(now())
-  
+  id           String   @id @default(cuid())
+  provision_id String
+  user_id      String
+  diff         Json
+  edit_type    String
+  created_at   DateTime @default(now())
+
   provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [user_id], references: [id])
 }
 
 model Comment {
-  id            String   @id @default(cuid())
-  provision_id  String
-  user_id       String
-  body          String   @db.Text
-  parent_id     String?
-  created_at    DateTime @default(now())
-  
+  id           String   @id @default(cuid())
+  provision_id String
+  user_id      String
+  body         String   @db.Text
+  parent_id    String?
+  created_at   DateTime @default(now())
+
   provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [user_id], references: [id])
   parent    Comment?  @relation("CommentReplies", fields: [parent_id], references: [id])
@@ -180,26 +181,26 @@ model Comment {
 // ---------------------------------------------------------
 model Framework {
   id          String   @id @default(cuid())
-  name        String   // e.g., "Labour Codes", "Companies Act", "FEMA"
+  name        String // e.g., "Labour Codes", "Companies Act", "FEMA"
   description String?  @db.Text
-  org_id      String?  
+  org_id      String?
   created_at  DateTime @default(now())
-  
-  provisions  Provision[]
+
+  provisions Provision[]
 }
 
 // ---------------------------------------------------------
 // PRODUCT 2: Entity Compliance Tracker
 // ---------------------------------------------------------
 model Company {
-  id                String   @id @default(cuid())
-  org_id            String?
-  name              String
+  id                 String    @id @default(cuid())
+  org_id             String?
+  name               String
   incorporation_date DateTime?
-  industry          String?
-  status            String   @default("Active") // Active, Dormant, Struck Off
-  created_at        DateTime @default(now())
-  
+  industry           String?
+  status             String    @default("Active") // Active, Dormant, Struck Off
+  created_at         DateTime  @default(now())
+
   // Relations to other products
   compliances       CompanyCompliance[]
   agreements        AgreementInstance[]
@@ -210,14 +211,14 @@ model Company {
 }
 
 model CompanyCompliance {
-  id               String   @id @default(cuid())
-  company_id       String
-  provision_id     String   // The specific law this company must comply with
-  applicability    String   @default("Applicable") // Applicable, Not Applicable, Exempt
-  status           String   @default("Not Started") // Compliant, At Risk, Non-Compliant
-  next_audit_date  DateTime?
-  notes            String?  @db.Text
-  
+  id              String    @id @default(cuid())
+  company_id      String
+  provision_id    String // The specific law this company must comply with
+  applicability   String    @default("Applicable") // Applicable, Not Applicable, Exempt
+  status          String    @default("Not Started") // Compliant, At Risk, Non-Compliant
+  next_audit_date DateTime?
+  notes           String?   @db.Text
+
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
@@ -225,35 +226,35 @@ model CompanyCompliance {
 // PRODUCT 3: Modular Agreement Drafting Platform
 // ---------------------------------------------------------
 model AgreementTemplate {
-  id          String   @id @default(cuid())
-  name        String   // e.g., "Non-Disclosure Agreement", "Employment Contract"
-  category    String
-  content     String   @db.Text // The raw HTML/Markdown template containing {{variables}}
-  created_at  DateTime @default(now())
-  
-  variables   AgreementVariable[]
-  instances   AgreementInstance[]
+  id         String   @id @default(cuid())
+  name       String // e.g., "Non-Disclosure Agreement", "Employment Contract"
+  category   String
+  content    String   @db.Text // The raw HTML/Markdown template containing {{variables}}
+  created_at DateTime @default(now())
+
+  variables AgreementVariable[]
+  instances AgreementInstance[]
 }
 
 model AgreementVariable {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   template_id String
-  key         String   // e.g., "Company_Name"
-  label       String   // e.g., "What is the name of the hiring company?"
-  type        String   @default("text") // text, date, number, currency
-  
+  key         String // e.g., "Company_Name"
+  label       String // e.g., "What is the name of the hiring company?"
+  type        String @default("text") // text, date, number, currency
+
   template AgreementTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
 }
 
 model AgreementInstance {
-  id                String   @id @default(cuid())
-  template_id       String
-  company_id        String?
-  name              String   // e.g., "NDA - Reliance Ind."
-  filled_variables  Json     // Key-value store of filled variables mapping to the template
-  status            String   @default("Draft") // Draft, Ready for Signature, Signed
-  created_at        DateTime @default(now())
-  
+  id               String   @id @default(cuid())
+  template_id      String
+  company_id       String?
+  name             String // e.g., "NDA - Reliance Ind."
+  filled_variables Json // Key-value store of filled variables mapping to the template
+  status           String   @default("Draft") // Draft, Ready for Signature, Signed
+  created_at       DateTime @default(now())
+
   template AgreementTemplate @relation(fields: [template_id], references: [id])
   company  Company?          @relation(fields: [company_id], references: [id])
 }
@@ -266,7 +267,7 @@ model AgreementInstance {
 model CapTableEntry {
   id               String   @id @default(cuid())
   company_id       String
-  round_name       String   // e.g., "Seed", "Series A"
+  round_name       String // e.g., "Seed", "Series A"
   date             DateTime
   pre_money_val    Float?
   post_money_val   Float?
@@ -275,47 +276,123 @@ model CapTableEntry {
   investor_name    String
   compliance_check Boolean  @default(false) // Did this issuance comply with Companies Act Section 42/62?
   notes            String?
-  
+
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 // Window 3: Corporate Hygiene & Penalty Monitor
 model CorporateHygieneLog {
-  id               String   @id @default(cuid())
-  company_id       String
-  event_type       String   // e.g., "Board Meeting", "AGM", "AOC-4 Filing"
-  due_date         DateTime?
-  completed_date   DateTime?
-  status           String   @default("Pending") // Compliant, Delayed, Defaulted
-  potential_penalty Float?  // Calculated fine if delayed
-  notes            String?
-  
+  id                String    @id @default(cuid())
+  company_id        String
+  event_type        String // e.g., "Board Meeting", "AGM", "AOC-4 Filing"
+  due_date          DateTime?
+  completed_date    DateTime?
+  status            String    @default("Pending") // Compliant, Delayed, Defaulted
+  potential_penalty Float? // Calculated fine if delayed
+  notes             String?
+
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 // Window 4: Licenses & Authorizations
 model License {
-  id               String   @id @default(cuid())
-  company_id       String
-  name             String   // e.g., "Factory License", "Shop & Establishment"
-  issuer           String   // e.g., "State Labor Department"
-  issue_date       DateTime?
-  expiry_date      DateTime?
-  status           String   @default("Active") // Active, Expired, Revoked, Applied
-  
+  id          String    @id @default(cuid())
+  company_id  String
+  name        String // e.g., "Factory License", "Shop & Establishment"
+  issuer      String // e.g., "State Labor Department"
+  issue_date  DateTime?
+  expiry_date DateTime?
+  status      String    @default("Active") // Active, Expired, Revoked, Applied
+
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 // Window 5: Business Contracts Repository
 model BusinessContract {
-  id               String   @id @default(cuid())
-  company_id       String
-  counterparty     String
-  contract_type    String   // e.g., "Vendor", "Client MSA", "IP Assignment"
-  effective_date   DateTime?
-  expiry_date      DateTime?
-  value            Float?
-  key_obligations  String?  @db.Text
-  
+  id              String    @id @default(cuid())
+  company_id      String
+  counterparty    String
+  contract_type   String // e.g., "Vendor", "Client MSA", "IP Assignment"
+  effective_date  DateTime?
+  expiry_date     DateTime?
+  value           Float?
+  key_obligations String?   @db.Text
+
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+// ==============================================================================
+// 🌟 PHASE 5: TWO-LAYER WORKFLOW & TASK EXECUTION ENGINE
+// ==============================================================================
+
+// ---------------------------------------------------------
+// LAYER 2: WORKFLOW TEMPLATES (The Master Blueprint)
+// ---------------------------------------------------------
+model WorkflowTemplate {
+  id          String   @id @default(cuid())
+  name        String // e.g., "13-Stage VC/PE Deal Execution"
+  description String?  @db.Text
+  version     Int      @default(1)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  stages     WorkflowStage[]
+  workspaces Workspace[]
+}
+
+model WorkflowStage {
+  id          String @id @default(cuid())
+  template_id String
+  name        String // e.g., "1. Deal Origination & Pre-Investment Structuring"
+  order       Int // 1, 2, 3... to maintain the 13-stage sequence
+
+  template WorkflowTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+  tasks    TaskMaster[]
+}
+
+model TaskMaster {
+  id          String  @id @default(cuid())
+  stage_id    String
+  title       String // e.g., "Structuring Cap Table Modeling"
+  description String? @db.Text
+  is_required Boolean @default(true)
+  order       Int // Order within the specific stage
+
+  stage     WorkflowStage  @relation(fields: [stage_id], references: [id], onDelete: Cascade)
+  instances TaskInstance[]
+}
+
+// ---------------------------------------------------------
+// LAYER 2: ACTIVE WORKSPACES (The Deal Rooms)
+// ---------------------------------------------------------
+model Workspace {
+  id          String    @id @default(cuid())
+  template_id String
+  org_id      String?
+  title       String // e.g., "Project Phoenix - Series A"
+  status      String    @default("Active") // Active, On Hold, Closed, Cancelled
+  target_date DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  template WorkflowTemplate @relation(fields: [template_id], references: [id])
+  tasks    TaskInstance[]
+}
+
+model TaskInstance {
+  id           String    @id @default(cuid())
+  workspace_id String
+  master_id    String // The blueprint task this was generated from
+  title        String // Copied from master, but can be overridden
+  status       String    @default("Todo") // Todo, In Progress, Review, Done
+  assignee_id  String? // Optional relation to User
+  notes        String?   @db.Text
+  due_date     DateTime?
+  completed_at DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  workspace Workspace  @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  master    TaskMaster @relation(fields: [master_id], references: [id])
+  assignee  User?      @relation(fields: [assignee_id], references: [id])
 }
