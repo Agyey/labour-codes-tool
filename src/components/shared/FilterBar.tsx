@@ -11,12 +11,37 @@ import {
 } from "@/config/tags";
 import { STATES } from "@/config/states";
 import { createBlankProvision } from "@/lib/utils";
-import { Search, RotateCcw, Plus, Printer } from "lucide-react";
+import { Search, RotateCcw, Plus, Printer, Loader2 } from "lucide-react";
+import { generatePDF } from "@/lib/pdfService";
+import { useTheme } from "next-themes";
 
 export function FilterBar() {
-  const { activeCode, setEditingProvision } = useUI();
+  const { activeCode, setEditingProvision, setPdfBlobUrl, isGeneratingPDF, setIsGeneratingPDF } = useUI();
   const { canEdit, stats } = useData();
   const { searchQuery, setSearchQuery, filters, setFilter, resetFilters } = useFilter();
+  const { theme, setTheme } = useTheme();
+
+  const handlePrint = async () => {
+    if (isGeneratingPDF) return;
+    setIsGeneratingPDF(true);
+    
+    // Switch to light mode briefly for clean PDF capture
+    const prevTheme = theme;
+    setTheme('light');
+    
+    // Allow theme transition to finish
+    await new Promise(r => setTimeout(r, 600));
+
+    try {
+      const url = await generatePDF('app-shell-main', 'labour-code-review.pdf');
+      setPdfBlobUrl(url);
+    } catch (error) {
+      console.error("PDF Generation failed:", error);
+    } finally {
+      setTheme(prevTheme || 'system');
+      setIsGeneratingPDF(false);
+    }
+  };
 
   const cObj = CODES[activeCode];
 
@@ -60,10 +85,15 @@ export function FilterBar() {
             </button>
           )}
           <button
-            onClick={() => window.print()}
-            className="p-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md text-slate-600 dark:text-zinc-400 rounded-xl border border-white/80 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer shadow-sm"
+            onClick={handlePrint}
+            disabled={isGeneratingPDF}
+            className="p-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md text-slate-600 dark:text-zinc-400 rounded-xl border border-white/80 dark:border-zinc-800 hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer shadow-sm disabled:opacity-50"
           >
-            <Printer className="w-4 h-4" />
+            {isGeneratingPDF ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Printer className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>

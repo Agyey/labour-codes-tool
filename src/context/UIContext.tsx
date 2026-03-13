@@ -25,6 +25,8 @@ interface UIState {
   compareA: string | null;
   compareB: string | null;
   sidebarOpen: boolean;
+  pdfBlobUrl: string | null;
+  isGeneratingPDF: boolean;
 }
 
 interface UIActions {
@@ -38,6 +40,8 @@ interface UIActions {
   setCompareA: (id: string | null) => void;
   setCompareB: (id: string | null) => void;
   setSidebarOpen: (open: boolean) => void;
+  setPdfBlobUrl: (url: string | null) => void;
+  setIsGeneratingPDF: (generating: boolean) => void;
 }
 
 const UIContext = createContext<(UIState & UIActions) | null>(null);
@@ -53,6 +57,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [compareA, setCompareA] = useState<string | null>(null);
   const [compareB, setCompareB] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const toggleShowText = useCallback((key: string) => {
     setShowTextMap((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -69,6 +75,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
     compareA,
     compareB,
     sidebarOpen,
+    pdfBlobUrl,
+    isGeneratingPDF,
     setMode,
     setPasswordVerified,
     setActiveView,
@@ -79,9 +87,22 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setCompareA,
     setCompareB,
     setSidebarOpen,
+    setPdfBlobUrl,
+    setIsGeneratingPDF,
   }), [
-    mode, passwordVerified, activeView, activeCode, expandedProvisionId,
-    editingProvision, showTextMap, compareA, compareB, sidebarOpen, toggleShowText
+    mode, 
+    passwordVerified, 
+    activeView, 
+    activeCode, 
+    expandedProvisionId,
+    editingProvision, 
+    showTextMap, 
+    compareA, 
+    compareB, 
+    sidebarOpen,
+    pdfBlobUrl, 
+    isGeneratingPDF, 
+    toggleShowText
   ]);
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

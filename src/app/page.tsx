@@ -13,6 +13,7 @@ const TimelineView = dynamic(() => import("@/components/views/TimelineView").the
 const PenaltiesView = dynamic(() => import("@/components/views/PenaltiesView").then(m => m.PenaltiesView), { ssr: false });
 const CompareView = dynamic(() => import("@/components/views/CompareView").then(m => m.CompareView), { ssr: false });
 const EditorModal = dynamic(() => import("@/components/provisions/EditorModal").then(m => m.EditorModal), { ssr: false });
+const PDFPreviewModal = dynamic(() => import("@/components/shared/PDFPreviewModal").then(m => m.PDFPreviewModal), { ssr: false });
 
 function ViewRouter() {
   const { activeView, editingProvision } = useUI();
@@ -20,6 +21,7 @@ function ViewRouter() {
   return (
     <>
       {editingProvision && <EditorModal />}
+      <PDFPreviewModal />
 
       <AnimatePresence mode="wait">
         <motion.div

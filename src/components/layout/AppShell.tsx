@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {sidebarOpen && <AppSidebar />}
 
         {/* Main content */}
-        <main className="flex-1 p-4 overflow-auto min-h-[calc(100vh-120px)]">
+        <main id="app-shell-main" className="flex-1 p-4 overflow-auto min-h-[calc(100vh-120px)]">
           {children}
         </main>
       </div>
