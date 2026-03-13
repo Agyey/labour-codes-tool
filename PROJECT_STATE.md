@@ -44,6 +44,6 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 5. [x] **Build Compliance**: 100% ESLint compliance reached and verified with Railway.
 6. [x] **Data Integrity**: Standardized snake_case (Prisma) to camelCase (Frontend) mappings.
 7. [x] **Infrastructure Hardening**: Resolved Prisma engine breakage on Alpine/Railway via `binaryTargets` and custom Docker layers.
-8. [x] **UI Polish**: High-fidelity transformation with glassmorphism and animations.
+8. [x] **UI Polish**: High-fidelity transformation with Zinc-based (`zinc-950`) dark mode and fixed Reader/Editor toggle logic.
 9. [ ] **Statelessness Audit**: Audit server actions for disk writes.
 10. [ ] **Type Hardening**: Refine recursive types for comments.

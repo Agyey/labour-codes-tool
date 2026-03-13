@@ -9,7 +9,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { sidebarOpen } = useUI();
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 font-sans transition-colors duration-300">
       <AppHeader />
       <AppNavigation />
 
@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white">
+      <footer className="border-t border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 backdrop-blur-md">
         <div className="max-w-[1400px] mx-auto px-4 py-3 text-center text-[10px] text-gray-400">
           Auto-saves · States may amend Central provisions — verify state rules
           · Not legal advice · Data as of March 2026

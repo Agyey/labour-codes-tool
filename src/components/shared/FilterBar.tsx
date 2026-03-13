@@ -34,11 +34,11 @@ export function FilterBar() {
         <div className="flex items-center gap-3 py-1.5 px-3 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-md rounded-2xl border border-white/60 dark:border-zinc-800/60 shadow-premium-sm">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: cObj.c }} />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-400">{cObj.secs} Sections</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-300">{cObj.secs} Sections</span>
           </div>
           <div className="w-px h-3 bg-slate-200 dark:bg-zinc-800" />
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-400">{stats.totalProvisions} Mapped</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-300">{stats.totalProvisions} Mapped</span>
           </div>
           <div className="w-px h-3 bg-slate-200 dark:bg-zinc-800" />
           <div className="flex items-center gap-2">
