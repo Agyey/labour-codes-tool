@@ -12,6 +12,9 @@ import {
   ShieldAlert,
   Database,
   Building2,
+  Gavel,
+  Users,
+  Calendar,
   LucideIcon
 } from "lucide-react";
 
@@ -65,11 +68,20 @@ export function AppSidebar() {
             Legal OS
           </h3>
 
-          <div className="space-y-1 mb-8">
+          <div className="space-y-1 mb-6">
             {navItems.map(item => renderNavButton(item))}
           </div>
 
-          {/* SECTION 2: MANAGEMENT */}
+          {/* SECTION 2: LITIGATION NEXUS */}
+          <h3 className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-4 px-2 mt-8 truncate transition-opacity ${!sidebarOpen && 'lg:opacity-0'}`}>
+            Litigation Nexus
+          </h3>
+
+          <div className="space-y-1 mb-6">
+            {litigationItems.map(item => renderNavButton(item))}
+          </div>
+
+          {/* SECTION 3: MANAGEMENT */}
           <h3 className={`text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 mb-4 px-2 mt-8 truncate transition-opacity ${!sidebarOpen && 'lg:opacity-0'}`}>
             Management
           </h3>
@@ -94,8 +106,13 @@ const navItems = [
   { href: "/entities", label: "Entity Database", icon: Building2, desc: "Manage client jurisdictions", color: "bg-cyan-600", textHover: "group-hover:text-cyan-600" },
 ];
 
+const litigationItems = [
+  { href: "/litigation", label: "Case Tracker", icon: Gavel, desc: "Court dates & stage tracking", color: "bg-indigo-700", textHover: "group-hover:text-indigo-700" },
+  { href: "/litigation/counsel", label: "Counsel Repo", icon: Users, desc: "Empanelled lawyers & fees", color: "bg-slate-700", textHover: "group-hover:text-slate-700" },
+  { href: "/litigation/hearings", label: "Hearing Board", icon: Calendar, desc: "Daily cause list & notices", color: "bg-rose-800", textHover: "group-hover:text-rose-800" },
+];
+
 const mgmtItems = [
   { href: "/org-settings", label: "Firm Settings", icon: Settings, desc: "Team & Subscriptions", color: "bg-rose-600", textHover: "group-hover:text-rose-600" },
   { href: "/admin", label: "Super Admin", icon: ShieldAlert, desc: "Platform Control Center", color: "bg-slate-800", textHover: "group-hover:text-slate-900" },
-  { href: "/admin/knowledge-base", label: "AI Verification", icon: Database, desc: "Review Extracted Scenarios", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" },
 ];

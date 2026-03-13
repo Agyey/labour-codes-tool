@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 
 export function BucketExplorer() {
   const { activeCode, setActiveView, setActiveCode } = useUI();
-  const { frameworks, legislations, deleteLegislation, canEdit } = useData();
+  const { frameworks, legislations, provisions, deleteLegislation, canEdit } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFwModalOpen, setIsFwModalOpen] = useState(false);
   const [editingLeg, setEditingLeg] = useState<Legislation | null>(null);
@@ -115,11 +115,15 @@ export function BucketExplorer() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center bg-white/10 p-4 rounded-3xl backdrop-blur-sm">
                    <span className="text-xs font-bold uppercase tracking-widest opacity-70">Total Provisions</span>
-                   <span className="text-xl font-black">542</span>
+                   <span className="text-xl font-black">
+                     {legislations.filter(l => l.frameworkId === framework.id).reduce((acc, l) => acc + ((l as any).provisions?.length || 0), 0)}
+                   </span>
                 </div>
                 <div className="flex justify-between items-center bg-white/10 p-4 rounded-3xl backdrop-blur-sm">
                    <span className="text-xs font-bold uppercase tracking-widest opacity-70">Regulatory Authority</span>
-                   <span className="text-sm font-bold">Central Govt</span>
+                   <span className="text-sm font-bold">
+                     {provisions.find(p => p.frameworkId === framework.id)?.ruleAuth || "Central Govt"}
+                   </span>
                 </div>
               </div>
            </div>
@@ -127,7 +131,8 @@ export function BucketExplorer() {
             <div className="p-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[40px] shadow-sm">
               <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-6">Transition History</h4>
               <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium leading-relaxed">
-                This bucket tracks the transition from the legacy Payment of Wages, Minimum Wages, and Bonus acts into the unified 2019 Code.
+                This bucket tracks the transition to the unified {framework.name}. 
+                {framework.description && <span className="block mt-2">{framework.description}</span>}
               </p>
               <button 
                 onClick={() => setActiveView('compare')}

@@ -1,5 +1,3 @@
-"use client";
-
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { useFilter } from "@/context/FilterContext";
@@ -11,26 +9,36 @@ import { createBlankProvision } from "@/lib/utils";
 import { Plus, BookOpen, Database, Upload, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { LibraryTable } from "@/components/library/LibraryTable";
-import { MOCK_PRIVATE_PLACEMENT } from "@/lib/mockData";
+import { injectSampleData } from "@/app/actions/provisions";
 import { PdfUploadWizard } from "@/components/parsers/PdfUploadWizard";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
+import { useRouter } from "next/navigation";
 
 export function MappingView() {
+  const router = useRouter();
   const { activeCode, setEditingProvision } = useUI();
-  const { canEdit } = useData();
+  const { canEdit, frameworks } = useData();
   const { filteredProvisions } = useFilter();
   const [showPdfWizard, setShowPdfWizard] = useState(false);
 
   const cObj = CODES[activeCode];
-  const { saveProvision } = useData();
 
   const handleInjectMock = async () => {
     try {
-      const p = { ...MOCK_PRIVATE_PLACEMENT, code: activeCode, id: "mock-" + Date.now() };
-      await saveProvision(p);
-      toast.success("Injected the Private Placement Mock Provision!");
+      const framework = frameworks.find(f => f.shortName === activeCode || f.id === activeCode);
+      if (!framework) {
+        toast.error("Framework context not found");
+        return;
+      }
+      const res = await injectSampleData(framework.id, activeCode);
+      if (res.success) {
+        toast.success("Injected the Private Placement Mock Provision!");
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to inject mock");
+      }
     } catch (e) {
       toast.error("Failed to inject mock");
     }

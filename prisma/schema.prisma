@@ -609,3 +609,48 @@ model DraftTask {
   due_logic         String?
   draft_scenario    DraftScenario @relation(fields: [draft_scenario_id], references: [id], onDelete: Cascade)
 }
+model LegalCase {
+  id           String    @id @default(cuid())
+  matter_id    String?
+  name         String
+  case_number  String?
+  court        String?
+  bench        String?
+  status       String    @default("Active") // Active, Stayed, Disposed, Appeal
+  stage        String    @default("Notice") // Notice, Pleadings, Evidence, Arguments, Judgment
+  description  String?
+  opposition   String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now())
+  matter       Matter?   @relation(fields: [matter_id], references: [id])
+  hearings     Hearing[]
+  counsels     Counsel[]
+}
+
+model Counsel {
+  id             String      @id @default(cuid())
+  name           String
+  firm           String?
+  specialization String?
+  email          String?
+  phone          String?
+  rating         Float       @default(0.0)
+  hourly_rate    Float?
+  status         String      @default("Active")
+  cases          LegalCase[]
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @default(now())
+}
+
+model Hearing {
+  id           String    @id @default(cuid())
+  case_id      String
+  date         DateTime
+  description  String?
+  orders_passed String?
+  next_date    DateTime?
+  status       String    @default("Scheduled") // Scheduled, adjourned, Heard
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now())
+  case         LegalCase @relation(fields: [case_id], references: [id], onDelete: Cascade)
+}

@@ -1,14 +1,70 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
+import { MOCK_PRIVATE_PLACEMENT } from "@/lib/mockData";
 import type { Provision, Comment } from "@/types/provision";
 import { ProvisionUpdateSchema } from "@/lib/validations/provision";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logActivity } from "@/lib/audit";
-import { revalidatePath } from "next/cache";
+
+export async function injectSampleData(frameworkId: string, activeCode: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
+    const legislation = await prisma.legislation.findFirst({
+      where: { framework_id: frameworkId }
+    });
+
+    if (!legislation) return { success: false, error: "No legislation found in this framework" };
+
+    const provision = await prisma.provision.create({
+      data: {
+        code: activeCode,
+        framework_id: frameworkId,
+        legislation_id: legislation.id,
+        chapter: MOCK_PRIVATE_PLACEMENT.ch,
+        chapter_name: MOCK_PRIVATE_PLACEMENT.chName,
+        section: MOCK_PRIVATE_PLACEMENT.sec,
+        sub_section: MOCK_PRIVATE_PLACEMENT.sub,
+        title: MOCK_PRIVATE_PLACEMENT.title,
+        provision_type: "section",
+        summary: MOCK_PRIVATE_PLACEMENT.summary,
+        full_text: MOCK_PRIVATE_PLACEMENT.fullText,
+        impact: MOCK_PRIVATE_PLACEMENT.impact,
+        rule_authority: "Central Government",
+        verified: true,
+        pinned: true,
+        change_tags: MOCK_PRIVATE_PLACEMENT.changeTags,
+        workflow_tags: MOCK_PRIVATE_PLACEMENT.workflowTags,
+        penalty_old: MOCK_PRIVATE_PLACEMENT.penaltyOld,
+        penalty_new: MOCK_PRIVATE_PLACEMENT.penaltyNew,
+        notes: MOCK_PRIVATE_PLACEMENT.notes,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }
+    });
+
+    await logActivity({
+      orgId: session.user.orgId || "system",
+      actorId: session.user.id,
+      action: "INJECT_MOCK",
+      entityType: "Provision",
+      entityId: provision.id,
+      metadata: { frameworkId, activeCode }
+    });
+
+    revalidatePath("/library");
+    return { success: true, provisionId: provision.id };
+  } catch (err) {
+    logger.error("Failed to inject sample data", err);
+    return { success: false, error: "Internal server error" };
+  }
+}
 
 // Local helper for Prisma transaction client type if Prisma.TransactionClient is missing or causing issues
 type TransactionClient = Omit<
