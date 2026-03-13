@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe, Building2, Briefcase, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Play, Scale, Landmark } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,30 @@ export function ScenarioWizard() {
   const [entity, setEntity] = useState("");
   const [scenario, setScenario] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [dbScenarios, setDbScenarios] = useState<any[]>([]);
   const router = useRouter();
+
+  // Load verified scenarios from Knowledge Base
+  useEffect(() => {
+    async function load() {
+      const { getDraftScenarios } = await import("@/app/actions/knowledge");
+      const drafts = await getDraftScenarios();
+      const approved = drafts.filter((d: any) => d.status === 'Approved');
+      setDbScenarios(approved);
+    }
+    load();
+  }, []);
+
+  // Merge static defaults with dynamic verified scenarios
+  const allScenarios = [
+    ...SCENARIOS,
+    ...dbScenarios.map(d => ({
+      id: d.id,
+      name: d.name,
+      category: d.category,
+      desc: d.description
+    }))
+  ];
 
   const handleNext = () => {
     if (step < 4) {
@@ -183,7 +206,7 @@ export function ScenarioWizard() {
             <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6">What transaction or event are we executing?</p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {SCENARIOS.map((s) => {
+              {allScenarios.map((s) => {
                 const isSelected = scenario === s.id;
                 return (
                   <button
