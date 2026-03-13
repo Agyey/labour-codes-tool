@@ -34,12 +34,61 @@ export function LibraryTable({ data }: LibraryTableProps) {
   const { canEdit, deleteProvision, toggleVerify, togglePin } = useData();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const toggleExpand = (id: string) => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === data.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(data.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedIds.size} provisions?`)) return;
+    
+    // Process one by one for now as the action handles single IDs
+    for (const id of Array.from(selectedIds)) {
+      await deleteProvision(id);
+    }
+    setSelectedIds(new Set());
+  };
+
   const columns = useMemo<ColumnDef<Provision>[]>(() => [
+    {
+      id: "select",
+      header: () => (
+        <div className="flex items-center">
+          <input 
+            type="checkbox" 
+            className="w-4 h-4 rounded border-slate-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            checked={selectedIds.size === data.length && data.length > 0}
+            onChange={toggleSelectAll}
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center">
+          <input 
+            type="checkbox" 
+            className="w-4 h-4 rounded border-slate-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            checked={selectedIds.has(row.original.id)}
+            onChange={() => toggleSelect(row.original.id)}
+          />
+        </div>
+      ),
+    },
     {
       accessorKey: "code",
       header: "Framework",
@@ -106,7 +155,7 @@ export function LibraryTable({ data }: LibraryTableProps) {
       accessorKey: "title",
       header: "Provision Title",
       cell: ({ row }) => (
-        <div className="max-w-[300px] truncate font-medium text-sm text-slate-700 dark:text-zinc-200">
+        <div className="max-w-[200px] truncate font-medium text-sm text-slate-700 dark:text-zinc-200">
           {row.getValue("title")}
         </div>
       ),
@@ -159,14 +208,23 @@ export function LibraryTable({ data }: LibraryTableProps) {
       cell: ({ row }) => {
         const isExpanded = expandedRows[row.original.id];
         return (
-          <div className="flex items-center justify-end gap-2 pr-2">
+          <div className="flex items-center justify-end gap-1 pr-2">
             <button
               onClick={() => setExpandedProvision(row.original.id)}
               className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"
               title="Open full view"
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-3.5 h-3.5" />
             </button>
+            {canEdit && (
+              <button
+                onClick={() => { if (confirm("Delete this provision?")) deleteProvision(row.original.id); }}
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+                title="Delete provision"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               onClick={() => toggleExpand(row.original.id)}
               className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg transition-colors"
@@ -177,7 +235,7 @@ export function LibraryTable({ data }: LibraryTableProps) {
         );
       },
     },
-  ], [expandedRows]);
+  ], [expandedRows, selectedIds, canEdit, data]);
 
   const table = useReactTable({
     data,
@@ -195,13 +253,28 @@ export function LibraryTable({ data }: LibraryTableProps) {
         { id: "reference", desc: false }
       ],
       pagination: {
-        pageSize: 15,
+        pageSize: 50, // More suitable for bulk deletions
       },
     },
   });
 
   return (
     <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+      {/* Table Action Header */}
+      {selectedIds.size > 0 && (
+        <div className="bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3 border-b border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
+          <div className="text-sm font-bold text-indigo-700 dark:text-indigo-400">
+            {selectedIds.size} provisions selected
+          </div>
+          <button 
+            onClick={handleBulkDelete}
+            className="flex items-center gap-2 px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-rose-600/20"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Delete Selected
+          </button>
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
