@@ -22,7 +22,7 @@ export function StateTrackerView() {
 
   return (
     <div className="space-y-4">
-      <div className="mb-8 p-6 rounded-3xl border border-slate-200/60 bg-white shadow-sm overflow-hidden relative group">
+      <div className="mb-8 p-6 rounded-3xl border border-slate-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden relative group">
         <div 
           className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.05]" 
           style={{ backgroundColor: cObj.c }} 
@@ -38,18 +38,18 @@ export function StateTrackerView() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Badge color={cObj.c}>{cObj.s}</Badge>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">State Compliance Hub</span>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest">State Compliance Hub</span>
               </div>
-              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none">
+              <h1 className="text-2xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight leading-none">
                 State Tracker
               </h1>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 bg-slate-50/80 p-1.5 rounded-2xl border border-slate-100">
-            <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">States Impacted</p>
-              <p className="text-xl font-black text-slate-900 leading-none">{stateProvisions.length}</p>
+          <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/50 p-1.5 rounded-2xl border border-slate-100 dark:border-zinc-800">
+            <div className="px-4 py-2 bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-slate-100 dark:border-zinc-800">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">States Impacted</p>
+              <p className="text-xl font-black text-slate-900 dark:text-zinc-100 leading-none">{stateProvisions.length}</p>
             </div>
           </div>
         </div>
@@ -66,10 +66,10 @@ export function StateTrackerView() {
         stateProvisions.map((p) => (
           <div
             key={p.id}
-            className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm"
+            className="border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 shadow-sm"
           >
             <div
-              className="px-5 py-3 font-bold text-sm flex items-center justify-between border-b border-slate-100"
+              className="px-5 py-3 font-bold text-sm flex items-center justify-between border-b border-slate-100 dark:border-zinc-800"
               style={{ background: `color-mix(in srgb, ${cObj.c}, transparent 95%)` }}
             >
               <div className="flex items-center gap-2.5" style={{ color: cObj.c }}>
@@ -85,14 +85,14 @@ export function StateTrackerView() {
                     (s) =>
                       (p.stateNotes || {})[s] || (p.stateRuleText || {})[s]
                   ).map((s) => (
-                    <tr key={s} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/30 transition-colors">
-                      <td className="px-5 py-3 font-extrabold w-32 text-slate-700 uppercase tracking-tight">
+                    <tr key={s} className="border-b border-slate-50 dark:border-zinc-800/50 last:border-0 hover:bg-slate-50/30 dark:hover:bg-zinc-800/30 transition-colors">
+                      <td className="px-5 py-3 font-extrabold w-32 text-slate-700 dark:text-zinc-300 uppercase tracking-tight">
                         {s}
                       </td>
-                      <td className="px-5 py-3 text-slate-600 font-medium leading-relaxed">
+                      <td className="px-5 py-3 text-slate-600 dark:text-zinc-400 font-medium leading-relaxed">
                         {(p.stateNotes || {})[s]}
                       </td>
-                      <td className="px-5 py-3 italic text-slate-400 font-normal">
+                      <td className="px-5 py-3 italic text-slate-400 dark:text-zinc-500 font-normal">
                         {(p.stateRuleText || {})[s]}
                       </td>
                       <td className="px-5 py-3 w-32 text-right">

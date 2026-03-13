@@ -27,7 +27,7 @@ export function TimelineView() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-extrabold text-gray-800">
+      <h2 className="text-xl font-extrabold text-gray-800 dark:text-zinc-100">
         Timeline — Key Dates
       </h2>
 
@@ -52,10 +52,10 @@ export function TimelineView() {
             >
               {/* Dot */}
               <div
-                className="absolute left-[-14px] top-2 z-10 w-3.5 h-3.5 rounded-full border-[3px] border-white shadow-sm transition-transform duration-300 group-hover:scale-125"
+                className="absolute left-[-14px] top-2 z-10 w-3.5 h-3.5 rounded-full border-[3px] border-white dark:border-zinc-950 shadow-sm transition-transform duration-300 group-hover:scale-125"
                 style={{ backgroundColor: cObj.c }}
               />
-              <div className="flex-1 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1 relative overflow-hidden group-hover:border-blue-100">
+              <div className="flex-1 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-1 relative overflow-hidden group-hover:border-blue-100 dark:group-hover:border-zinc-700">
                 <div 
                   className="absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   style={{ backgroundColor: cObj.c }}
@@ -67,14 +67,14 @@ export function TimelineView() {
                       {d.date || "TBD"}
                     </span>
                   </div>
-                  <div className="bg-gray-50 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <div className="bg-gray-50 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                     S.{d.sec}{d.sub} <ChevronRight className="w-3 h-3" />
                   </div>
                 </div>
-                <div className="text-base font-bold text-gray-900 mb-1.5 leading-tight">
+                <div className="text-base font-bold text-gray-900 dark:text-zinc-100 mb-1.5 leading-tight">
                   {d.label}
                 </div>
-                <div className="text-sm text-gray-500 line-clamp-2">
+                <div className="text-sm text-gray-500 dark:text-zinc-400 line-clamp-2">
                   {d.title}
                 </div>
               </div>

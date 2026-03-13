@@ -19,7 +19,7 @@ export function PenaltiesView() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-extrabold text-gray-800">
+      <h2 className="text-xl font-extrabold text-gray-800 dark:text-zinc-100">
         Penalty Comparison — {cObj.s}
       </h2>
 
@@ -32,10 +32,10 @@ export function PenaltiesView() {
         penaltyProvisions.map((p) => (
           <div
             key={p.id}
-            className="group border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-300"
+            className="group border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md transition-all duration-300"
           >
             <div
-              className="px-5 py-3 font-bold text-sm flex items-center justify-between border-b border-slate-100"
+              className="px-5 py-3 font-bold text-sm flex items-center justify-between border-b border-slate-100 dark:border-zinc-800"
               style={{ background: `color-mix(in srgb, ${cObj.c}, transparent 95%)` }}
             >
               <div className="flex items-center gap-2.5" style={{ color: cObj.c }}>
@@ -45,22 +45,22 @@ export function PenaltiesView() {
               <Badge text={cObj.s} color={cObj.c} className="opacity-80" />
             </div>
             <div className="grid grid-cols-[1fr_40px_1fr] items-stretch">
-              <div className="p-5 bg-red-50/30">
-                <div className="text-[10px] font-extrabold text-red-600/70 uppercase tracking-wider mb-2.5">
+              <div className="p-5 bg-red-50/30 dark:bg-red-500/5">
+                <div className="text-[10px] font-extrabold text-red-600/70 dark:text-red-400/70 uppercase tracking-wider mb-2.5">
                   Old Penalty
                 </div>
-                <div className="text-sm text-slate-600 leading-relaxed font-medium">
+                <div className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed font-medium">
                   {p.penaltyOld || "—"}
                 </div>
               </div>
-              <div className="flex items-center justify-center bg-slate-50 border-x border-slate-100/50">
-                <ArrowRight className="w-4 h-4 text-slate-300" />
+              <div className="flex items-center justify-center bg-slate-50 dark:bg-zinc-800 border-x border-slate-100/50 dark:border-zinc-700/50">
+                <ArrowRight className="w-4 h-4 text-slate-300 dark:text-zinc-600" />
               </div>
-              <div className="p-5 bg-emerald-50/30">
-                <div className="text-[10px] font-extrabold text-emerald-600/70 uppercase tracking-wider mb-2.5">
+              <div className="p-5 bg-emerald-50/30 dark:bg-emerald-500/5">
+                <div className="text-[10px] font-extrabold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-wider mb-2.5">
                   New Penalty
                 </div>
-                <div className="text-sm text-slate-600 leading-relaxed font-medium">
+                <div className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed font-medium">
                   {p.penaltyNew || "—"}
                 </div>
               </div>

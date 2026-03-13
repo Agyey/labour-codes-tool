@@ -21,7 +21,7 @@ export function CompareView() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">
+      <h2 className="text-xl font-extrabold text-slate-800 dark:text-zinc-100">
         Compare Provisions
       </h2>
 
@@ -33,7 +33,7 @@ export function CompareView() {
           <select
             value={compareA || ""}
             onChange={(e) => setCompareA(e.target.value || null)}
-            className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            className="w-full px-3 py-2.5 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
           >
             <option value="">Select provision</option>
             {codeProvisions.map((p) => (
@@ -54,7 +54,7 @@ export function CompareView() {
           <select
             value={compareB || ""}
             onChange={(e) => setCompareB(e.target.value || null)}
-            className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            className="w-full px-3 py-2.5 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
           >
             <option value="">Select provision</option>
             {codeProvisions.map((p) => (
@@ -72,7 +72,7 @@ export function CompareView() {
           {[a, b].map((p) => (
             <div
               key={p.id}
-              className="p-5 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3 bg-white dark:bg-slate-900 shadow-sm"
+              className="p-5 border border-slate-200 dark:border-zinc-800 rounded-2xl space-y-3 bg-white dark:bg-zinc-900 shadow-sm"
             >
               <div
                 className="text-base font-bold"
@@ -88,18 +88,18 @@ export function CompareView() {
                 />
                 <Badge text={p.ruleAuth} color="#6b7280" />
               </div>
-              <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+              <div className="text-sm text-slate-700 dark:text-zinc-400 leading-relaxed font-medium">
                 {p.summary}
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-500 space-y-0.5">
                 <div>
-                  <b className="text-slate-700 dark:text-slate-400">Old Mappings:</b> {(p.oldMappings || []).length}
+                  <b className="text-slate-700 dark:text-zinc-400">Old Mappings:</b> {(p.oldMappings || []).length}
                 </div>
                 <div>
-                  <b className="text-slate-700 dark:text-slate-400">Compliance Items:</b> {(p.compItems || []).length}
+                  <b className="text-slate-700 dark:text-zinc-400">Compliance Items:</b> {(p.compItems || []).length}
                 </div>
                 <div>
-                  <b className="text-slate-700 dark:text-slate-400">Draft Rules:</b> {(p.draftRules || []).length}
+                  <b className="text-slate-700 dark:text-zinc-400">Draft Rules:</b> {(p.draftRules || []).length}
                 </div>
               </div>
             </div>
