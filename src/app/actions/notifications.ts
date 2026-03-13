@@ -3,28 +3,37 @@
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { z } from "zod"
 
-export async function createNotification(data: {
-  userId: string;
-  orgId?: string;
-  title: string;
-  message: string;
-  type: 'INFO' | 'WARNING' | 'SUCCESS' | 'URGENT';
-  link?: string;
-}) {
+// --- Validation Schemas ---
+const CreateNotificationSchema = z.object({
+  userId: z.string(),
+  orgId: z.string().optional(),
+  title: z.string().min(1).max(200),
+  message: z.string().min(1),
+  type: z.enum(['INFO', 'WARNING', 'SUCCESS', 'URGENT']),
+  link: z.string().optional(),
+})
+
+export async function createNotification(data: any) {
   try {
+    const validated = CreateNotificationSchema.parse(data)
+
     const notification = await prisma.notification.create({
       data: {
-        user_id: data.userId,
-        org_id: data.orgId,
-        title: data.title,
-        message: data.message,
-        type: data.type,
-        link: data.link,
+        user_id: validated.userId,
+        org_id: validated.orgId,
+        title: validated.title,
+        message: validated.message,
+        type: validated.type,
+        link: validated.link,
       }
     })
     return { success: true, notification }
   } catch (error) {
+    if (error instanceof z.ZodError) return { error: "Invalid notification data" }
     logger.error("Failed to create notification", error)
     return { error: "Failed to create notification" }
   }
@@ -32,6 +41,9 @@ export async function createNotification(data: {
 
 export async function getNotifications(userId: string) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user || session.user.id !== userId) return []
+
     const notifications = await prisma.notification.findMany({
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
@@ -46,6 +58,17 @@ export async function getNotifications(userId: string) {
 
 export async function markAsRead(notificationId: string) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) return { error: "Unauthorized" }
+
+    const notification = await prisma.notification.findUnique({
+      where: { id: notificationId }
+    })
+
+    if (!notification || notification.user_id !== session.user.id) {
+      return { error: "Notification not found" }
+    }
+
     await prisma.notification.update({
       where: { id: notificationId },
       data: { read: true }
@@ -60,6 +83,9 @@ export async function markAsRead(notificationId: string) {
 
 export async function markAllAsRead(userId: string) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user || session.user.id !== userId) return { error: "Unauthorized" }
+
     await prisma.notification.updateMany({
       where: { user_id: userId, read: false },
       data: { read: true }

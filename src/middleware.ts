@@ -11,7 +11,11 @@ export default withAuth(
     }
 
     const role = token.role || "viewer"; 
-    console.log(`[MIDDLEWARE] Path: ${path} | Role: ${role}`);
+    
+    // In production, we avoid verbose logging of every request
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[AUTH_GATE] Path: ${path} | Role: ${role}`);
+    }
 
     // 1. Protect Super Admin Routes
     if (path.startsWith("/admin")) {

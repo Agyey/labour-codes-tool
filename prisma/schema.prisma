@@ -59,6 +59,7 @@ model User {
   clientAccesses    ClientAccess[]
   organizationUsers OrganizationUser[]
   notifications     Notification[]
+  auditLogs         AuditLog[]
 }
 
 model Notification {
@@ -97,6 +98,7 @@ model Organization {
   notifications Notification[]
   users        OrganizationUser[]
   matters      Matter[]
+  auditLogs    AuditLog[]
 }
 
 model OrganizationUser {
@@ -689,4 +691,19 @@ model DraftTask {
   due_logic         String?  // Text description from AI (e.g., "Within 30 days of resolution")
   
   draft_scenario    DraftScenario @relation(fields: [draft_scenario_id], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  org_id      String?
+  actor_id    String?
+  action      String   // e.g., "CREATE_MATTER", "INVITE_USER", "DELETE_ENTITY"
+  entity_type String   // e.g., "Matter", "User", "Entity"
+  entity_id   String?
+  metadata    Json?    // Stores the payload or diff
+  ip_address  String?
+  created_at  DateTime @default(now())
+
+  organization Organization? @relation(fields: [org_id], references: [id])
+  actor        User?         @relation(fields: [actor_id], references: [id])
 }
