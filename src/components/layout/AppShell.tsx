@@ -1,17 +1,19 @@
 "use client";
 
 import { useUI } from "@/context/UIContext";
+import { usePathname } from "next/navigation";
 import { AppHeader } from "./AppHeader";
 import { AppNavigation } from "./AppNavigation";
 import { AppSidebar } from "./AppSidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { sidebarOpen } = useUI();
+  const pathname = usePathname();
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 font-sans transition-colors duration-300">
       <AppHeader />
-      <AppNavigation />
+      {pathname?.startsWith("/library") && <AppNavigation />}
 
       {/* Main content area with optional sidebar */}
       <div className="max-w-[1400px] mx-auto flex">
