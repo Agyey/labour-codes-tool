@@ -506,6 +506,7 @@ model Matter {
   documents      MatterDocument[]
   members        MatterMember[]
   tasks          Task[]
+  cases          LegalCase[]
   auditLogs      AuditLog[]
 }
 
