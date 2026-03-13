@@ -10,20 +10,20 @@ export default withAuth(
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    const role = token.role || "viewer"; // default fallback
+    const role = token.role || "viewer"; 
+    console.log(`[MIDDLEWARE] Path: ${path} | Role: ${role}`);
 
     // 1. Protect Super Admin Routes
     if (path.startsWith("/admin")) {
       if (role !== "admin") {
-        // Not an admin, redirect to normal dashboard
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
 
     // 2. Protect Internal Firm Dashboard Routes
-    if (path.startsWith("/dashboard") || path.startsWith("/library") || path.startsWith("/scenarios") || path.startsWith("/matters")) {
+    const firmPaths = ["/dashboard", "/library", "/scenarios", "/matters", "/entities"];
+    if (firmPaths.some(p => path.startsWith(p))) {
       if (role === "client") {
-        // Clients cannot see internal firm workspaces
         return NextResponse.redirect(new URL("/portal/dashboard", req.url));
       }
     }

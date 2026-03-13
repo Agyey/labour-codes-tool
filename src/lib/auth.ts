@@ -13,35 +13,39 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
+      console.log("[AUTH] SignIn attempt:", user.email);
       // Auto-assign admin roles to our specified emails
       if (
         user.email === "shreeyash1998@gmail.com" ||
         user.email === "agyey1997@gmail.com"
       ) {
+        console.log("[AUTH] Auto-assigning admin role to:", user.email);
         // Ensure role is admin in db
         await prisma.user.update({
           where: { email: user.email },
           data: { role: "admin" },
-        }).catch(() => null); // Ignore if they don't exist yet, they will get defaults from adapter
+        }).catch((e) => {
+          console.log("[AUTH] Update for admin role failed (might be new user):", e.message);
+        }); 
       }
       return true;
     },
     async jwt({ token, user, trigger, session }) {
+      console.log("[AUTH] JWT Callback. Trigger:", trigger, "User present:", !!user);
       if (user) {
         token.id = user.id;
-        // Fetch role from DB on initial sign in
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { role: true },
-        });
-        token.role = dbUser?.role || "viewer";
+        // The adapter user object should already have the role from DB
+        token.role = (user as any).role || "viewer";
+        console.log("[AUTH] Initial JWT role assigned:", token.role);
       }
       if (trigger === "update" && session?.role) {
         token.role = session.role;
+        console.log("[AUTH] JWT role updated via trigger:", token.role);
       }
       return token;
     },
     async session({ session, token }) {
+      console.log("[AUTH] Session Callback. Token role:", token?.role);
       if (session?.user && token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
