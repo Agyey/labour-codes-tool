@@ -49,7 +49,7 @@ const UIContext = createContext<(UIState & UIActions) | null>(null);
 export function UIProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ModeType>("read");
   const [passwordVerified, setPasswordVerified] = useState(false);
-  const [activeView, setActiveView] = useState<ViewType>("mapping");
+  const [activeView, setActiveView] = useState<ViewType>("dashboard");
   const [activeCode, setActiveCode] = useState<CodeKey>("CoW");
   const [expandedProvisionId, setExpandedProvision] = useState<string | null>(null);
   const [editingProvision, setEditingProvision] = useState<Provision | null>(null);

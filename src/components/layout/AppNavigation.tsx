@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 
 const VIEWS = [
-  { id: "mapping", label: "Mapping", icon: Map },
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "mapping", label: "Mapping", icon: Map },
   { id: "stateTracker", label: "States", icon: Globe },
   { id: "timeline", label: "Timeline", icon: Clock },
   { id: "penalties", label: "Penalties", icon: AlertTriangle },
