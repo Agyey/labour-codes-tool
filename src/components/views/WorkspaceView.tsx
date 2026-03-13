@@ -1,6 +1,7 @@
 "use client";
 
-import { Layers, FilePlus, CalendarCheck, CheckCircle2 } from "lucide-react";
+import { Layers, CalendarCheck, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 
 export function WorkspaceView() {
   return (
@@ -31,7 +32,7 @@ export function WorkspaceView() {
               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
               <span className="text-sm font-semibold text-slate-700 dark:text-zinc-300 line-through decoration-slate-400">1. Draft Non-Binding Term Sheet</span>
             </div>
-            <img src="https://i.pravatar.cc/150?u=1" className="w-6 h-6 rounded-full border border-slate-200" alt="Avatar" />
+            <Image src="https://i.pravatar.cc/150?u=1" width={24} height={24} className="rounded-full border border-slate-200" alt="Avatar" unoptimized />
           </div>
 
           <div className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 border border-indigo-500 shadow-sm shadow-indigo-500/10 rounded-xl">
