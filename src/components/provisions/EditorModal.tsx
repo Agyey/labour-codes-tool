@@ -147,7 +147,9 @@ export function EditorModal() {
             addArrayItem={addArrayItem}
             removeArrayItem={removeArrayItem}
             updateArrayItem={updateArrayItem}
+            update={update}
             inputCls={inputCls} 
+            labelCls={labelCls}
             sectionCls={sectionCls} 
           />
 

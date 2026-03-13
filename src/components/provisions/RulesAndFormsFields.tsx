@@ -8,7 +8,9 @@ interface RulesAndFormsFieldsProps {
   addArrayItem: (key: "draftRules" | "repealedRules" | "forms") => void;
   removeArrayItem: (key: "draftRules" | "repealedRules" | "forms", idx: number) => void;
   updateArrayItem: (key: "draftRules" | "repealedRules" | "forms", idx: number, field: string, val: string) => void;
+  update: <K extends keyof Provision>(key: K, val: Provision[K]) => void;
   inputCls: string;
+  labelCls: string;
   sectionCls: string;
 }
 
@@ -17,11 +19,37 @@ export function RulesAndFormsFields({
   addArrayItem,
   removeArrayItem,
   updateArrayItem,
+  update,
   inputCls,
+  labelCls,
   sectionCls
 }: RulesAndFormsFieldsProps) {
   return (
     <>
+      <div className={sectionCls}>
+        <h3 className="text-xs font-bold text-gray-700">Relational Mapping</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Parent Section (For Rules)</label>
+            <input 
+              value={form.parentSection || ""} 
+              onChange={(e) => update("parentSection", e.target.value)} 
+              placeholder="e.g. 67"
+              className={inputCls} 
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Linked Rule Refs (Comma Separated)</label>
+            <input 
+              value={(form.linkedRuleRefs || []).join(", ")} 
+              onChange={(e) => update("linkedRuleRefs", e.target.value.split(",").map(t => t.trim()).filter(Boolean))} 
+              placeholder="e.g. 12, 13, 14"
+              className={inputCls} 
+            />
+          </div>
+        </div>
+      </div>
+
       {(["draftRules", "repealedRules", "forms"] as const).map((key) => {
         const titles = { draftRules: "New Rules", repealedRules: "Old Rules", forms: "Forms / Registers" };
         const placeholders = { draftRules: ["Rule ref", "Summary"], repealedRules: ["Old rule", "Summary"], forms: ["Form ref", "Description"] };
