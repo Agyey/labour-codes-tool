@@ -161,6 +161,8 @@ model OldMapping {
   provision_id       String
   act_name           String
   section            String
+  sub_section        String?
+  target_sub_section String?
   summary            String
   full_text          String   @db.Text
   change_description String

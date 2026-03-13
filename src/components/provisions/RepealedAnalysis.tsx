@@ -84,8 +84,13 @@ export function RepealedAnalysis({ provision: p }: RepealedAnalysisProps) {
               </span>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm text-slate-900 dark:text-white truncate">{m.act}</div>
-                <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                  {m.sec && <span className="font-semibold">S.{m.sec}</span>}
+                <div className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 flex items-center gap-2">
+                  {m.sec && <span className="font-semibold text-slate-700 dark:text-zinc-300">S.{m.sec}{m.subSec}</span>}
+                  {m.targetSubSec && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-500/80 uppercase tracking-tight bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-500/20">
+                      <GitCompare className="w-2.5 h-2.5" /> {m.targetSubSec}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">

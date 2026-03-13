@@ -140,6 +140,22 @@ export function LibraryTable({ data }: LibraryTableProps) {
     {
       accessorFn: (row) => `${row.ch} ${row.sec}`,
       id: "reference",
+      sortingFn: (rowA, rowB) => {
+        const a = rowA.original;
+        const b = rowB.original;
+        
+        const getSortKey = (p: Provision) => {
+          // Grouping logic: Rules/Forms fall under their parentSection
+          const groupSec = p.parentSection || p.sec;
+          const secNum = parseInt(groupSec.replace(/\D/g, "")) || 0;
+          const typeWeight = p.provisionType === "section" ? 0 : 1;
+          const innerSecNum = parseInt(p.sec.replace(/\D/g, "")) || 0;
+          
+          return `${p.ch.padStart(3, "0")}-${secNum.toString().padStart(5, "0")}-${typeWeight}-${innerSecNum.toString().padStart(5, "0")}`;
+        };
+
+        return getSortKey(a).localeCompare(getSortKey(b));
+      },
       header: ({ column }) => {
         return (
           <button
@@ -152,13 +168,16 @@ export function LibraryTable({ data }: LibraryTableProps) {
         )
       },
       cell: ({ row }) => {
+        const p = row.original;
+        const isChild = !!p.parentSection && p.provisionType !== 'section';
+        
         return (
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-500 dark:text-zinc-400">
-              Ch {row.original.ch}
+          <div className={`flex flex-col ${isChild ? 'pl-4 border-l-2 border-slate-100 dark:border-zinc-800' : ''}`}>
+            <span className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase">
+              {p.provisionType === 'section' ? `Ch ${p.ch}` : `Ref Sec ${p.parentSection || '?'}`}
             </span>
             <span className="text-sm font-bold text-slate-800 dark:text-zinc-100">
-              Sec {row.original.sec}
+              {p.provisionType === 'section' ? 'Sec' : p.provisionType.charAt(0).toUpperCase() + p.provisionType.slice(1)} {p.sec}
             </span>
           </div>
         );

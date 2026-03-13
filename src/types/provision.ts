@@ -17,6 +17,8 @@ export interface Comment {
 export interface OldMapping {
   act: string;
   sec: string;
+  subSec?: string;
+  targetSubSec?: string;
   summary: string;
   fullText: string;
   change: string;

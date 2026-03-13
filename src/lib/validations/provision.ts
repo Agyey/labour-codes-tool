@@ -7,7 +7,7 @@ export const ProvisionUpdateSchema = z.object({
   sec: z.string(),
   sub: z.string(),
   title: z.string(),
-  provisionType: z.enum(["section", "rule"]).optional().default("section"),
+  provisionType: z.enum(["section", "rule", "form", "register"]).optional().default("section"),
   parentSection: z.string().optional().nullable(),
   subSections: z.array(z.object({ marker: z.string(), text: z.string() })).optional().default([]),
   linkedRuleRefs: z.array(z.string()).optional().default([]),
@@ -33,6 +33,8 @@ export const ProvisionUpdateSchema = z.object({
   oldMappings: z.array(z.object({
     act: z.string(),
     sec: z.string(),
+    subSec: z.string().optional().nullable(),
+    targetSubSec: z.string().optional().nullable(),
     summary: z.string(),
     fullText: z.string(),
     change: z.string(),

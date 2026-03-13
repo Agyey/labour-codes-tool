@@ -57,6 +57,8 @@ export async function getProvisions(): Promise<Provision[]> {
       oldMappings: (p.oldMappings || []).map((m: any) => ({
         act: m.act_name,
         sec: m.section,
+        subSec: m.sub_section || undefined,
+        targetSubSec: m.target_sub_section || undefined,
         summary: m.summary,
         fullText: m.full_text,
         change: m.change_description,
@@ -163,6 +165,8 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
       const oldMappingsCreate = (validatedData.oldMappings as any[] || []).map((m: any) => ({
         act_name: m.act,
         section: m.sec,
+        sub_section: m.subSec || null,
+        target_sub_section: m.targetSubSec || null,
         summary: m.summary,
         full_text: m.fullText,
         change_description: m.change,
