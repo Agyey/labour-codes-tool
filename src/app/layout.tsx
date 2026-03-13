@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
+import { LegalOSProvider } from "@/context/LegalOSContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Toaster } from "react-hot-toast";
 
@@ -37,7 +38,9 @@ export default function RootLayout({
       <body className="antialiased bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 selection:bg-blue-500/30 transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <AppProvider>{children}</AppProvider>
+            <LegalOSProvider>
+              <AppProvider>{children}</AppProvider>
+            </LegalOSProvider>
           </AuthProvider>
         </ThemeProvider>
         <Toaster

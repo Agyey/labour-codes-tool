@@ -6,6 +6,7 @@ import { useFilter } from "@/context/FilterContext";
 import { CODES } from "@/config/codes";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { ProvisionCard } from "@/components/provisions/ProvisionCard";
+import { MappingSubNav } from "@/components/layout/MappingSubNav";
 import { createBlankProvision } from "@/lib/utils";
 import { Plus, BookOpen, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
@@ -32,6 +33,7 @@ export function MappingView() {
 
   return (
     <div>
+      <MappingSubNav />
       <FilterBar />
 
       {chapters.length === 0 && (

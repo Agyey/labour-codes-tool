@@ -2,10 +2,14 @@
 
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
+import { useLegalOS } from "@/context/LegalOSContext";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { AppShell } from "@/components/layout/AppShell";
 import { MappingView } from "@/components/views/MappingView";
+import { ComplianceProductView } from "@/components/views/ComplianceProductView";
+import { AgreementsProductView } from "@/components/views/AgreementsProductView";
+import { DiligenceProductView } from "@/components/views/DiligenceProductView";
 
 const DashboardView = dynamic(() => import("@/components/views/DashboardView").then(m => m.DashboardView), { ssr: false });
 const StateTrackerView = dynamic(() => import("@/components/views/StateTrackerView").then(m => m.StateTrackerView), { ssr: false });
@@ -46,6 +50,7 @@ function ViewRouter() {
 
 export default function Home() {
   const { loading } = useData();
+  const { activeProduct } = useLegalOS();
 
   if (loading) {
     return (
@@ -60,7 +65,10 @@ export default function Home() {
 
   return (
     <AppShell>
-      <ViewRouter />
+      {activeProduct === "MAPPING" && <ViewRouter />}
+      {activeProduct === "COMPLIANCE" && <ComplianceProductView />}
+      {activeProduct === "AGREEMENTS" && <AgreementsProductView />}
+      {activeProduct === "DILIGENCE" && <DiligenceProductView />}
     </AppShell>
   );
 }
