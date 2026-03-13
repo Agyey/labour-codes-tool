@@ -123,6 +123,37 @@ export async function getMatters() {
   }
 }
 
+export async function getMatterDetails(id: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return null;
+
+    const matter = await prisma.matter.findUnique({
+      where: { id },
+      include: {
+        entity: true,
+        members: {
+          include: {
+            user: true
+          }
+        },
+        tasks: {
+          orderBy: { created_at: "asc" }
+        },
+        auditLogs: {
+          orderBy: { created_at: "desc" },
+          take: 20
+        }
+      }
+    });
+
+    return matter;
+  } catch (error) {
+    console.error(`Failed to fetch matter details for ${id}`, error);
+    return null;
+  }
+}
+
 export async function updateMatter(id: string, data: any) {
   try {
     const session = await getServerSession(authOptions);

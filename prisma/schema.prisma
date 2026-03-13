@@ -320,6 +320,7 @@ model Entity {
   businessContracts BusinessContract[]
   ClientAccess      ClientAccess[]
   matters           Matter[]
+  auditLogs         AuditLog[]
 }
 
 model EntityCompliance {
@@ -594,6 +595,7 @@ model Matter {
   members        MatterMember[]
   documents      MatterDocument[]
   clientAccesses ClientAccess[]
+  auditLogs      AuditLog[]
 }
 
 model MatterMember {
@@ -692,18 +694,23 @@ model DraftTask {
   
   draft_scenario    DraftScenario @relation(fields: [draft_scenario_id], references: [id], onDelete: Cascade)
 }
-
 model AuditLog {
   id          String   @id @default(cuid())
   org_id      String?
   actor_id    String?
-  action      String   // e.g., "CREATE_MATTER", "INVITE_USER", "DELETE_ENTITY"
   entity_type String   // e.g., "Matter", "User", "Entity"
-  entity_id   String?
-  metadata    Json?    // Stores the payload or diff
+  entity_id   String?  // Polymorphic ID
+  action      String   // e.g., "CREATE_MATTER", "INVITE_USER"
+  metadata    Json?    
   ip_address  String?
   created_at  DateTime @default(now())
 
+  // Explicit Relations for performance
+  matter_id   String?
+  entity_id_ref String?
+
   organization Organization? @relation(fields: [org_id], references: [id])
   actor        User?         @relation(fields: [actor_id], references: [id])
+  matter       Matter?       @relation(fields: [matter_id], references: [id])
+  entity       Entity?       @relation(fields: [entity_id_ref], references: [id])
 }
