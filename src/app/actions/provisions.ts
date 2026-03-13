@@ -12,6 +12,92 @@ type TransactionClient = Omit<
 >;
 
 /**
+ * Fetches all provisions with nested relations and maps them to the frontend type.
+ */
+export async function getProvisions(): Promise<Provision[]> {
+  try {
+    const dbProvs = await prisma.provision.findMany({
+      include: {
+        oldMappings: true,
+        complianceItems: true,
+        comments: {
+          include: {
+            user: true
+          },
+          orderBy: {
+            created_at: 'desc'
+          }
+        }
+      }
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return dbProvs.map((p: any) => ({
+      id: p.id,
+      code: p.code,
+      ch: p.chapter,
+      chName: p.chapter_name,
+      sec: p.section,
+      sub: p.sub_section,
+      title: p.title,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ruleAuth: p.rule_authority as any,
+      summary: p.summary,
+      fullText: p.full_text,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      oldMappings: p.oldMappings.map((m: any) => ({
+        act: m.act_name,
+        sec: m.section,
+        summary: m.summary,
+        fullText: m.full_text,
+        change: m.change_description,
+        changeTags: m.change_tags,
+      })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      impact: p.impact as any,
+      changeTags: p.change_tags,
+      workflowTags: p.workflow_tags,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      compItems: p.complianceItems.map((c: any) => ({
+        task: c.task,
+        assignee: c.assignee || "",
+        due: c.due_date ? c.due_date.toISOString() : "",
+      })),
+      draftRules: [],
+      repealedRules: [],
+      forms: [],
+      stateNotes: {},
+      stateRuleText: {},
+      stateCompStatus: {},
+      penaltyOld: p.penalty_old || "",
+      penaltyNew: p.penalty_new || "",
+      timelineDates: [],
+      notes: p.notes || "",
+      verified: p.verified,
+      pinned: p.pinned,
+      assignee: p.assignee || "",
+      dueDate: p.due_date ? p.due_date.toISOString() : "",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      comments: p.comments.map((c: any) => ({
+        id: c.id,
+        body: c.body,
+        parentId: c.parent_id,
+        createdAt: c.created_at.toISOString(),
+        user: {
+          id: c.user.id,
+          name: c.user.name,
+          image: c.user.image,
+          role: c.user.role,
+        },
+      })),
+    }));
+  } catch (error) {
+    console.error("[GET_PROVISIONS_ERROR]", error);
+    return [];
+  }
+}
+
+/**
  * Server action to update a provision with transactional integrity.
  * Ensures that nested updates (oldMappings, complianceItems) are atomic.
  */
@@ -56,7 +142,7 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
             summary: m.summary,
             full_text: m.fullText,
             change_description: m.change,
-            change_tags: m.changeTags || [],
+            change_tags: m.change_tags || [],
           }))
         };
       }
@@ -86,7 +172,8 @@ export async function updateProvision(id: string, rawUpdates: Provision, userId?
           data: {
             provision_id: id,
             user_id: userId,
-            change_summary: "Updated provision via transactional editor",
+            edit_type: "update",
+            diff: { message: "Updated provision via transactional editor" },
           }
         });
       }
