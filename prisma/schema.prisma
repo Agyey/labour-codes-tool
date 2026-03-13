@@ -74,6 +74,7 @@ model Organization {
 model Provision {
   id             String   @id @default(cuid())
   org_id         String?
+  framework_id   String?
   code           String
   chapter        String
   chapter_name   String
@@ -99,6 +100,7 @@ model Provision {
   
   // Relations
   organization     Organization? @relation(fields: [org_id], references: [id])
+  framework        Framework?    @relation(fields: [framework_id], references: [id])
   oldMappings      OldMapping[]
   complianceItems  ComplianceItem[]
   stateData        StateData[]
@@ -166,4 +168,153 @@ model Comment {
   user      User      @relation(fields: [user_id], references: [id])
   parent    Comment?  @relation("CommentReplies", fields: [parent_id], references: [id])
   replies   Comment[] @relation("CommentReplies")
+}
+
+// ==============================================================================
+// 🌟 4-PRODUCT LEGAL OS EXPANSION SCHEMAS
+// ==============================================================================
+
+// ---------------------------------------------------------
+// PRODUCT 1: Universal Provision Mapping Tool
+// ---------------------------------------------------------
+model Framework {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Labour Codes", "Companies Act", "FEMA"
+  description String?  @db.Text
+  org_id      String?  
+  created_at  DateTime @default(now())
+  
+  provisions  Provision[]
+}
+
+// ---------------------------------------------------------
+// PRODUCT 2: Entity Compliance Tracker
+// ---------------------------------------------------------
+model Company {
+  id                String   @id @default(cuid())
+  org_id            String?
+  name              String
+  incorporation_date DateTime?
+  industry          String?
+  status            String   @default("Active") // Active, Dormant, Struck Off
+  created_at        DateTime @default(now())
+  
+  // Relations to other products
+  compliances       CompanyCompliance[]
+  agreements        AgreementInstance[]
+  capTable          CapTableEntry[]
+  hygieneLogs       CorporateHygieneLog[]
+  licenses          License[]
+  businessContracts BusinessContract[]
+}
+
+model CompanyCompliance {
+  id               String   @id @default(cuid())
+  company_id       String
+  provision_id     String   // The specific law this company must comply with
+  applicability    String   @default("Applicable") // Applicable, Not Applicable, Exempt
+  status           String   @default("Not Started") // Compliant, At Risk, Non-Compliant
+  next_audit_date  DateTime?
+  notes            String?  @db.Text
+  
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------
+// PRODUCT 3: Modular Agreement Drafting Platform
+// ---------------------------------------------------------
+model AgreementTemplate {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Non-Disclosure Agreement", "Employment Contract"
+  category    String
+  content     String   @db.Text // The raw HTML/Markdown template containing {{variables}}
+  created_at  DateTime @default(now())
+  
+  variables   AgreementVariable[]
+  instances   AgreementInstance[]
+}
+
+model AgreementVariable {
+  id          String   @id @default(cuid())
+  template_id String
+  key         String   // e.g., "Company_Name"
+  label       String   // e.g., "What is the name of the hiring company?"
+  type        String   @default("text") // text, date, number, currency
+  
+  template AgreementTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+}
+
+model AgreementInstance {
+  id                String   @id @default(cuid())
+  template_id       String
+  company_id        String?
+  name              String   // e.g., "NDA - Reliance Ind."
+  filled_variables  Json     // Key-value store of filled variables mapping to the template
+  status            String   @default("Draft") // Draft, Ready for Signature, Signed
+  created_at        DateTime @default(now())
+  
+  template AgreementTemplate @relation(fields: [template_id], references: [id])
+  company  Company?          @relation(fields: [company_id], references: [id])
+}
+
+// ---------------------------------------------------------
+// PRODUCT 4: Intelligent Due Diligence Checklist
+// ---------------------------------------------------------
+
+// Window 1: Capital Structure & Valuation
+model CapTableEntry {
+  id               String   @id @default(cuid())
+  company_id       String
+  round_name       String   // e.g., "Seed", "Series A"
+  date             DateTime
+  pre_money_val    Float?
+  post_money_val   Float?
+  shares_issued    Int
+  price_per_share  Float?
+  investor_name    String
+  compliance_check Boolean  @default(false) // Did this issuance comply with Companies Act Section 42/62?
+  notes            String?
+  
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+// Window 3: Corporate Hygiene & Penalty Monitor
+model CorporateHygieneLog {
+  id               String   @id @default(cuid())
+  company_id       String
+  event_type       String   // e.g., "Board Meeting", "AGM", "AOC-4 Filing"
+  due_date         DateTime?
+  completed_date   DateTime?
+  status           String   @default("Pending") // Compliant, Delayed, Defaulted
+  potential_penalty Float?  // Calculated fine if delayed
+  notes            String?
+  
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+// Window 4: Licenses & Authorizations
+model License {
+  id               String   @id @default(cuid())
+  company_id       String
+  name             String   // e.g., "Factory License", "Shop & Establishment"
+  issuer           String   // e.g., "State Labor Department"
+  issue_date       DateTime?
+  expiry_date      DateTime?
+  status           String   @default("Active") // Active, Expired, Revoked, Applied
+  
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+// Window 5: Business Contracts Repository
+model BusinessContract {
+  id               String   @id @default(cuid())
+  company_id       String
+  counterparty     String
+  contract_type    String   // e.g., "Vendor", "Client MSA", "IP Assignment"
+  effective_date   DateTime?
+  expiry_date      DateTime?
+  value            Float?
+  key_obligations  String?  @db.Text
+  
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
