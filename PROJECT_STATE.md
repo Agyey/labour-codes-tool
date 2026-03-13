@@ -41,6 +41,7 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 2. [x] **Transactional Integrity**: Implemented `prisma.$transaction` in provision updates.
 3. [x] **UX Polish**: Added loading states and prevents double-submissions.
 4. [x] **Accessibility**: Added ARIA labels to interactive elements.
-5. [x] **Build Compliance**: 100% ESLint compliance reached.
-6. [ ] **Statelessness Audit**: Audit server actions for disk writes.
-7. [ ] **Type Hardening**: Refine recursive types for comments.
+5. [x] **Build Compliance**: 100% ESLint compliance reached and verified with Railway.
+6. [x] **Data Integrity**: Standardized snake_case (Prisma) to camelCase (Frontend) mappings.
+7. [ ] **Statelessness Audit**: Audit server actions for disk writes.
+8. [ ] **Type Hardening**: Refine recursive types for comments.

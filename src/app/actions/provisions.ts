@@ -32,7 +32,7 @@ export async function getProvisions(): Promise<Provision[]> {
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return dbProvs.map((p: any) => ({
+    return (dbProvs as any[]).map((p: any) => ({
       id: p.id,
       code: p.code,
       ch: p.chapter,
@@ -86,6 +86,7 @@ export async function getProvisions(): Promise<Provision[]> {
         user: {
           id: c.user.id,
           name: c.user.name,
+          email: c.user.email,
           image: c.user.image,
           role: c.user.role,
         },
@@ -245,7 +246,7 @@ export async function addComment(provisionId: string, body: string) {
       id: comment.id,
       body: comment.body,
       parentId: comment.parent_id,
-      createdAt: comment.createdAt.toISOString(),
+      createdAt: comment.created_at.toISOString(),
       user: {
         id: comment.user.id,
         name: comment.user.name,
