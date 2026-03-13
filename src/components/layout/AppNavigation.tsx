@@ -2,6 +2,7 @@
 
 import { useUI } from "@/context/UIContext";
 import { useFilter } from "@/context/FilterContext";
+import { useLegalOS } from "@/context/LegalOSContext";
 import { CODES } from "@/config/codes";
 import type { CodeKey } from "@/types/code";
 import {
@@ -31,6 +32,11 @@ export function AppNavigation() {
     setExpandedProvision,
   } = useUI();
   const { setFilter } = useFilter();
+  const { activeProduct } = useLegalOS();
+
+  if (activeProduct !== "MAPPING") {
+    return null;
+  }
 
   return (
     <nav className="sticky top-[73px] z-40 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md border-b border-slate-200/60 dark:border-zinc-800/60 shadow-sm transition-colors duration-300">
