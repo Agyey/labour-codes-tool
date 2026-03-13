@@ -9,9 +9,7 @@ import {
   LayoutDashboard,
   Map,
   Globe,
-  Clock,
   AlertTriangle,
-  GitCompare,
 } from "lucide-react";
 
 const VIEWS = [
