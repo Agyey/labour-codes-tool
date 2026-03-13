@@ -12,12 +12,15 @@ import { Plus, BookOpen, Database, Upload, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { LibraryTable } from "@/components/library/LibraryTable";
 import { MOCK_PRIVATE_PLACEMENT } from "@/lib/mockData";
+import { PdfUploadWizard } from "@/components/parsers/PdfUploadWizard";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 export function MappingView() {
   const { activeCode, setEditingProvision } = useUI();
   const { canEdit } = useData();
   const { filteredProvisions } = useFilter();
+  const [showPdfWizard, setShowPdfWizard] = useState(false);
 
   const cObj = CODES[activeCode];
   const { saveProvision } = useData();
@@ -32,18 +35,16 @@ export function MappingView() {
     }
   };
 
-  const handleUploadPDF = () => {
-    alert("Phase 4 Feature: The document parsing pipeline (Mammoth/PDF.js) will extract and map this Act automatically. For now, please use the 'Inject Mock Data' button to test the UI!");
-  };
-
   return (
     <div>
+      {showPdfWizard && <PdfUploadWizard onClose={() => setShowPdfWizard(false)} />}
+      
       <div className="flex items-center justify-between mb-4 mt-2">
         <MappingSubNav />
         {canEdit && (
           <div className="flex items-center gap-3">
             <button
-              onClick={handleUploadPDF}
+              onClick={() => setShowPdfWizard(true)}
               className="px-4 py-2 border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors shadow-sm flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />

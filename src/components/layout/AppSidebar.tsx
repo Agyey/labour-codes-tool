@@ -54,9 +54,9 @@ export function AppSidebar() {
 
         <div className="space-y-1 mb-8">
           {renderNavButton({ href: "/home", label: "Home Dashboard", icon: Home, desc: "Firm overview & alerts", color: "bg-blue-600", textHover: "group-hover:text-blue-600" })}
-          {renderNavButton({ href: "/matters", label: "Active Matters", icon: Layers, desc: "Collaborative workspaces", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" })}
-          {renderNavButton({ href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" })}
           {renderNavButton({ href: "/library", label: "Knowledge Library", icon: BookOpen, desc: "Structured legal databases", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" })}
+          {renderNavButton({ href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" })}
+          {renderNavButton({ href: "/matters", label: "Active Matters", icon: Layers, desc: "Collaborative workspaces & tasks", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" })}
         </div>
 
       </div>
