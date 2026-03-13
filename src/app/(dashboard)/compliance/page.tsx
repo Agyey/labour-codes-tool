@@ -162,8 +162,10 @@ export default async function ComplianceTracker() {
             </p>
             <div className="space-y-4 relative z-10">
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-200 mb-1">Last Sync</div>
-                <div className="text-sm font-black">March 14, 2024 - 01:22 AM</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-200 mb-1">Last Sync Status</div>
+                <div className="text-sm font-black">
+                  {tasks[0] ? format(tasks[0].updated_at, 'MMMM dd, yyyy - hh:mm a') : format(new Date(), 'MMMM dd, yyyy')}
+                </div>
               </div>
             </div>
           </div>
@@ -171,20 +173,22 @@ export default async function ComplianceTracker() {
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[32px] p-8">
             <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-6">Upcoming Milestones</h3>
             <div className="space-y-6">
-              {[
-                { label: "Q1 GST Filings", date: "April 20", status: "Upcoming" },
-                { label: "Annual General Meeting", date: "June 15", status: "Planned" },
-                { label: "Board Resolution #4", date: "March 28", status: "Urgent" }
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{item.label}</div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{item.date}</div>
+              {tasks.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">No milestones tracked.</p>
+              ) : (
+                tasks.slice(0, 3).map((item, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight truncate max-w-[150px]">{item.name}</div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                        {item.due_date ? format(item.due_date, 'MMMM dd') : "No Date"}
+                      </div>
+                    </div>
+                    <div className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${item.status === 'Urgent' ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'}`}>
+                      {item.status || "Upcoming"}
+                    </div>
                   </div>
-                  <div className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${item.status === 'Urgent' ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'}`}>
-                    {item.status}
-                  </div>
-                </div>
+                )
               ))}
             </div>
           </div>

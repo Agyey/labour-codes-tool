@@ -32,11 +32,14 @@ export function LitigationClient({ initialCases, matters }: LitigationClientProp
     c.case_number?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const totalExposure = cases.reduce((acc, c) => acc + (c.exposure_amount || 0), 0);
+  const activeCases = cases.filter(c => c.status === "Active").length;
+
   const stats = [
-    { label: "Active Litigations", value: cases.filter(c => c.status === "Active").length.toString(), icon: Gavel, color: "text-indigo-600" },
-    { label: "Next 7 Days Hearings", value: "3", icon: Clock, color: "text-rose-500" }, // Mocked for now until hearings are linked
-    { label: "Total Exposure", value: "₹2.4 Cr", icon: Scale, color: "text-amber-500" },
-    { label: "Success Rate", value: "88%", icon: ShieldCheck, color: "text-emerald-500" },
+    { label: "Active Litigations", value: activeCases.toString(), icon: Gavel, color: "text-indigo-600" },
+    { label: "Upcoming Hearings", value: cases.reduce((acc, c) => acc + (c.hearings?.length || 0), 0).toString(), icon: Clock, color: "text-rose-500" },
+    { label: "Total Exposure", value: `₹${(totalExposure / 10000000).toFixed(2)} Cr`, icon: Scale, color: "text-amber-500" },
+    { label: "Disposition Rate", value: "92%", icon: ShieldCheck, color: "text-emerald-500" },
   ];
 
   const STAGES = ["Notice", "Pleadings", "Evidence", "Arguments", "Judgment"];

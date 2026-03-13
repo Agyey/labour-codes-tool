@@ -54,7 +54,9 @@ export async function createCase(data: any) {
         stage: data.stage || "Notice",
         description: data.description,
         opposition: data.opposition,
-        matter_id: data.matterId,
+        matter_id: data.matterId || null,
+        exposure_amount: data.exposureAmount ? parseFloat(data.exposureAmount) : null,
+        currency: data.currency || "INR",
       }
     });
 
@@ -72,5 +74,55 @@ export async function createCase(data: any) {
   } catch (err) {
     console.error("Failed to create case", err);
     return { success: false, error: "Internal server error" };
+  }
+}
+
+export async function createCounsel(data: any) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
+    const counsel = await prisma.counsel.create({
+      data: {
+        name: data.name,
+        representative_name: data.representativeName,
+        firm: data.firm,
+        specialization: data.specialization,
+        email: data.email,
+        phone: data.phone,
+        rating: parseFloat(data.rating || "0"),
+        hourly_rate: data.hourlyRate ? parseFloat(data.hourlyRate) : null,
+        status: "Active"
+      }
+    });
+
+    await logActivity({
+      orgId: session.user.orgId || "system",
+      actorId: session.user.id,
+      action: "CREATE_COUNSEL",
+      entityType: "Counsel",
+      entityId: counsel.id,
+      metadata: { name: counsel.name }
+    });
+
+    revalidatePath("/litigation/counsel");
+    return { success: true, counsel };
+  } catch (err) {
+    console.error("Failed to create counsel", err);
+    return { success: false, error: "Internal server error" };
+  }
+}
+
+export async function getHearings() {
+  try {
+    return await prisma.hearing.findMany({
+      include: {
+        case: true
+      },
+      orderBy: { date: 'asc' }
+    });
+  } catch (err) {
+    console.error("Failed to fetch hearings", err);
+    return [];
   }
 }

@@ -618,6 +618,8 @@ model LegalCase {
   bench        String?
   status       String    @default("Active") // Active, Stayed, Disposed, Appeal
   stage        String    @default("Notice") // Notice, Pleadings, Evidence, Arguments, Judgment
+  exposure_amount Float?
+  currency        String?   @default("INR")
   description  String?
   opposition   String?
   created_at   DateTime  @default(now())
@@ -626,10 +628,10 @@ model LegalCase {
   hearings     Hearing[]
   counsels     Counsel[]
 }
-
 model Counsel {
   id             String      @id @default(cuid())
   name           String
+  representative_name String?
   firm           String?
   specialization String?
   email          String?

@@ -23,7 +23,9 @@ export function CreateCaseModal({ isOpen, onClose, matters, onSuccess }: CreateC
     stage: "Notice",
     description: "",
     opposition: "",
-    matterId: ""
+    matterId: "",
+    exposureAmount: "",
+    currency: "INR"
   });
 
   if (!isOpen) return null;
@@ -126,6 +128,28 @@ export function CreateCaseModal({ isOpen, onClose, matters, onSuccess }: CreateC
                   <option key={s} value={s}>{s} Stage</option>
                 ))}
               </select>
+            </div>
+
+            {/* Exposure Amount */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Exposure</label>
+              <div className="flex gap-2">
+                <select 
+                  className="w-24 px-3 py-3 rounded-2xl bg-slate-50 dark:bg-zinc-800 border-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-900 dark:text-white appearance-none"
+                  value={formData.currency}
+                  onChange={e => setFormData({...formData, currency: e.target.value})}
+                >
+                  <option value="INR">INR</option>
+                  <option value="USD">USD</option>
+                </select>
+                <input 
+                  type="number"
+                  placeholder="e.g. 500000"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-zinc-800 border-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-900 dark:text-white"
+                  value={formData.exposureAmount}
+                  onChange={e => setFormData({...formData, exposureAmount: e.target.value})}
+                />
+              </div>
             </div>
 
             {/* Opposition */}
