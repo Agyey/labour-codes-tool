@@ -7,11 +7,11 @@
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const buildLogMessage = (level: LogLevel, message: string, context?: LogContext, error?: unknown) => {
-  const logObj: Record<string, any> = {
+  const logObj: Record<string, any> = { // eslint-disable-line @typescript-eslint/no-explicit-any
     timestamp: new Date().toISOString(),
     level,
     message,

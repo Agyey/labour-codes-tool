@@ -40,7 +40,7 @@ export function CommandPalette() {
     : [];
 
   const handleSelect = (codeKey: string, provId: string) => {
-    setActiveCode(codeKey as any);
+    setActiveCode(codeKey as keyof typeof CODES);
     setActiveView("mapping");
     setExpandedProvision(provId);
     setOpen(false);
@@ -98,7 +98,7 @@ export function CommandPalette() {
                 
                 {query && results.length === 0 && (
                   <div className="px-4 py-8 text-center text-sm text-gray-500">
-                    No results found for "{query}"
+                    No results found for &quot;{query}&quot;
                   </div>
                 )}
 

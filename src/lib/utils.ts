@@ -3,7 +3,6 @@ import { twMerge } from "tailwind-merge";
 import type {
   Provision,
   OldMapping,
-  ComplianceItem,
 } from "@/types/provision";
 import { STATES } from "@/config/states";
 

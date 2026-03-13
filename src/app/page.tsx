@@ -3,14 +3,16 @@
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { AppShell } from "@/components/layout/AppShell";
 import { MappingView } from "@/components/views/MappingView";
-import { DashboardView } from "@/components/views/DashboardView";
-import { StateTrackerView } from "@/components/views/StateTrackerView";
-import { TimelineView } from "@/components/views/TimelineView";
-import { PenaltiesView } from "@/components/views/PenaltiesView";
-import { CompareView } from "@/components/views/CompareView";
-import { EditorModal } from "@/components/provisions/EditorModal";
+
+const DashboardView = dynamic(() => import("@/components/views/DashboardView").then(m => m.DashboardView), { ssr: false });
+const StateTrackerView = dynamic(() => import("@/components/views/StateTrackerView").then(m => m.StateTrackerView), { ssr: false });
+const TimelineView = dynamic(() => import("@/components/views/TimelineView").then(m => m.TimelineView), { ssr: false });
+const PenaltiesView = dynamic(() => import("@/components/views/PenaltiesView").then(m => m.PenaltiesView), { ssr: false });
+const CompareView = dynamic(() => import("@/components/views/CompareView").then(m => m.CompareView), { ssr: false });
+const EditorModal = dynamic(() => import("@/components/provisions/EditorModal").then(m => m.EditorModal), { ssr: false });
 
 function ViewRouter() {
   const { activeView, editingProvision } = useUI();

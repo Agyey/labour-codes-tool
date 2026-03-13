@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from 'react'
-import { Scale } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 
 export default function LoginPage() {
@@ -10,8 +9,6 @@ export default function LoginPage() {
   async function signInWithGoogle() {
     setIsLoading(true)
     await signIn('google', { callbackUrl: '/' })
-    // No need to setIsLoading(false) if redirect succeeds, 
-    // but if it stays on page we can handle error (signIn auto-redirects usually)
   }
 
   return (

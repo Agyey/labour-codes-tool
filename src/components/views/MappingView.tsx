@@ -9,7 +9,7 @@ import { ProvisionCard } from "@/components/provisions/ProvisionCard";
 import { createBlankProvision } from "@/lib/utils";
 import { Plus, BookOpen, ChevronRight } from "lucide-react";
 import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export function MappingView() {
   const { activeCode, setEditingProvision } = useUI();

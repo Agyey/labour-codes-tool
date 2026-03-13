@@ -15,7 +15,7 @@ import { getProvisions, updateProvision } from "@/app/actions/provisions";
 import { getUsers } from "@/app/actions/users";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { useUI } from "./UIContext";
+import { useUI } from "@/context/UIContext";
 import toast from "react-hot-toast";
 
 const STORAGE_KEY = "lc-enterprise-v1";
@@ -68,7 +68,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         const dbUsers = await getUsers();
         if (dbUsers) {
-          setUsers(dbUsers as any[]);
+          setUsers(dbUsers as User[]);
         }
 
         const data = loadStorage<StorageData>(STORAGE_KEY);
