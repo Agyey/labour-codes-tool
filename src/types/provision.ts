@@ -66,17 +66,17 @@ export interface Legislation {
   frameworkId: string;
   name: string;
   shortName: string;
-  type: 'act' | 'rules' | 'repealed_act' | 'repealed_rules';
+  type: string;
   isRepealed: boolean;
-  year?: number;
-  color?: string;
+  year?: number | null;
+  color?: string | null;
 }
 
 export interface Framework {
   id: string;
   name: string;
-  shortName?: string;
-  description?: string;
+  shortName: string;
+  description?: string | null;
   legislations?: Legislation[];
 }
 

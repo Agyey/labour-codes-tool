@@ -2,12 +2,17 @@
 
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
-import { FolderKanban, Scale, ChevronRight, Activity, Pencil, Trash2, PieChart } from "lucide-react";
+import { FolderKanban, Scale, ChevronRight, Activity, Pencil, Trash2, PieChart, Plus } from "lucide-react";
 import toast from "react-hot-toast";
+import { useState } from "react";
+import { FrameworkModal } from "./FrameworkModal";
+import { Framework } from "@/types/provision";
 
 export function FrameworkDashboard() {
-  const { frameworks, loading } = useData();
+  const { frameworks, loading, deleteFramework } = useData();
   const { setActiveView, setActiveCode } = useUI();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingFw, setEditingFw] = useState<Framework | null>(null);
 
   if (loading) {
     return (
@@ -25,9 +30,17 @@ export function FrameworkDashboard() {
         <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
           Legal Operations <span className="text-indigo-600 dark:text-indigo-400">Nexus</span>
         </h1>
-        <p className="text-slate-500 dark:text-zinc-400 font-medium max-w-2xl">
-          Central intelligence for complex legal frameworks. Manage legislations, rules, and connectors within their respective buckets.
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-slate-500 dark:text-zinc-400 font-medium max-w-2xl">
+            Central intelligence for complex legal frameworks. Manage legislations, rules, and connectors within their respective buckets.
+          </p>
+          <button 
+            onClick={() => { setEditingFw(null); setIsModalOpen(true); }}
+            className="px-6 py-3 bg-indigo-600 text-white text-[12px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
+          >
+            Create New Bucket
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -66,10 +79,16 @@ export function FrameworkDashboard() {
                     <PieChart className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={(e) => { e.stopPropagation(); toast.success("Edit Framework metadata!"); }}
+                    onClick={(e) => { e.stopPropagation(); setEditingFw(fw); setIsModalOpen(true); }}
                     className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     <Pencil className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); deleteFramework(fw.id); }}
+                    className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>

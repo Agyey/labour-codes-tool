@@ -342,7 +342,18 @@ export async function getLegislations() {
         }
       }
     });
-    return legislations;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (legislations as any[]).map(l => ({
+      id: l.id,
+      frameworkId: l.framework_id,
+      name: l.name,
+      shortName: l.short_name,
+      type: l.type,
+      isRepealed: l.is_repealed,
+      year: l.year,
+      color: l.color,
+      provisions: l.provisions
+    }));
   } catch (error) {
     logger.error("Failed to fetch legislations", error);
     return [];
@@ -360,11 +371,114 @@ export async function getFrameworks() {
             }
           }
         }
-      }
+      },
+      orderBy: { created_at: 'desc' }
     });
-    return frameworks;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (frameworks as any[]).map(f => ({
+      id: f.id,
+      name: f.name,
+      shortName: f.short_name,
+      description: f.description,
+      legislations: (f.legislations || []).map((l: any) => ({
+        id: l.id,
+        frameworkId: l.framework_id,
+        name: l.name,
+        shortName: l.short_name,
+        type: l.type,
+        isRepealed: l.is_repealed,
+        year: l.year,
+        color: l.color,
+        provisions: l.provisions
+      }))
+    }));
   } catch (error) {
     logger.error("Failed to fetch frameworks", error);
     return [];
+  }
+}
+
+/** 
+ * Hierarchical CRUD Actions 
+ */
+
+export async function createFramework(data: { name: string; shortName: string; description?: string }) {
+  try {
+    const framework = await prisma.framework.create({
+      data: {
+        name: data.name,
+        short_name: data.shortName,
+        description: data.description,
+      }
+    });
+    return { success: true, framework };
+  } catch (error) {
+    logger.error("Failed to create framework", error);
+    return { success: false, error: "Failed to create framework" };
+  }
+}
+
+export async function updateFramework(id: string, data: { name?: string; shortName?: string; description?: string }) {
+  try {
+    const framework = await prisma.framework.update({
+      where: { id },
+      data: {
+        name: data.name,
+        short_name: data.shortName,
+        description: data.description,
+      }
+    });
+    return { success: true, framework };
+  } catch (error) {
+    logger.error("Failed to update framework", error);
+    return { success: false, error: "Failed to update framework" };
+  }
+}
+
+export async function deleteFramework(id: string) {
+  try {
+    await prisma.framework.delete({ where: { id } });
+    return { success: true };
+  } catch (error) {
+    logger.error("Failed to delete framework", error);
+    return { success: false, error: "Failed to delete framework" };
+  }
+}
+
+export async function createLegislation(data: { 
+  frameworkId: string; 
+  name: string; 
+  shortName: string; 
+  type: string; 
+  isRepealed: boolean;
+  year?: number;
+  color?: string;
+}) {
+  try {
+    const legislation = await prisma.legislation.create({
+      data: {
+        framework_id: data.frameworkId,
+        name: data.name,
+        short_name: data.shortName,
+        type: data.type,
+        is_repealed: data.isRepealed,
+        year: data.year,
+        color: data.color
+      }
+    });
+    return { success: true, legislation };
+  } catch (error) {
+    logger.error("Failed to create legislation", error);
+    return { success: false, error: "Failed to create legislation" };
+  }
+}
+
+export async function deleteLegislation(id: string) {
+  try {
+    await prisma.legislation.delete({ where: { id } });
+    return { success: true };
+  } catch (error) {
+    logger.error("Failed to delete legislation", error);
+    return { success: false, error: "Failed to delete legislation" };
   }
 }

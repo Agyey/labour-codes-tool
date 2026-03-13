@@ -11,7 +11,7 @@ import { Breadcrumbs } from "../shared/Breadcrumbs";
 import toast from "react-hot-toast";
 
 export function CompareView() {
-  const { provisions, saveProvision } = useData();
+  const { provisions, frameworks, legislations, saveProvision, createLegislation } = useData();
   const { comparePayload, setComparePayload } = useUI();
   
   const [codeA, setCodeA] = useState<string>("");
@@ -20,9 +20,8 @@ export function CompareView() {
   const [provB, setProvB] = useState<string>("");
   const [subA, setSubA] = useState<string>("");
   const [subB, setSubB] = useState<string>("");
+  const [targetFrameworkId, setTargetFrameworkId] = useState("");
 
-  // Local state for manually registered acts
-  const [registeredActs, setRegisteredActs] = useState<Record<string, { n: string; s: string; c: string }>>({});
   const [showAddAct, setShowAddAct] = useState(false);
   const [newActName, setNewActName] = useState("");
   const [newActShort, setNewActShort] = useState("");
@@ -35,18 +34,26 @@ export function CompareView() {
     }
   }, [comparePayload]);
 
-  const handleRegisterAct = (e: React.FormEvent) => {
+  const handleRegisterAct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newActName || !newActShort) return;
-    const id = newActShort.toUpperCase().replace(/\s+/g, '_');
-    setRegisteredActs(prev => ({
-      ...prev,
-      [id]: { n: newActName, s: newActShort, c: "#94a3b8" }
-    }));
-    setNewActName("");
-    setNewActShort("");
-    setShowAddAct(false);
-    toast.success(`Registered ${newActShort}`);
+    if (!newActName || !newActShort || !targetFrameworkId) return;
+    
+    const success = await createLegislation({
+      frameworkId: targetFrameworkId,
+      name: newActName,
+      shortName: newActShort,
+      type: 'act',
+      isRepealed: true,
+      year: new Date().getFullYear(),
+      color: "#94a3b8"
+    });
+
+    if (success) {
+      setNewActName("");
+      setNewActShort("");
+      setShowAddAct(false);
+      toast.success(`Registered ${newActShort} persistently.`);
+    }
   };
 
   /** Create a formal OldMapping connector between A and B */
@@ -73,18 +80,21 @@ export function CompareView() {
 
   // Dynamically derive available codes from provisions + static config + manual registrations
   const availableCodes = useMemo(() => {
-    const codesInData = new Set([...provisions.map(p => p.code), ...Object.keys(registeredActs)]);
+    // Collect unique codes from provisions + global legislations
+    const codesInData = new Set([...provisions.map(p => p.code), ...legislations.map(l => l.shortName)]);
     const all = Array.from(codesInData).map(c => {
-      const meta = CODES[c as keyof typeof CODES] || registeredActs[c];
+      const dbLeg = legislations.find(l => l.shortName === c);
+      const staticMeta = CODES[c as keyof typeof CODES];
+      
       return {
         id: c,
-        name: meta?.n || c,
-        short: meta?.s || c,
-        color: meta?.c || "#64748b"
+        name: dbLeg?.name || staticMeta?.n || c,
+        short: dbLeg?.shortName || staticMeta?.s || c,
+        color: dbLeg?.color || staticMeta?.c || "#64748b"
       };
     }).sort((a, b) => a.name.localeCompare(b.name));
     return all;
-  }, [provisions, registeredActs]);
+  }, [provisions, legislations]);
 
   const provsA = useMemo(() => provisions.filter(p => p.code === codeA), [provisions, codeA]);
   const provsB = useMemo(() => provisions.filter(p => p.code === codeB), [provisions, codeB]);
@@ -173,6 +183,20 @@ export function CompareView() {
                   placeholder="e.g. PWA36"
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-indigo-500/20"
                 />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Framework (Bucket)</label>
+                <select 
+                  required
+                  value={targetFrameworkId}
+                  onChange={e => setTargetFrameworkId(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value="">Select Bucket</option>
+                  {frameworks.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
               </div>
               <button 
                 type="submit"

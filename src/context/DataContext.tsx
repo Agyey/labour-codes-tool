@@ -18,7 +18,12 @@ import {
   togglePin as togglePinAction,
   toggleVerify as toggleVerifyAction,
   getFrameworks,
-  getLegislations
+  getLegislations,
+  createFramework as createFrameworkAction,
+  updateFramework as updateFrameworkAction,
+  deleteFramework as deleteFrameworkAction,
+  createLegislation as createLegislationAction,
+  deleteLegislation as deleteLegislationAction
 } from "@/app/actions/provisions";
 import { getUsers } from "@/app/actions/users";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
@@ -52,6 +57,11 @@ interface DataActions {
   toggleVerify: (id: string) => void;
   setComplianceStatus: (id: string, status: string) => void;
   setEditorPassword: (pw: string) => void;
+  // Hierarchy actions
+  createFramework: (data: any) => Promise<boolean>;
+  deleteFramework: (id: string) => Promise<boolean>;
+  createLegislation: (data: any) => Promise<boolean>;
+  deleteLegislation: (id: string) => Promise<boolean>;
   canEdit: boolean;
   stats: ReturnType<typeof calculateStats>;
 }
@@ -199,6 +209,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setComplianceStatuses((prev) => ({ ...prev, [id]: status }));
   }, []);
 
+  const createFramework = useCallback(async (data: any) => {
+    const res = await createFrameworkAction(data);
+    if (res.success) {
+      const refreshed = await getFrameworks();
+      setFrameworks(refreshed);
+      toast.success("Framework created.");
+      return true;
+    }
+    toast.error("Failed to create framework.");
+    return false;
+  }, []);
+
+  const deleteFramework = useCallback(async (id: string) => {
+    if (!confirm("Delete this framework and all its contents?")) return false;
+    const res = await deleteFrameworkAction(id);
+    if (res.success) {
+      setFrameworks(prev => prev.filter(f => f.id !== id));
+      toast.success("Framework deleted.");
+      return true;
+    }
+    toast.error("Failed to delete framework.");
+    return false;
+  }, []);
+
+  const createLegislation = useCallback(async (data: any) => {
+    const res = await createLegislationAction(data);
+    if (res.success) {
+      const refreshed = await getFrameworks();
+      setFrameworks(refreshed);
+      toast.success("Legislation created.");
+      return true;
+    }
+    toast.error("Failed to create legislation.");
+    return false;
+  }, []);
+
+  const deleteLegislation = useCallback(async (id: string) => {
+    const res = await deleteLegislationAction(id);
+    if (res.success) {
+      setFrameworks(prev => prev.map(f => ({
+        ...f,
+        legislations: f.legislations?.filter(l => l.id !== id)
+      })));
+      toast.success("Legislation deleted.");
+      return true;
+    }
+    toast.error("Failed to delete legislation.");
+    return false;
+  }, []);
+
   const setEditorPassword = useCallback((pw: string) => {
     setEditorPasswordState(pw);
   }, []);
@@ -229,6 +289,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     toggleVerify,
     setComplianceStatus,
     setEditorPassword,
+    createFramework,
+    deleteFramework,
+    createLegislation,
+    deleteLegislation,
     canEdit,
     stats,
   }), [

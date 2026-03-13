@@ -5,12 +5,16 @@ import { useUI } from "@/context/UIContext";
 import { LegislationTile } from "./LegislationTile";
 import { ArrowLeft, Plus, LayoutGrid, Info, AlertCircle, Pencil } from "lucide-react";
 import { Breadcrumbs } from "../shared/Breadcrumbs";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { LegislationModal } from "./LegislationModal";
+import { Legislation } from "@/types/provision";
 import toast from "react-hot-toast";
 
 export function BucketExplorer() {
   const { activeCode, setActiveView, setActiveCode } = useUI();
-  const { frameworks, legislations } = useData();
+  const { frameworks, legislations, deleteLegislation } = useData();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingLeg, setEditingLeg] = useState<Legislation | null>(null);
 
   const framework = useMemo(() => 
     frameworks.find(f => f.shortName === activeCode || f.id === activeCode),
@@ -53,6 +57,7 @@ export function BucketExplorer() {
         </div>
 
         <button 
+          onClick={() => { setEditingLeg(null); setIsModalOpen(true); }}
           className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl"
         >
           <Plus className="w-4 h-4" /> Add Legislation
@@ -73,13 +78,17 @@ export function BucketExplorer() {
                 key={leg.id}
                 legislation={leg}
                 onSelect={() => {
-                   setActiveCode(framework.shortName as any || framework.id);
+                   setActiveCode(leg.shortName as any || leg.id);
                    setActiveView('mapping');
                 }}
+                onDelete={() => deleteLegislation(leg.id)}
               />
             ))}
             
-            <button className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[32px] hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-indigo-50/10 transition-all group">
+            <button 
+              onClick={() => { setEditingLeg(null); setIsModalOpen(true); }}
+              className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[32px] hover:border-indigo-400 dark:hover:border-indigo-500/50 hover:bg-indigo-50/10 transition-all group"
+            >
               <Plus className="w-8 h-8 text-slate-300 dark:text-zinc-700 group-hover:text-indigo-500 mb-2" />
               <span className="text-xs font-black text-slate-400 dark:text-zinc-600 uppercase tracking-widest group-hover:text-indigo-500 text-center">
                 New Act/Rule Tile
