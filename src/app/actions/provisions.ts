@@ -1,8 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import type { Provision, Comment } from "@/types/provision";
 import { ProvisionUpdateSchema } from "@/lib/validations/provision";
+// @ts-ignore - PrismaClient is generated but IDE may require TS Server restart to recognize it
 import { PrismaClient } from "@prisma/client";
 
 // Local helper for Prisma transaction client type if Prisma.TransactionClient is missing or causing issues
@@ -16,6 +18,7 @@ type TransactionClient = Omit<
  */
 export async function getProvisions(): Promise<Provision[]> {
   try {
+    logger.info("Fetching provisions from database");
     const dbProvs = await prisma.provision.findMany({
       include: {
         oldMappings: true,
@@ -31,6 +34,8 @@ export async function getProvisions(): Promise<Provision[]> {
       }
     });
 
+    logger.info(`Successfully fetched ${dbProvs.length} provisions`);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (dbProvs as any[]).map((p: any) => ({
       id: p.id,
@@ -45,7 +50,7 @@ export async function getProvisions(): Promise<Provision[]> {
       summary: p.summary,
       fullText: p.full_text,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      oldMappings: p.oldMappings.map((m: any) => ({
+      oldMappings: (p.oldMappings || []).map((m: any) => ({
         act: m.act_name,
         sec: m.section,
         summary: m.summary,
@@ -58,7 +63,7 @@ export async function getProvisions(): Promise<Provision[]> {
       changeTags: p.change_tags,
       workflowTags: p.workflow_tags,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      compItems: p.complianceItems.map((c: any) => ({
+      compItems: (p.complianceItems || []).map((c: any) => ({
         task: c.task,
         assignee: c.assignee || "",
         due: c.due_date ? c.due_date.toISOString() : "",
@@ -78,22 +83,22 @@ export async function getProvisions(): Promise<Provision[]> {
       assignee: p.assignee || "",
       dueDate: p.due_date ? p.due_date.toISOString() : "",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      comments: p.comments.map((c: any) => ({
+      comments: (p.comments || []).map((c: any) => ({
         id: c.id,
         body: c.body,
         parentId: c.parent_id,
         createdAt: c.created_at.toISOString(),
         user: {
-          id: c.user.id,
-          name: c.user.name,
-          email: c.user.email,
-          image: c.user.image,
-          role: c.user.role,
+          id: c.user?.id || "unknown",
+          name: c.user?.name || "Deleted User",
+          email: c.user?.email,
+          image: c.user?.image,
+          role: c.user?.role || "viewer",
         },
       })),
     }));
   } catch (error) {
-    console.error("[GET_PROVISIONS_ERROR]", error);
+    logger.error("Failed to fetch provisions", error);
     return [];
   }
 }
