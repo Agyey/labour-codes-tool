@@ -7,9 +7,10 @@ interface LegislationTileProps {
   legislation: Legislation & { provisions?: { id: string }[] };
   onSelect: () => void;
   onDelete?: () => void;
+  canEdit?: boolean;
 }
 
-export function LegislationTile({ legislation, onSelect, onDelete }: LegislationTileProps) {
+export function LegislationTile({ legislation, onSelect, onDelete, canEdit }: LegislationTileProps) {
   const provCount = legislation.provisions?.length || 0;
   
   return (
@@ -60,18 +61,20 @@ export function LegislationTile({ legislation, onSelect, onDelete }: Legislation
         </div>
         
         <div className="flex items-center gap-2">
+          {canEdit && (
             <button 
               onClick={(e) => { e.stopPropagation(); if (confirm("Delete this legislation tile?")) onDelete?.(); }}
               className="p-2.5 bg-slate-50 dark:bg-zinc-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-xl transition-all"
             >
               <Trash2 className="w-4 h-4" />
             </button>
-            <button 
-              onClick={onSelect}
-              className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md"
-            >
-              Open
-            </button>
+          )}
+          <button 
+            onClick={onSelect}
+            className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md"
+          >
+            Open
+          </button>
         </div>
       </div>
     </div>

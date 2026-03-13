@@ -63,3 +63,51 @@ export async function createMatterFromScenario(data: {
     return { success: false, error: error.message };
   }
 }
+
+export async function getMatters() {
+  try {
+    return await prisma.matter.findMany({
+      orderBy: { created_at: "desc" },
+      include: {
+        entity: true,
+        members: {
+          include: {
+            user: true
+          }
+        },
+        tasks: true
+      }
+    });
+  } catch (error) {
+    console.error("Failed to fetch matters", error);
+    return [];
+  }
+}
+
+export async function updateMatter(id: string, data: {
+  name?: string;
+  description?: string;
+  status?: string;
+  client_id?: string;
+}) {
+  try {
+    const matter = await prisma.matter.update({
+      where: { id },
+      data,
+    });
+    return { success: true, matter };
+  } catch (error) {
+    console.error("Failed to update matter", error);
+    return { success: false, error: "Failed to update matter" };
+  }
+}
+
+export async function deleteMatter(id: string) {
+  try {
+    await prisma.matter.delete({ where: { id } });
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete matter", error);
+    return { success: false, error: "Failed to delete matter" };
+  }
+}

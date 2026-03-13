@@ -485,6 +485,33 @@ export async function createLegislation(data: {
   }
 }
 
+export async function updateLegislation(id: string, data: { 
+  name?: string; 
+  shortName?: string; 
+  type?: string; 
+  isRepealed?: boolean;
+  year?: number;
+  color?: string;
+}) {
+  try {
+    const legislation = await prisma.legislation.update({
+      where: { id },
+      data: {
+        name: data.name,
+        short_name: data.shortName,
+        type: data.type,
+        is_repealed: data.isRepealed,
+        year: data.year,
+        color: data.color
+      }
+    });
+    return { success: true, legislation };
+  } catch (error) {
+    logger.error("Failed to update legislation", error);
+    return { success: false, error: "Failed to update legislation" };
+  }
+}
+
 export async function deleteLegislation(id: string) {
   try {
     await prisma.legislation.delete({ where: { id } });

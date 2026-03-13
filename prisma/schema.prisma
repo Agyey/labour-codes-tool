@@ -54,9 +54,10 @@ model User {
   TaskInstance TaskInstance[]
 
   // Legal OS Relations
-  matterMembers  MatterMember[]
-  assignedTasks  Task[]
-  clientAccesses ClientAccess[]
+  matterMembers     MatterMember[]
+  assignedTasks     Task[]
+  clientAccesses    ClientAccess[]
+  organizationUsers OrganizationUser[]
 }
 
 model VerificationToken {
@@ -88,7 +89,7 @@ model OrganizationUser {
   role    String @default("Member") // Admin, Member, Guest
 
   organization Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
-  // We skip relation to User here temporarily or just rely on manual mapping if needed
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model Subscription {
@@ -111,7 +112,7 @@ model ClientAccess {
 
   user    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   matter  Matter?  @relation(fields: [matter_id], references: [id], onDelete: Cascade)
-  company Company? @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  entity  Entity?  @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 model Provision {
@@ -277,35 +278,41 @@ model Framework {
 // ---------------------------------------------------------
 // PRODUCT 2: Entity Compliance Tracker
 // ---------------------------------------------------------
-model Company {
+model Entity {
   id                 String    @id @default(cuid())
   org_id             String?
   name               String
+  type               String?   // e.g., "Public Listed", "LLP", "Private Limited"
   incorporation_date DateTime?
   industry           String?
-  status             String    @default("Active") // Active, Dormant, Struck Off
+  status             String    @default("Healthy") // Healthy, Warning, Critical
+  health_score       Int       @default(100)
+  compliance_score   String    @default("A")
+  last_audit_at      DateTime?
   created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
 
   // Relations to other products
-  compliances       CompanyCompliance[]
+  compliances       EntityCompliance[]
   agreements        AgreementInstance[]
   capTable          CapTableEntry[]
   hygieneLogs       CorporateHygieneLog[]
   licenses          License[]
   businessContracts BusinessContract[]
   ClientAccess      ClientAccess[]
+  matters           Matter[]
 }
 
-model CompanyCompliance {
+model EntityCompliance {
   id              String    @id @default(cuid())
-  company_id      String
-  provision_id    String // The specific law this company must comply with
+  entity_id       String
+  provision_id    String // The specific law this entity must comply with
   applicability   String    @default("Applicable") // Applicable, Not Applicable, Exempt
   status          String    @default("Not Started") // Compliant, At Risk, Non-Compliant
   next_audit_date DateTime?
   notes           String?   @db.Text
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  entity Entity @relation(fields: [entity_id], references: [id], onDelete: Cascade)
 }
 
 // ---------------------------------------------------------
@@ -342,7 +349,7 @@ model AgreementInstance {
   created_at       DateTime @default(now())
 
   template AgreementTemplate @relation(fields: [template_id], references: [id])
-  company  Company?          @relation(fields: [company_id], references: [id])
+  entity   Entity?           @relation(fields: [company_id], references: [id])
 }
 
 // ---------------------------------------------------------
@@ -363,7 +370,7 @@ model CapTableEntry {
   compliance_check Boolean  @default(false) // Did this issuance comply with Companies Act Section 42/62?
   notes            String?
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  entity Entity @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 // Window 3: Corporate Hygiene & Penalty Monitor
@@ -377,7 +384,7 @@ model CorporateHygieneLog {
   potential_penalty Float? // Calculated fine if delayed
   notes             String?
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  entity Entity @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 // Window 4: Licenses & Authorizations
@@ -390,7 +397,7 @@ model License {
   expiry_date DateTime?
   status      String    @default("Active") // Active, Expired, Revoked, Applied
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  entity Entity @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 // Window 5: Business Contracts Repository
@@ -404,7 +411,7 @@ model BusinessContract {
   value           Float?
   key_obligations String?   @db.Text
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  entity Entity @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
 // ==============================================================================
@@ -556,11 +563,13 @@ model Matter {
   name        String // e.g., "Reliance - Q3 Private Placement"
   description String?  @db.Text
   scenario_id String?
+  client_id   String?
   status      String   @default("Active")
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
   organization   Organization?     @relation(fields: [org_id], references: [id])
+  entity         Entity?           @relation(fields: [client_id], references: [id])
   scenario       ScenarioTemplate? @relation(fields: [scenario_id], references: [id])
   tasks          Task[]
   members        MatterMember[]
@@ -600,6 +609,8 @@ model Task {
   due_date      DateTime?
   assignee_id   String?
   dependency_id String? // ID of a task this depends on
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
 
   matter     Matter           @relation(fields: [matter_id], references: [id], onDelete: Cascade)
   assignee   User?            @relation(fields: [assignee_id], references: [id])

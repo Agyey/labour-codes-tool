@@ -1,5 +1,3 @@
-"use client";
-
 import { 
   Briefcase, 
   AlertTriangle, 
@@ -10,21 +8,62 @@ import {
   Building2
 } from "lucide-react";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { formatDistanceToNow } from "date-fns";
 
-export default function FirmDashboard() {
-  // Mock unified firm data
+export default async function FirmDashboard() {
+  // 1. Fetch real data
+  const matters = await prisma.matter.findMany({
+    include: {
+      tasks: true,
+      entity: true,
+    }
+  });
+
+  const entities = await prisma.entity.findMany({
+    orderBy: { health_score: "asc" },
+    take: 5
+  });
+
+  const overdueTasks = await prisma.task.findMany({
+    where: {
+      status: { not: "Completed" },
+      due_date: { lt: new Date() }
+    },
+    include: {
+      matter: true
+    },
+    take: 5
+  });
+
+  // 2. Calculate metrics
+  const activeDeals = matters.filter(m => m.status === "Active").length;
+  const overdueCount = await prisma.task.count({
+    where: {
+      status: { not: "Completed" },
+      due_date: { lt: new Date() }
+    }
+  });
+  
+  const completedLast7Days = await prisma.task.count({
+    where: {
+      status: "Completed",
+      updated_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+    }
+  });
+
+  const pendingSignatures = await prisma.task.count({
+    where: {
+      name: { contains: "Signature" },
+      status: { not: "Completed" }
+    }
+  });
+
   const metrics = [
-    { label: "Active Deals", value: "12", change: "+2 this week", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-    { label: "Overdue Tasks", value: "3", change: "Requires attention", icon: AlertTriangle, color: "text-rose-500", bg: "bg-rose-500/10" },
-    { label: "Completed (7d)", value: "48", change: "+12% vs last week", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Pending Signatures", value: "7", change: "Waiting on client", icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
-  ];
-
-  const inboxTasks = [
-    { id: 1, matter: "Reliance - Q3 Private Placement", task: "Upload Board Resolution (Draft)", due: "Today", status: "Overdue", type: "Docs" },
-    { id: 2, matter: "Tata Motors - ESOP Restructuring", task: "Verify Form SH-7 Filing", due: "Tomorrow", status: "Pending", type: "Compliance" },
-    { id: 3, matter: "Zomato - Seed Round", task: "Review Shareholders Agreement", due: "In 2 days", status: "In Progress", type: "Review" },
-    { id: 4, matter: "Reliance - Q3 Private Placement", task: "Client signature: Valuation Report", due: "In 3 days", status: "Pending", type: "Client" },
+    { label: "Active Deals", value: activeDeals.toString(), change: "Live from database", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+    { label: "Overdue Tasks", value: overdueCount.toString(), change: overdueCount > 0 ? "Requires attention" : "Everything on track", icon: AlertTriangle, color: "text-rose-500", bg: "bg-rose-500/10" },
+    { label: "Completed (7d)", value: completedLast7Days.toString(), change: "Task throughput", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+    { label: "Pending Signatures", value: pendingSignatures.toString(), change: "Execution pipeline", icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
   ];
 
   return (
@@ -79,35 +118,40 @@ export default function FirmDashboard() {
           </div>
 
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-            <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-              {inboxTasks.map((task) => (
-                <div key={task.id} className="p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group cursor-pointer">
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${task.status === 'Overdue' ? 'bg-rose-500' : task.status === 'In Progress' ? 'bg-amber-500' : 'bg-indigo-500'}`} />
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white text-sm mb-1">{task.task}</div>
-                      <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 flex items-center gap-2">
-                        <Briefcase className="w-3 h-3" /> {task.matter}
+            {overdueTasks.length === 0 ? (
+              <div className="p-12 text-center">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4 opacity-20" />
+                <p className="text-sm font-bold text-slate-400">Zero urgent tasks. You're all caught up!</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-zinc-800">
+                {overdueTasks.map((task) => (
+                  <div key={task.id} className="p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group cursor-pointer">
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 bg-rose-500`} />
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-white text-sm mb-1">{task.name}</div>
+                        <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 flex items-center gap-2">
+                          <Briefcase className="w-3 h-3" /> {task.matter?.name || "Independent Task"}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 sm:w-1/3 justify-between sm:justify-end border-t border-slate-100 sm:border-0 pt-3 sm:pt-0">
-                    <div className="flex flex-col items-start sm:items-end">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                        task.status === 'Overdue' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300'
-                      }`}>
-                        {task.due}
-                      </span>
-                      <span className="text-xs text-slate-400 mt-1">{task.type}</span>
+                    
+                    <div className="flex items-center gap-4 sm:w-1/3 justify-between sm:justify-end border-t border-slate-100 sm:border-0 pt-3 sm:pt-0">
+                      <div className="flex flex-col items-start sm:items-end">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400`}>
+                          {task.due_date ? formatDistanceToNow(task.due_date, { addSuffix: true }) : "No date"}
+                        </span>
+                        <span className="text-xs text-slate-400 mt-1">{task.stage}</span>
+                      </div>
+                      <Link href={`/matters/${task.matter_id}`} className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg">
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
                     </div>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg">
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -118,26 +162,26 @@ export default function FirmDashboard() {
           </h2>
           
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm space-y-5">
-            {[
-              { client: "Reliance Industries", health: 98, status: "Healthy" },
-              { client: "Tata Motors", health: 85, status: "Warning" },
-              { client: "Zomato", health: 62, status: "Critical" },
-            ].map((client, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex items-center justify-between text-sm font-semibold">
-                  <span className="text-slate-800 dark:text-zinc-200">{client.client}</span>
-                  <span className={client.health > 90 ? 'text-emerald-500' : client.health > 70 ? 'text-amber-500' : 'text-rose-500'}>
-                    {client.health}%
-                  </span>
+            {entities.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-4 italic">No entities tracked yet.</p>
+            ) : (
+              entities.map((ent, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm font-semibold">
+                    <span className="text-slate-800 dark:text-zinc-200 truncate pr-2">{ent.name}</span>
+                    <span className={ent.health_score > 90 ? 'text-emerald-500' : ent.health_score > 70 ? 'text-amber-500' : 'text-rose-500'}>
+                      {ent.health_score}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all ${ent.health_score > 90 ? 'bg-emerald-500' : ent.health_score > 70 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                      style={{ width: `${ent.health_score}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all ${client.health > 90 ? 'bg-emerald-500' : client.health > 70 ? 'bg-amber-500' : 'bg-rose-500'}`}
-                    style={{ width: `${client.health}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
             
             <Link href="/entities" className="block w-full text-center py-2.5 text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 rounded-xl transition-all">
               View Entity Database

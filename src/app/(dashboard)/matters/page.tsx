@@ -1,21 +1,26 @@
-"use client";
-
-import { useState } from "react";
 import { Plus, Search, Briefcase, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { format } from "date-fns";
 
-export default function MattersIndex() {
-  const [searchQuery, setSearchQuery] = useState("");
+export default async function MattersIndex() {
+  const mattersData = await prisma.matter.findMany({
+    orderBy: { created_at: "desc" },
+    include: {
+      entity: true,
+      tasks: true,
+      members: {
+        include: {
+          user: true
+        }
+      }
+    }
+  });
 
-  const mockMatters = [
-    { id: "1", name: "Reliance - Q3 Private Placement", client: "Reliance Industries", status: "Active", progress: 45, date: "Apr 15", team: ["SK", "AM", "JS"] },
-    { id: "2", name: "Tata Motors - ESOP Restructuring", client: "Tata Motors", status: "Review", progress: 85, date: "Mar 20", team: ["JS", "SK"] },
-    { id: "3", name: "Zomato - Seed Round", client: "Zomato", status: "On Hold", progress: 15, date: "May 01", team: ["AM"] },
-    { id: "4", name: "Infosys - Whistleblower Audit", client: "Infosys", status: "Active", progress: 60, date: "Mar 30", team: ["SK", "AM"] },
-  ];
+  const matters = mattersData as any[];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 h-full">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -38,8 +43,6 @@ export default function MattersIndex() {
           <input 
             type="text" 
             placeholder="Search deals, clients..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:text-white"
           />
         </div>
@@ -47,49 +50,69 @@ export default function MattersIndex() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockMatters.map(matter => (
-          <Link href={`/matters/${matter.id}`} key={matter.id} className="group bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-[220px]">
-            <div className="flex items-start justify-between mb-4">
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold tracking-wide ${
-                matter.status === 'Active' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400' :
-                matter.status === 'Review' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
-                'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-400'
-              }`}>
-                {matter.status}
-              </span>
-              <div className="text-slate-400 group-hover:text-indigo-500 transition-colors group-hover:translate-x-1 duration-300">
-                <ChevronRight className="w-5 h-5" />
-              </div>
-            </div>
+        {matters.length === 0 ? (
+          <div className="col-span-full py-20 text-center space-y-4">
+            <Briefcase className="w-16 h-16 text-slate-200 mx-auto" />
+            <div className="text-slate-400 font-bold">No active matters found. Create a new matter to start collaborating.</div>
+          </div>
+        ) : (
+          matters.map(matter => {
+            const completedTasks = matter.tasks.filter(t => t.status === 'Completed').length;
+            const totalTasks = matter.tasks.length;
+            const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            const latestTaskWithDate = matter.tasks.sort((a, b) => (b.due_date?.getTime() || 0) - (a.due_date?.getTime() || 0))[0];
 
-            <div className="flex-1">
-              <div className="text-xs font-bold text-slate-500 dark:text-zinc-400 mb-1">{matter.client}</div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight line-clamp-2">{matter.name}</h3>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800/50 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">
-                <Clock className="w-4 h-4" /> Due {matter.date}
-              </div>
-              <div className="flex -space-x-2">
-                {matter.team.map((m, i) => (
-                  <div key={i} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-zinc-800 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-black text-slate-600 dark:text-zinc-300">
-                    {m}
+            return (
+              <Link href={`/matters/${matter.id}`} key={matter.id} className="group bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-[240px]">
+                <div className="flex items-start justify-between mb-4">
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                    matter.status === 'Active' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400' :
+                    matter.status === 'Review' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+                    'bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-400'
+                  }`}>
+                    {matter.status}
+                  </span>
+                  <div className="text-slate-400 group-hover:text-indigo-500 transition-colors group-hover:translate-x-1 duration-300">
+                    <ChevronRight className="w-5 h-5" />
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mt-4 w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-              <div 
-                className={`h-full rounded-full transition-all duration-1000 ${
-                  matter.progress > 75 ? 'bg-emerald-500' : matter.progress > 40 ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-zinc-600'
-                }`}
-                style={{ width: `${matter.progress}%` }}
-              />
-            </div>
-          </Link>
-        ))}
+                </div>
+
+                <div className="flex-1">
+                  <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-1 uppercase tracking-widest truncate">{matter.entity?.name || "Independent"}</div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight line-clamp-2">{matter.name}</h3>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest">
+                    <Clock className="w-3.5 h-3.5" /> 
+                    {latestTaskWithDate?.due_date ? `Due ${format(latestTaskWithDate.due_date, 'MMM d')}` : 'No deadline'}
+                  </div>
+                  <div className="flex -space-x-2">
+                    {matter.members.slice(0, 3).map((m, i) => (
+                      <div key={i} title={m.user.name || ""} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-zinc-800 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-black text-slate-600 dark:text-zinc-300">
+                        {m.user.name?.split(' ').map(n => n[0]).join('').toUpperCase() || "?"}
+                      </div>
+                    ))}
+                    {matter.members.length > 3 && (
+                      <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-zinc-800 border-2 border-white dark:border-zinc-900 flex items-center justify-center text-[10px] font-black text-slate-400">
+                        +{matter.members.length - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-4 w-full bg-slate-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-1000 ${
+                      progress > 75 ? 'bg-emerald-500' : progress > 30 ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-zinc-600'
+                    }`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </Link>
+            );
+          })
+        )}
       </div>
     </div>
   );

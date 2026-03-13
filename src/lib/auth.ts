@@ -34,9 +34,16 @@ export const authOptions: NextAuthOptions = {
       console.log("[AUTH] JWT Callback. Trigger:", trigger, "User present:", !!user);
       if (user) {
         token.id = user.id;
-        // The adapter user object should already have the role from DB
         token.role = (user as any).role || "viewer";
-        console.log("[AUTH] Initial JWT role assigned:", token.role);
+        
+        // Fetch orgId if not present
+        const orgUser = await prisma.organizationUser.findFirst({
+          where: { user_id: user.id },
+          select: { org_id: true }
+        });
+        token.orgId = orgUser?.org_id;
+        
+        console.log("[AUTH] Initial JWT role assigned:", token.role, "Org:", token.orgId);
       }
       if (trigger === "update" && session?.role) {
         token.role = session.role;
@@ -49,6 +56,7 @@ export const authOptions: NextAuthOptions = {
       if (session?.user && token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.orgId = token.orgId as string;
       }
       return session;
     },

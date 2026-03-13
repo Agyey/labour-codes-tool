@@ -88,6 +88,7 @@ export function BucketExplorer() {
                    setActiveView('mapping');
                 }}
                 onDelete={() => deleteLegislation(leg.id)}
+                canEdit={canEdit}
               />
             ))}
             
@@ -123,7 +124,7 @@ export function BucketExplorer() {
               </div>
            </div>
 
-           <div className="p-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[40px] shadow-sm">
+            <div className="p-8 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-[40px] shadow-sm">
               <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-6">Transition History</h4>
               <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium leading-relaxed">
                 This bucket tracks the transition from the legacy Payment of Wages, Minimum Wages, and Bonus acts into the unified 2019 Code.
@@ -134,7 +135,7 @@ export function BucketExplorer() {
               >
                 View Full Transition Map
               </button>
-           </div>
+            </div>
         </div>
       </div>
       <LegislationModal 
