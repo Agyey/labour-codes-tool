@@ -1,3 +1,4 @@
+/* eslint-disable */
 const { Client } = require('pg');
 const crypto = require('crypto');
 
