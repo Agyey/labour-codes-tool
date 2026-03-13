@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-// @ts-ignore - CommonJS module without default export definitions
-import pdfParse from "pdf-parse";
 
 // Enhanced heuristic parser for Indian Legal Statutes
 const extractLegalStructure = (text: string) => {
@@ -94,8 +92,21 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Safely require pdf-parse dynamically to avoid Next.js edge runtime issues parsing CommonJS modules
+    let pdfParseFn;
+    try {
+      pdfParseFn = require("pdf-parse");
+      // Handle potential default export unwrapping
+      if (pdfParseFn && pdfParseFn.default) {
+        pdfParseFn = pdfParseFn.default;
+      }
+    } catch (reqErr: any) {
+      console.error("Failed to require pdf-parse:", reqErr);
+      return NextResponse.json({ error: "Failed to load PDF parsing library: " + reqErr.message }, { status: 500 });
+    }
+
     // Parse PDF text using pdf-parse
-    const pdfData = await pdfParse(buffer);
+    const pdfData = await pdfParseFn(buffer);
     const rawText = pdfData.text;
 
     // Run custom Legal Heuristics to structure the flat text
@@ -107,8 +118,11 @@ export async function POST(req: NextRequest) {
       data: structuredData 
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("PDF Parsing Error:", error);
-    return NextResponse.json({ error: "Failed to parse PDF document" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to parse PDF document: " + (error.message || String(error)),
+      stack: error.stack
+    }, { status: 500 });
   }
 }
