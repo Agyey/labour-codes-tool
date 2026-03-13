@@ -30,6 +30,9 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 | Deployment Config | [x] `railway.json` & `.env.example` added | High |
 | Accessibility | [x] ARIA Markers implemented | High |
 | Performance | [x] Next/Image & Hook Optimization | High |
+| Dashboard Revamp | [x] Glassmorphism & Modern Metrics | High |
+| PDF Generation | [x] High-fidelity Documents | High |
+| Theme Consistency | [x] Zinc-950 Dark Mode | High |
 
 
 ## Technical Debt & Gaps
@@ -45,5 +48,7 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 6. [x] **Data Integrity**: Standardized snake_case (Prisma) to camelCase (Frontend) mappings.
 7. [x] **Infrastructure Hardening**: Resolved Prisma engine breakage on Alpine/Railway via `binaryTargets` and custom Docker layers.
 8. [x] **UI Polish**: High-fidelity transformation with Zinc-based (`zinc-950`) dark mode and fixed Reader/Editor toggle logic.
-9. [ ] **Statelessness Audit**: Audit server actions for disk writes.
-10. [ ] **Type Hardening**: Refine recursive types for comments.
+9. [x] **Dashboard Revamp**: Modernized Executive Dashboard with premium glassmorphism and refined repository buttons.
+10. [x] **PDF Service**: Implemented high-fidelity client-side PDF generation with integrated preview and ink-friendly capture.
+11. [ ] **Statelessness Audit**: Audit server actions for disk writes.
+12. [ ] **Type Hardening**: Refine recursive types for comments.
