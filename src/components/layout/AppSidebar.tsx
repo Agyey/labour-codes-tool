@@ -1,6 +1,5 @@
 "use client";
 
-import { useUI } from "@/context/UIContext";
 import { useLegalOS, ProductType } from "@/context/LegalOSContext";
 import { 
   BookOpen, 

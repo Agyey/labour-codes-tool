@@ -4,7 +4,7 @@ import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { useFilter } from "@/context/FilterContext";
 import { CODES } from "@/config/codes";
-import { Pin, ChevronRight } from "lucide-react";
+import { Pin } from "lucide-react";
 
 export function MappingSubNav() {
   const { activeCode, setExpandedProvision } = useUI();
