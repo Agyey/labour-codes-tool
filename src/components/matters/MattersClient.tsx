@@ -6,6 +6,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { CreateMatterModal } from "./CreateMatterModal";
 
+import { ModuleHeader } from "@/components/shared/ModuleHeader";
+
 interface MattersClientProps {
   initialMatters: any[];
 }
@@ -21,23 +23,19 @@ export function MattersClient({ initialMatters: matters }: MattersClientProps) {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <Briefcase className="w-8 h-8 text-indigo-500" />
-            Active Matters
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">Manage and track your firm's ongoing transactional and compliance engagements.</p>
-        </div>
-        
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 px-5 py-2.5 rounded-xl font-bold hover:scale-105 active:scale-95 transition-transform shadow-md cursor-pointer"
-        >
-          <Plus className="w-5 h-5" /> New Matter
-        </button>
-      </div>
+      <ModuleHeader 
+        title="Active Matters"
+        description="Manage and track your firm's ongoing transactional and compliance engagements."
+        icon={Briefcase}
+        actions={
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 px-5 py-2.5 rounded-xl font-bold hover:scale-105 active:scale-95 transition-transform shadow-md cursor-pointer whitespace-nowrap"
+          >
+            <Plus className="w-5 h-5" /> New Matter
+          </button>
+        }
+      />
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row items-center gap-4">

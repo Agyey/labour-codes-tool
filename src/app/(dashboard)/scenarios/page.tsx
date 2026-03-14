@@ -1,6 +1,7 @@
 import { ScenarioWizard } from "@/components/scenarios/ScenarioWizard";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Zap } from "lucide-react";
 import Link from "next/link";
+import { ModuleHeader } from "@/components/shared/ModuleHeader";
 
 export default function ScenarioGeneratorPage() {
   return (
@@ -12,10 +13,13 @@ export default function ScenarioGeneratorPage() {
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Dashboard
       </Link>
-      <div className="mb-10 text-center">
-        <h1 className="text-3xl font-black text-slate-900 dark:text-zinc-50 tracking-tight mb-3">Scenario Engine</h1>
-        <p className="text-slate-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium">Instantly translate complex legal transactions into actionable, jurisdiction-specific compliance checklists and execution pipelines.</p>
-      </div>
+      
+      <ModuleHeader 
+        title="Scenario Engine"
+        description="Instantly translate complex legal transactions into actionable, jurisdiction-specific compliance checklists and execution pipelines."
+        icon={Zap}
+        iconColor="text-amber-500"
+      />
       
       <ScenarioWizard />
     </div>

@@ -8,6 +8,8 @@ import { useState } from "react";
 import { FrameworkModal } from "./FrameworkModal";
 import { Framework } from "@/types/provision";
 
+import { ModuleHeader } from "@/components/shared/ModuleHeader";
+
 export function FrameworkDashboard() {
   const { frameworks, loading, deleteFramework, canEdit } = useData();
   const { setActiveView, setActiveCode } = useUI();
@@ -26,24 +28,21 @@ export function FrameworkDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-          Legal Operations <span className="text-indigo-600 dark:text-indigo-400">Nexus</span>
-        </h1>
-        <div className="flex items-center justify-between">
-          <p className="text-slate-500 dark:text-zinc-400 font-medium max-w-2xl">
-            Central intelligence for complex legal frameworks. Manage legislations, rules, and connectors within their respective buckets.
-          </p>
-          {canEdit && (
+      <ModuleHeader 
+        title="Legal Operations Nexus"
+        description="Central intelligence for complex legal frameworks. Manage legislations, rules, and connectors within their respective buckets."
+        icon={FolderKanban}
+        actions={
+          canEdit && (
             <button 
               onClick={() => { setEditingFw(null); setIsModalOpen(true); }}
-              className="px-6 py-3 bg-indigo-600 text-white text-[12px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
+              className="px-6 py-3 bg-indigo-600 text-white text-[12px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-indigo-600/20 whitespace-nowrap"
             >
               Create New Bucket
             </button>
-          )}
-        </div>
-      </header>
+          )
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {frameworks.length === 0 ? (
