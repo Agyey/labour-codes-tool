@@ -1,18 +1,18 @@
 "use client";
 
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FileText, Eye, EyeOff, Scale, Gavel, Link2, ChevronDown, ChevronRight, Trash2, Layers, BookOpen } from "lucide-react";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import type { Provision } from "@/types/provision";
-import { useState } from "react";
 
 interface StatuteViewProps {
   provision: Provision;
   codeShortName: string;
 }
 
-export function StatuteView({ provision: p, codeShortName }: StatuteViewProps) {
+export const StatuteView = React.memo(function StatuteView({ provision: p, codeShortName }: StatuteViewProps) {
   const { mode, showTextMap, toggleShowText } = useUI();
   const { saveProvision } = useData();
   const [showSubSections, setShowSubSections] = useState(false);
@@ -160,8 +160,8 @@ export function StatuteView({ provision: p, codeShortName }: StatuteViewProps) {
       {/* Full Statutory Text (formatted, not <pre>) */}
       {showTextMap[`n-${p.id}`] && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
           className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-800/60"
         >
           <div className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Original Statutory Text</div>
@@ -184,4 +184,4 @@ export function StatuteView({ provision: p, codeShortName }: StatuteViewProps) {
       )}
     </div>
   );
-}
+});

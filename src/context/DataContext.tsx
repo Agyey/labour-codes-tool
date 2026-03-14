@@ -47,27 +47,27 @@ interface DataState {
   editorPassword: string;
   loading: boolean;
   users: User[];
+  canEdit: boolean;
+  stats: ReturnType<typeof calculateStats>;
 }
 
 interface DataActions {
-  saveProvision: (p: Provision) => void;
+  saveProvision: (p: Provision) => Promise<void>;
   deleteProvision: (id: string) => void;
   deleteProvisions: (ids: string[]) => void;
   togglePin: (id: string) => void;
   toggleVerify: (id: string) => void;
   setComplianceStatus: (id: string, status: string) => void;
   setEditorPassword: (pw: string) => void;
-  // Hierarchy actions
   createFramework: (data: any) => Promise<boolean>;
   updateFramework: (id: string, data: any) => Promise<boolean>;
   deleteFramework: (id: string) => Promise<boolean>;
   createLegislation: (data: any) => Promise<boolean>;
   deleteLegislation: (id: string) => Promise<boolean>;
-  canEdit: boolean;
-  stats: ReturnType<typeof calculateStats>;
 }
 
-const DataContext = createContext<(DataState & DataActions) | null>(null);
+const DataStateContext = createContext<DataState | null>(null);
+const DataActionsContext = createContext<DataActions | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
@@ -81,8 +81,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
 
-  // Load from database + localStorage
-   const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async () => {
     setLoading(true);
     try {
       const [dbProvs, dbUsers, dbFrameworks, dbLegislations] = await Promise.all([
@@ -109,12 +108,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Load from database + localStorage
   useEffect(() => {
     refreshData();
   }, [refreshData]);
 
-  // Auto-save local preferences with debounce (NOT provisions — those go to Postgres)
   useEffect(() => {
     if (loading) return;
     const timer = setTimeout(() => {
@@ -126,7 +123,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [complianceStatuses, editorPassword, loading]);
 
-  // Actions
   const saveProvision = useCallback(async (p: Provision) => {
     if (!p.id) return;
     const userId = session?.user?.id;
@@ -174,46 +170,40 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const togglePin = useCallback(async (id: string) => {
-    const prov = provisions.find((x) => x.id === id);
-    if (!prov) return;
-    const newPinned = !prov.pinned;
-    // Optimistic update
-    setProvisions((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, pinned: newPinned } : x))
-    );
-    const res = await togglePinAction(id, newPinned);
-    if (!res.success) {
-      // Revert on failure
-      setProvisions((prev) =>
-        prev.map((x) => (x.id === id ? { ...x, pinned: !newPinned } : x))
-      );
-      toast.error("Failed to update pin status.");
-    }
-  }, [provisions]);
+    setProvisions((prev) => {
+        const prov = prev.find((x) => x.id === id);
+        if (!prov) return prev;
+        const newPinned = !prov.pinned;
+        togglePinAction(id, newPinned).then(res => {
+            if (!res.success) {
+                setProvisions(p => p.map(x => x.id === id ? { ...x, pinned: !newPinned } : x));
+                toast.error("Failed to update pin status.");
+            }
+        });
+        return prev.map((x) => (x.id === id ? { ...x, pinned: newPinned } : x));
+    });
+  }, []);
 
   const toggleVerify = useCallback(async (id: string) => {
-    const prov = provisions.find((x) => x.id === id);
-    if (!prov) return;
-    const newVerified = !prov.verified;
-    // Optimistic update
-    setProvisions((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, verified: newVerified } : x))
-    );
-    const res = await toggleVerifyAction(id, newVerified);
-    if (!res.success) {
-      // Revert on failure
-      setProvisions((prev) =>
-        prev.map((x) => (x.id === id ? { ...x, verified: !newVerified } : x))
-      );
-      toast.error("Failed to update verification status.");
-    }
-  }, [provisions]);
+    setProvisions((prev) => {
+        const prov = prev.find((x) => x.id === id);
+        if (!prov) return prev;
+        const newVerified = !prov.verified;
+        toggleVerifyAction(id, newVerified).then(res => {
+            if (!res.success) {
+                setProvisions(p => p.map(x => x.id === id ? { ...x, verified: !newVerified } : x));
+                toast.error("Failed to update verification status.");
+            }
+        });
+        return prev.map((x) => (x.id === id ? { ...x, verified: newVerified } : x));
+    });
+  }, []);
 
   const setComplianceStatus = useCallback((id: string, status: string) => {
     setComplianceStatuses((prev) => ({ ...prev, [id]: status }));
   }, []);
 
-   const createFramework = useCallback(async (data: any) => {
+  const createFramework = useCallback(async (data: any) => {
     const res = await createFrameworkAction(data);
     if (res.success) {
       await refreshData();
@@ -273,18 +263,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setEditorPasswordState(pw);
   }, []);
 
-  const canEdit = mode === "admin" && !!session?.user && (session.user.role === "admin" || session.user.role === "editor");
+  const canEdit = useMemo(() => 
+    mode === "admin" && !!session?.user && (session.user.role === "admin" || session.user.role === "editor"),
+  [mode, session]);
 
-  const stats = useMemo(
-    () =>
-      calculateStats(
-        provisions.filter((x) => x.code === activeCode),
-        complianceStatuses
-      ),
-    [provisions, complianceStatuses, activeCode]
-  );
+  const stats = useMemo(() => 
+    calculateStats(provisions.filter((x) => x.code === activeCode), complianceStatuses),
+  [provisions, complianceStatuses, activeCode]);
 
-  const value = useMemo(() => ({
+  const stateValue = useMemo(() => ({
     provisions,
     frameworks,
     legislations,
@@ -292,6 +279,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     editorPassword,
     loading,
     users,
+    canEdit,
+    stats,
+  }), [provisions, frameworks, legislations, complianceStatuses, editorPassword, loading, users, canEdit, stats]);
+
+  const actionsValue = useMemo(() => ({
     saveProvision,
     deleteProvision,
     deleteProvisions,
@@ -304,20 +296,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
     deleteFramework,
     createLegislation,
     deleteLegislation,
-    canEdit,
-    stats,
   }), [
-    provisions, frameworks, legislations, complianceStatuses, editorPassword, loading, users,
     saveProvision, deleteProvision, deleteProvisions, togglePin, toggleVerify,
-    setComplianceStatus, setEditorPassword, canEdit, stats,
-    createFramework, updateFramework, deleteFramework, createLegislation, deleteLegislation
+    setComplianceStatus, setEditorPassword, createFramework, updateFramework, 
+    deleteFramework, createLegislation, deleteLegislation
   ]);
 
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+  return (
+    <DataStateContext.Provider value={stateValue}>
+      <DataActionsContext.Provider value={actionsValue}>
+        {children}
+      </DataActionsContext.Provider>
+    </DataStateContext.Provider>
+  );
 }
 
 export function useData() {
-  const ctx = useContext(DataContext);
-  if (!ctx) throw new Error("useData must be used within DataProvider");
-  return ctx;
+  const state = useContext(DataStateContext);
+  const actions = useContext(DataActionsContext);
+  if (!state || !actions) throw new Error("useData must be used within DataProvider");
+  return useMemo(() => ({ ...state, ...actions }), [state, actions]);
+}
+
+export function useDataActions() {
+    const actions = useContext(DataActionsContext);
+    if (!actions) throw new Error("useDataActions must be used within DataProvider");
+    return actions;
+}
+
+export function useDataState() {
+    const state = useContext(DataStateContext);
+    if (!state) throw new Error("useDataState must be used within DataProvider");
+    return state;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useData } from "@/context/DataContext";
 import { COMPLIANCE_STATUSES } from "@/config/tags";
 import type { Provision } from "@/types/provision";
@@ -8,7 +9,7 @@ interface ComplianceItemsListProps {
   provision: Provision;
 }
 
-export function ComplianceItemsList({ provision: p }: ComplianceItemsListProps) {
+export const ComplianceItemsList = React.memo(function ComplianceItemsList({ provision: p }: ComplianceItemsListProps) {
   const { complianceStatuses, setComplianceStatus } = useData();
 
   if (!p.compItems || p.compItems.length === 0) return null;
@@ -63,4 +64,4 @@ export function ComplianceItemsList({ provision: p }: ComplianceItemsListProps) 
       </div>
     </div>
   );
-}
+});

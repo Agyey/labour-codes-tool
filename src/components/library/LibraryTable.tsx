@@ -1,23 +1,22 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   flexRender,
   ColumnDef,
   SortingState,
 } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Provision } from "@/types/provision";
 import { CODES } from "@/config/codes";
-import { IMPACT_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
+import { IMPACT_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
-import { ChevronDown, ChevronRight, ChevronUp, FileText, ArrowUpDown, ExternalLink, Pencil, Trash2, CheckCircle, Pin, Scale, Gavel, BookOpen } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, ArrowUpDown, ExternalLink, Pencil, Trash2, CheckCircle, Pin, Scale, Gavel, BookOpen } from "lucide-react";
 import { useUI } from "@/context/UIContext";
-import { useData } from "@/context/DataContext";
+import { useDataActions, useDataState } from "@/context/DataContext";
 import { StatuteView } from "@/components/provisions/StatuteView";
 import { RepealedAnalysis } from "@/components/provisions/RepealedAnalysis";
 import { PenaltyInfo } from "@/components/provisions/PenaltyInfo";
@@ -31,73 +30,66 @@ interface LibraryTableProps {
 
 export function LibraryTable({ data }: LibraryTableProps) {
   const { setExpandedProvision, setEditingProvision } = useUI();
-  const { canEdit, deleteProvision, deleteProvisions, toggleVerify, togglePin } = useData();
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const { deleteProvision, deleteProvisions, toggleVerify, togglePin } = useDataActions();
+  const { canEdit } = useDataState();
+  
+  const [sorting, setSorting] = useState<SortingState>([{ id: "reference", desc: false }]);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const toggleExpand = (id: string) => {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const toggleExpand = useCallback((id: string) => {
     setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
-  };
+  }, []);
 
-  const toggleSelect = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
-  };
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === data.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(data.map(p => p.id)));
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedIds.size} provisions?`)) return;
-    
-    await deleteProvisions(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  };
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds(prev => {
+        if (prev.size === data.length) return new Set();
+        return new Set(data.map(p => p.id));
+    });
+  }, [data]);
 
   const columns = useMemo<ColumnDef<Provision>[]>(() => [
     {
       id: "select",
+      size: 40,
       header: () => (
-        <div className="flex items-center">
-          <input 
-            type="checkbox" 
-            className="w-4 h-4 rounded border-slate-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-            checked={selectedIds.size === data.length && data.length > 0}
-            onChange={toggleSelectAll}
-          />
-        </div>
+        <input 
+          type="checkbox" 
+          className="w-4 h-4 rounded border-slate-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+          checked={selectedIds.size === data.length && data.length > 0}
+          onChange={toggleSelectAll}
+        />
       ),
       cell: ({ row }) => (
-        <div className="flex items-center">
-          <input 
-            type="checkbox" 
-            className="w-4 h-4 rounded border-slate-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-            checked={selectedIds.has(row.original.id)}
-            onChange={() => toggleSelect(row.original.id)}
-          />
-        </div>
+        <input 
+          type="checkbox" 
+          className="w-4 h-4 rounded border-slate-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+          checked={selectedIds.has(row.original.id)}
+          onChange={() => toggleSelect(row.original.id)}
+        />
       ),
     },
     {
       accessorKey: "code",
       header: "Framework",
+      size: 120,
       cell: ({ row }) => {
         const cObj = CODES[row.original.code as keyof typeof CODES];
         return (
           <div className="flex items-center gap-2">
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: cObj?.c || "#94a3b8" }}
-            />
-            <span className="font-semibold text-slate-700 dark:text-zinc-200 text-xs">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cObj?.c || "#94a3b8" }} />
+            <span className="font-semibold text-slate-700 dark:text-zinc-200 text-xs truncate">
               {cObj?.s || row.original.code}
             </span>
           </div>
@@ -107,84 +99,51 @@ export function LibraryTable({ data }: LibraryTableProps) {
     {
       id: "type",
       header: "Type",
+      size: 100,
       cell: ({ row }) => {
         const type = row.original.provisionType || 'section';
-        let icon = <Scale className="w-3 h-3 inline mr-0.5 -mt-0.5" />;
-        let styles = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300';
-        let label = 'Section';
+        const config = {
+          section: { icon: Scale, styles: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20', label: 'Section' },
+          rule: { icon: Gavel, styles: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20', label: 'Rule' },
+          form: { icon: FileText, styles: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20', label: 'Form' },
+          register: { icon: BookOpen, styles: 'bg-rose-50 text-rose-700 dark:bg-rose-900/20', label: 'Register' },
+        }[type] || { icon: Scale, styles: 'bg-slate-50 text-slate-700 dark:bg-slate-900/20', label: type };
         
-        if (type === 'rule') {
-          icon = <Gavel className="w-3 h-3 inline mr-0.5 -mt-0.5" />;
-          styles = 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300';
-          label = 'Rule';
-        } else if (type === 'form') {
-          icon = <FileText className="w-3 h-3 inline mr-0.5 -mt-0.5" />;
-          styles = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300';
-          label = 'Form';
-        } else if (type === 'register') {
-          icon = <BookOpen className="w-3 h-3 inline mr-0.5 -mt-0.5" />;
-          styles = 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-300';
-          label = 'Register';
-        }
-
+        const Icon = config.icon;
         return (
-          <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${styles}`}>
-            {icon} {label}
+          <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${config.styles}`}>
+            <Icon className="w-3 h-3 inline mr-1 -mt-0.5" /> {config.label}
           </span>
         );
       },
     },
     {
-      accessorFn: (row) => `${row.ch} ${row.sec}`,
       id: "reference",
-      sortingFn: (rowA, rowB) => {
-        const a = rowA.original;
-        const b = rowB.original;
-        
-        const getSortKey = (p: Provision) => {
-          // Grouping logic: Rules/Forms fall under their parentSection
-          const groupSec = p.parentSection || p.sec;
-          const secNum = parseInt(groupSec.replace(/\D/g, "")) || 0;
-          const typeWeight = p.provisionType === "section" ? 0 : 1;
-          const innerSecNum = parseInt(p.sec.replace(/\D/g, "")) || 0;
-          
-          return `${p.ch.padStart(3, "0")}-${secNum.toString().padStart(5, "0")}-${typeWeight}-${innerSecNum.toString().padStart(5, "0")}`;
-        };
-
-        return getSortKey(a).localeCompare(getSortKey(b));
-      },
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Reference
-            <ArrowUpDown className="w-3 h-3" />
-          </button>
-        )
-      },
+      accessorFn: (row) => `${row.ch} ${row.sec}`,
+      header: ({ column }) => (
+        <button className="flex items-center gap-1 hover:text-slate-900" onClick={() => column.toggleSorting()}>
+          Ref <ArrowUpDown className="w-3 h-3" />
+        </button>
+      ),
       cell: ({ row }) => {
         const p = row.original;
         const isChild = !!p.parentSection && p.provisionType !== 'section';
-        
         return (
-          <div className={`flex flex-col ${isChild ? 'pl-4 border-l-2 border-slate-100 dark:border-zinc-800' : ''}`}>
-            <span className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase">
-              {p.provisionType === 'section' ? `Ch ${p.ch}` : `Ref Sec ${p.parentSection || '?'}`}
+          <div className={`flex flex-col ${isChild ? 'pl-2 border-l-2' : ''}`}>
+            <span className="text-[9px] text-slate-400 uppercase truncate">
+              {p.provisionType === 'section' ? `Ch ${p.ch}` : `Ref S.${p.parentSection}`}
             </span>
-            <span className="text-sm font-bold text-slate-800 dark:text-zinc-100">
-              {p.provisionType === 'section' ? 'Sec' : p.provisionType.charAt(0).toUpperCase() + p.provisionType.slice(1)} {p.sec}
-            </span>
+            <span className="text-sm font-bold text-slate-800 dark:text-zinc-100">{p.sec}</span>
           </div>
         );
       },
     },
     {
       accessorKey: "title",
-      header: "Provision Title",
+      header: "Title",
+      size: 200,
       cell: ({ row }) => (
-        <div className="max-w-[200px] truncate font-medium text-sm text-slate-700 dark:text-zinc-200">
+        <div className="truncate font-medium text-sm text-slate-700 dark:text-zinc-200">
           {row.getValue("title")}
         </div>
       ),
@@ -192,230 +151,121 @@ export function LibraryTable({ data }: LibraryTableProps) {
     {
       accessorKey: "impact",
       header: "Impact",
+      size: 90,
       cell: ({ row }) => {
         const impact = row.getValue("impact") as string;
-        return (
-          <div className="hidden md:block">
-            <Badge 
-              text={impact} 
-              color={IMPACT_COLORS[impact] || "#6b7280"} 
-              className="text-[10px]"
-            />
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "workflowTags",
-      header: "Workflow Tags",
-      cell: ({ row }) => {
-        const tags = row.getValue("workflowTags") as string[] || [];
-        if (tags.length === 0) return <span className="text-xs text-slate-400 hidden md:inline">-</span>;
-        
-        return (
-          <div className="flex flex-wrap gap-1 hidden md:flex">
-            {tags.slice(0, 2).map(tag => (
-              <Badge 
-                key={tag} 
-                text={tag} 
-                color={WORKFLOW_TAG_COLORS[tag] || "#6b7280"} 
-                className="text-[9px] py-0.5 px-1.5"
-              />
-            ))}
-            {tags.length > 2 && (
-              <span className="text-[10px] text-slate-500 font-medium ml-1">
-                +{tags.length - 2}
-              </span>
-            )}
-          </div>
-        );
+        return <Badge text={impact} color={IMPACT_COLORS[impact] || "#6b7280"} className="text-[9px]" />;
       },
     },
     {
       id: "actions",
       header: "",
+      size: 100,
       cell: ({ row }) => {
         const isExpanded = expandedRows[row.original.id];
         return (
-          <div className="flex items-center justify-end gap-1 pr-2">
-            <button
-              onClick={() => setExpandedProvision(row.original.id)}
-              className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"
-              title="Open full view"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-            {canEdit && (
-              <button
-                onClick={() => { if (confirm("Delete this provision?")) deleteProvision(row.original.id); }}
-                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
-                title="Delete provision"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              onClick={() => toggleExpand(row.original.id)}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg transition-colors"
-            >
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+          <div className="flex items-center justify-end gap-1">
+            <button onClick={() => setExpandedProvision(row.original.id)} className="p-1 hover:text-indigo-600"><ExternalLink className="w-4 h-4" /></button>
+            {canEdit && <button onClick={() => deleteProvision(row.original.id)} className="p-1 hover:text-rose-600"><Trash2 className="w-4 h-4" /></button>}
+            <button onClick={() => toggleExpand(row.original.id)} className="p-1">{isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button>
           </div>
         );
       },
     },
-  ], [expandedRows, selectedIds, canEdit, data]);
+  ], [selectedIds, data, expandedRows, canEdit, toggleExpand, toggleSelect, toggleSelectAll, setExpandedProvision, deleteProvision]);
 
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-    },
+    state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    initialState: {
-      sorting: [
-        { id: "reference", desc: false }
-      ],
-      pagination: {
-        pageSize: 50, // More suitable for bulk deletions
-      },
-    },
   });
 
-  return (
-    <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-      {/* Table Action Header */}
-      {selectedIds.size > 0 && (
-        <div className="bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3 border-b border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
-          <div className="text-sm font-bold text-indigo-700 dark:text-indigo-400">
-            {selectedIds.size} provisions selected
-          </div>
-          <button 
-            onClick={handleBulkDelete}
-            className="flex items-center gap-2 px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-rose-600/20"
-          >
-            <Trash2 className="w-3.5 h-3.5" /> Delete Selected
-          </button>
-        </div>
-      )}
+  const { rows } = table.getRowModel();
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
-                {headerGroup.headers.map(header => {
-                  const hideOnMobile = header.id === 'impact' || header.id === 'workflowTags';
-                  return (
-                    <th key={header.id} className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap ${hideOnMobile ? 'hidden md:table-cell' : ''}`}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/50">
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map(row => {
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: useCallback((index) => {
+        const id = rows[index].original.id;
+        return expandedRows[id] ? 600 : 54;
+    }, [expandedRows, rows]),
+    overscan: 5,
+  });
+
+  // Re-measure when expanded state changes
+  useEffect(() => {
+    rowVirtualizer.measure();
+  }, [expandedRows, rowVirtualizer]);
+
+  return (
+    <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm flex flex-col h-[75vh] min-h-[500px]">
+      <div ref={parentRef} className="flex-1 overflow-auto relative scrollbar-thin scrollbar-thumb-slate-200">
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+          <table className="w-full text-left border-collapse table-fixed">
+            <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 shadow-sm">
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th key={header.id} style={{ width: header.getSize() }} className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50 dark:bg-zinc-900">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+            </thead>
+            <tbody>
+              {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                const row = rows[virtualRow.index];
                 const isExpanded = expandedRows[row.original.id];
+                
                 return (
                   <React.Fragment key={row.id}>
-                    <tr className={`transition-colors hover:bg-slate-50/80 dark:hover:bg-zinc-800/30 ${isExpanded ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
-                      {row.getVisibleCells().map(cell => {
-                        const hideOnMobile = cell.column.id === 'impact' || cell.column.id === 'workflowTags';
-                        return (
-                          <td key={cell.id} className={`px-4 py-3 align-middle ${hideOnMobile ? 'hidden md:table-cell' : ''}`}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    {isExpanded && (
-                      <tr className="bg-slate-50 dark:bg-zinc-950/20">
-                        <td colSpan={columns.length} className="p-0 border-b-2 border-indigo-100 dark:border-indigo-900 overflow-hidden">
-                          <div className="p-6 bg-slate-50/80 dark:bg-zinc-950/50 shadow-inner">
-                            {/* Original ProvisionCard Data Layout */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-4">
-                              <StatuteView provision={row.original} codeShortName={CODES[row.original.code as keyof typeof CODES]?.n} />
+                    <tr 
+                      className={`absolute left-0 w-full transition-colors hover:bg-slate-50 dark:hover:bg-zinc-800/30 border-b border-slate-100 dark:border-zinc-800/50 ${isExpanded ? 'bg-indigo-50/20 z-10' : ''}`}
+                      style={{ height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }}
+                    >
+                      <td colSpan={columns.length} className="p-0 align-top h-full">
+                        <div className="flex h-[54px] items-center">
+                           {row.getVisibleCells().map(cell => (
+                            <div key={cell.id} style={{ width: cell.column.getSize() }} className="px-4 truncate">
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {isExpanded && (
+                          <div className="p-6 bg-slate-50/50 dark:bg-zinc-950/20 border-t border-indigo-100 dark:border-indigo-900/50 overflow-auto h-[546px]">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                              <StatuteView provision={row.original} codeShortName={CODES[row.original.code as keyof typeof CODES]?.s} />
                               <RepealedAnalysis provision={row.original} />
                             </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 border-t border-slate-200/60 dark:border-zinc-800/80">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 border-t border-slate-200 dark:border-zinc-800">
                               <PenaltyInfo provision={row.original} />
                               <RulesAndForms provision={row.original} />
                               <ComplianceItemsList provision={row.original} />
                             </div>
-
                             <StateNotesTable provision={row.original} />
-
-                            {/* Actions Bar */}
-                            <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-zinc-800/80 flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <button onClick={() => toggleVerify(row.original.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${row.original.verified ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20' : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700 hover:text-slate-900 border border-slate-200 dark:border-zinc-700'}`}>
-                                  <CheckCircle className="w-4 h-4" /> {row.original.verified ? "Verified" : "Verify Content"}
+                            <div className="mt-6 flex gap-4">
+                                <button onClick={() => toggleVerify(row.original.id)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border rounded-xl text-xs font-bold">
+                                   <CheckCircle className={`w-4 h-4 ${row.original.verified ? 'text-emerald-500' : 'text-slate-300'}`} /> {row.original.verified ? 'Verified' : 'Verify'}
                                 </button>
-                                <button onClick={() => togglePin(row.original.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${row.original.pinned ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20' : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-700 hover:text-slate-900 border border-slate-200 dark:border-zinc-700'}`}>
-                                  <Pin className="w-4 h-4" /> {row.original.pinned ? "Unpinned" : "Pin for Review"}
+                                <button onClick={() => togglePin(row.original.id)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border rounded-xl text-xs font-bold">
+                                   <Pin className={`w-4 h-4 ${row.original.pinned ? 'text-amber-500' : 'text-slate-300'}`} /> {row.original.pinned ? 'Pinned' : 'Pin'}
                                 </button>
-                              </div>
-
-                              {canEdit && (
-                                <div className="flex items-center gap-2">
-                                  <button onClick={() => setEditingProvision(row.original)} className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 border border-transparent hover:border-amber-200 dark:hover:border-amber-700/30 rounded-xl transition-all shadow-sm">
-                                    <Pencil className="w-4 h-4" />
-                                  </button>
-                                  <button onClick={() => { if (confirm("Delete this provision?")) deleteProvision(row.original.id); }} className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 border border-transparent hover:border-rose-200 dark:hover:border-rose-700/30 rounded-xl transition-all shadow-sm">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
+                                {canEdit && <button onClick={() => setEditingProvision(row.original)} className="p-2 bg-white dark:bg-zinc-800 border rounded-xl text-xs font-bold ml-auto"><Pencil className="w-4 h-4" /></button>}
                             </div>
                           </div>
-                        </td>
-                      </tr>
-                    )}
+                        )}
+                      </td>
+                    </tr>
                   </React.Fragment>
                 );
-              })
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-slate-500 dark:text-zinc-400">
-                  No provisions found matching these filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
-        <div className="text-xs text-slate-500 dark:text-zinc-400">
-          Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-          {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, table.getFilteredRowModel().rows.length)} of{' '}
-          {table.getFilteredRowModel().rows.length} provisions
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors"
-          >
-            Next
-          </button>
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

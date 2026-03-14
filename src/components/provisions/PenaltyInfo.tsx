@@ -1,12 +1,13 @@
 "use client";
 
+import React from "react";
 import type { Provision } from "@/types/provision";
 
 interface PenaltyInfoProps {
   provision: Provision;
 }
 
-export function PenaltyInfo({ provision: p }: PenaltyInfoProps) {
+export const PenaltyInfo = React.memo(function PenaltyInfo({ provision: p }: PenaltyInfoProps) {
   if (!p.penaltyOld && !p.penaltyNew) return null;
 
   return (
@@ -25,4 +26,4 @@ export function PenaltyInfo({ provision: p }: PenaltyInfoProps) {
       </div>
     </div>
   );
-}
+});
