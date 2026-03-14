@@ -12,7 +12,7 @@ interface FrameworkModalProps {
 }
 
 export function FrameworkModal({ isOpen, onClose, editingFramework }: FrameworkModalProps) {
-  const { createFramework } = useData();
+  const { createFramework, updateFramework } = useData();
   const [name, setName] = useState("");
   const [shortName, setShortName] = useState("");
   const [description, setDescription] = useState("");
@@ -20,8 +20,8 @@ export function FrameworkModal({ isOpen, onClose, editingFramework }: FrameworkM
 
   useEffect(() => {
     if (editingFramework) {
-      setName(editingFramework.name);
-      setShortName(editingFramework.shortName);
+      setName(editingFramework.name || "");
+      setShortName(editingFramework.shortName || "");
       setDescription(editingFramework.description || "");
     } else {
       setName("");
@@ -35,7 +35,14 @@ export function FrameworkModal({ isOpen, onClose, editingFramework }: FrameworkM
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const success = await createFramework({ name, shortName, description });
+    
+    let success = false;
+    if (editingFramework) {
+      success = await updateFramework(editingFramework.id, { name, shortName, description });
+    } else {
+      success = await createFramework({ name, shortName, description });
+    }
+    
     setIsSubmitting(false);
     if (success) onClose();
   };

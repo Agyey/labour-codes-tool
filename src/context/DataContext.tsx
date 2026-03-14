@@ -59,6 +59,7 @@ interface DataActions {
   setEditorPassword: (pw: string) => void;
   // Hierarchy actions
   createFramework: (data: any) => Promise<boolean>;
+  updateFramework: (id: string, data: any) => Promise<boolean>;
   deleteFramework: (id: string) => Promise<boolean>;
   createLegislation: (data: any) => Promise<boolean>;
   deleteLegislation: (id: string) => Promise<boolean>;
@@ -221,6 +222,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return false;
   }, []);
 
+  const updateFramework = useCallback(async (id: string, data: any) => {
+    const res = await updateFrameworkAction(id, data);
+    if (res.success) {
+      const refreshed = await getFrameworks();
+      setFrameworks(refreshed);
+      toast.success("Framework updated.");
+      return true;
+    }
+    toast.error(res.error || "Failed to update framework.");
+    return false;
+  }, []);
+
   const deleteFramework = useCallback(async (id: string) => {
     if (!confirm("Delete this framework and all its contents?")) return false;
     const res = await deleteFrameworkAction(id);
@@ -290,6 +303,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setComplianceStatus,
     setEditorPassword,
     createFramework,
+    updateFramework,
     deleteFramework,
     createLegislation,
     deleteLegislation,
@@ -297,8 +311,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     stats,
   }), [
     provisions, frameworks, legislations, complianceStatuses, editorPassword, loading, users,
-    saveProvision, deleteProvision, togglePin, toggleVerify,
-    setComplianceStatus, setEditorPassword, canEdit, stats
+    saveProvision, deleteProvision, deleteProvisions, togglePin, toggleVerify,
+    setComplianceStatus, setEditorPassword, canEdit, stats,
+    createFramework, updateFramework, deleteFramework, createLegislation, deleteLegislation
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

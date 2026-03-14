@@ -29,11 +29,11 @@ export function StatuteFields({
         <h3 className="text-xs font-bold text-gray-700">New Provision</h3>
         <div>
           <label className={labelCls}>Summary</label>
-          <textarea value={form.summary} onChange={(e) => update("summary", e.target.value)} rows={3} className={inputCls} />
+          <textarea value={form.summary || ""} onChange={(e) => update("summary", e.target.value)} rows={3} className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>Full Statutory Text</label>
-          <textarea value={form.fullText} onChange={(e) => update("fullText", e.target.value)} rows={4} className={textareaCls} />
+          <textarea value={form.fullText || ""} onChange={(e) => update("fullText", e.target.value)} rows={4} className={textareaCls} />
         </div>
       </div>
 

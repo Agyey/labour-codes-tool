@@ -18,25 +18,25 @@ export function BasicInfoFields({ form, update, inputCls, labelCls, sectionCls }
       <div className="grid grid-cols-[70px_1fr_70px_70px] gap-3">
         <div>
           <label className={labelCls}>Chapter</label>
-          <input value={form.ch} onChange={(e) => update("ch", e.target.value)} className={inputCls} />
+          <input value={form.ch || ""} onChange={(e) => update("ch", e.target.value)} className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>Chapter Name</label>
-          <input value={form.chName} onChange={(e) => update("chName", e.target.value)} className={inputCls} />
+          <input value={form.chName || ""} onChange={(e) => update("chName", e.target.value)} className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>Section</label>
-          <input value={form.sec} onChange={(e) => update("sec", e.target.value)} className={inputCls} />
+          <input value={form.sec || ""} onChange={(e) => update("sec", e.target.value)} className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>Sub-sec</label>
-          <input value={form.sub} onChange={(e) => update("sub", e.target.value)} className={inputCls} />
+          <input value={form.sub || ""} onChange={(e) => update("sub", e.target.value)} className={inputCls} />
         </div>
       </div>
       <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3">
         <div>
           <label className={labelCls}>Title</label>
-          <input value={form.title} onChange={(e) => update("title", e.target.value)} className={inputCls} />
+          <input value={form.title || ""} onChange={(e) => update("title", e.target.value)} className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>Type</label>

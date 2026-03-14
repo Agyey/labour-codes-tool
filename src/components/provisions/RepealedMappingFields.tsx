@@ -37,15 +37,15 @@ export function RepealedMappingFields({
             <span className="text-[10px] font-bold text-red-600">Old Act #{i + 1}</span>
             <button onClick={() => removeOldMapping(i)} className="text-xs text-red-500 hover:text-red-700 cursor-pointer flex items-center gap-0.5"><Trash2 className="w-3 h-3" /> Remove</button>
           </div>
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2">
-            <div><label className={labelCls}>Act Name</label><input value={m.act} onChange={(e) => updateOldMapping(i, "act", e.target.value)} className={inputCls} /></div>
-            <div><label className={labelCls}>Section</label><input value={m.sec} onChange={(e) => updateOldMapping(i, "sec", e.target.value)} className={inputCls} /></div>
+           <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-2">
+            <div><label className={labelCls}>Act Name</label><input value={m.act || ""} onChange={(e) => updateOldMapping(i, "act", e.target.value)} className={inputCls} /></div>
+            <div><label className={labelCls}>Section</label><input value={m.sec || ""} onChange={(e) => updateOldMapping(i, "sec", e.target.value)} className={inputCls} /></div>
             <div><label className={labelCls}>Old Sub-sec</label><input value={m.subSec || ""} onChange={(e) => updateOldMapping(i, "subSec", e.target.value)} className={inputCls} placeholder="(1)" /></div>
             <div><label className={labelCls}>Target Sub</label><input value={m.targetSubSec || ""} onChange={(e) => updateOldMapping(i, "targetSubSec", e.target.value)} className={inputCls} placeholder="(1)" /></div>
           </div>
-          <div><label className={labelCls}>Summary of old provision</label><textarea value={m.summary} onChange={(e) => updateOldMapping(i, "summary", e.target.value)} rows={2} className={inputCls} /></div>
-          <div><label className={labelCls}>Full text</label><textarea value={m.fullText} onChange={(e) => updateOldMapping(i, "fullText", e.target.value)} rows={2} className={textareaCls} /></div>
-          <div><label className={labelCls}>What changed</label><textarea value={m.change} onChange={(e) => updateOldMapping(i, "change", e.target.value)} rows={2} className={inputCls} /></div>
+          <div><label className={labelCls}>Summary of old provision</label><textarea value={m.summary || ""} onChange={(e) => updateOldMapping(i, "summary", e.target.value)} rows={2} className={inputCls} /></div>
+          <div><label className={labelCls}>Full text</label><textarea value={m.fullText || ""} onChange={(e) => updateOldMapping(i, "fullText", e.target.value)} rows={2} className={textareaCls} /></div>
+          <div><label className={labelCls}>What changed</label><textarea value={m.change || ""} onChange={(e) => updateOldMapping(i, "change", e.target.value)} rows={2} className={inputCls} /></div>
           <div>
             <label className={labelCls}>Per-Act Change Tags</label>
             <div className="flex flex-wrap gap-1">
