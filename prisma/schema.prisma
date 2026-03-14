@@ -677,6 +677,34 @@ model DiligenceProject {
   requisitions    DiligenceRequisition[]
 }
 
+model DiligenceMatrix {
+  id             String               @id @default(cuid())
+  requisition_id String               @unique
+  columns        Json                 @default("[]") // [{ key: "entity_name", label: "Entity Name", type: "text" }, ...]
+  requisition    DiligenceRequisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  rows           DiligenceMatrixRow[]
+}
+
+model DiligenceMatrixRow {
+  id        String                @id @default(cuid())
+  matrix_id String
+  data      Json                  @default("{}") // { "entity_name": "Shareholder A", "status": "Verified" }
+  matrix    DiligenceMatrix       @relation(fields: [matrix_id], references: [id], onDelete: Cascade)
+  cells     DiligenceMatrixCell[]
+}
+
+model DiligenceMatrixCell {
+  id             String             @id @default(cuid())
+  row_id         String
+  column_key     String
+  comment        String?
+  document_id    String?
+  row            DiligenceMatrixRow @relation(fields: [row_id], references: [id], onDelete: Cascade)
+  document       DiligenceDocument? @relation(fields: [document_id], references: [id])
+  
+  @@unique([row_id, column_key])
+}
+
 model DiligenceBucket {
   id          String                 @id @default(cuid())
   project_id  String
@@ -704,17 +732,19 @@ model DiligenceRequisition {
   provision        Provision?           @relation(fields: [provision_id], references: [id])
   documents        DiligenceDocument[]
   findings         DiligenceFinding[]
+  matrix           DiligenceMatrix?
 }
 
 model DiligenceDocument {
   id             String               @id @default(cuid())
   requisition_id String
   name           String
-  file_url       String
+  url            String
   version        Int                  @default(1)
   notes          String?
   uploaded_at    DateTime             @default(now())
   requisition    DiligenceRequisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  matrixCells    DiligenceMatrixCell[]
 }
 
 model DiligenceFinding {

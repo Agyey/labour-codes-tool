@@ -269,3 +269,84 @@ export async function exportToExcel(projectId: string) {
   // Mock export for now
   return { success: true, message: "Exporting to Excel... This feature will be available in the next update." };
 }
+
+// --- Matrix Actions ---
+
+export async function initializeMatrix(requisitionId: string, columns: any[]) {
+  try {
+    const matrix = await prisma.diligenceMatrix.create({
+      data: {
+        requisition_id: requisitionId,
+        columns: columns,
+      }
+    });
+    return { success: true, matrix };
+  } catch (error) {
+    console.error("[initializeMatrix] Error:", error);
+    return { success: false, error: "Failed to initialize matrix" };
+  }
+}
+
+export async function getMatrix(requisitionId: string) {
+  try {
+    return await prisma.diligenceMatrix.findUnique({
+      where: { requisition_id: requisitionId },
+      include: {
+        rows: {
+          include: {
+            cells: {
+              include: {
+                document: true
+              }
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("[getMatrix] Error:", error);
+    return null;
+  }
+}
+
+export async function addMatrixRow(matrixId: string, data: any) {
+  try {
+    const row = await prisma.diligenceMatrixRow.create({
+      data: {
+        matrix_id: matrixId,
+        data: data
+      }
+    });
+    return { success: true, row };
+  } catch (error) {
+    console.error("[addMatrixRow] Error:", error);
+    return { success: false, error: "Failed to add row" };
+  }
+}
+
+export async function updateMatrixCell(rowId: string, columnKey: string, comment?: string, documentId?: string) {
+  try {
+    const cell = await prisma.diligenceMatrixCell.upsert({
+      where: {
+        row_id_column_key: {
+          row_id: rowId,
+          column_key: columnKey
+        }
+      },
+      update: {
+        comment,
+        document_id: documentId
+      },
+      create: {
+        row_id: rowId,
+        column_key: columnKey,
+        comment,
+        document_id: documentId
+      }
+    });
+    return { success: true, cell };
+  } catch (error) {
+    console.error("[updateMatrixCell] Error:", error);
+    return { success: false, error: "Failed to update cell" };
+  }
+}
