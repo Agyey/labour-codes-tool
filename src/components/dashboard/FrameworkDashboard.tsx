@@ -53,7 +53,7 @@ export function FrameworkDashboard() {
            </div>
         ) : (
           frameworks.map((fw) => (
-            <button 
+             <div 
               key={fw.id}
               onClick={() => {
                 setActiveCode(fw.shortName as any || fw.id);
@@ -134,7 +134,7 @@ export function FrameworkDashboard() {
                   <ChevronRight className="w-5 h-5" />
                 </div>
               </div>
-            </button>
+            </div>
           ))
         )}
       </div>
