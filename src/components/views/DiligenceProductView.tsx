@@ -38,7 +38,8 @@ import {
   initializeMatrix,
   getMatrix,
   addMatrixRow,
-  updateMatrixCell
+  updateMatrixCell,
+  addDiligenceRequisition
 } from "@/app/actions/diligence";
 import { getMatters } from "@/app/actions/matters"; // Scenarios might be fetched differently, checking for getScenarioTemplates
 import toast from "react-hot-toast";
@@ -478,6 +479,8 @@ function RequisitionTable({ project, items, onUpdate, setSelectedRequisitionId }
   const [filter, setFilter] = useState("");
   const [isSeeding, setIsSeeding] = useState(false);
 
+  const [showAddModal, setShowAddModal] = useState(false);
+
   async function handleSeedStatus() {
      if (items.length > 0) return;
      setIsSeeding(true);
@@ -492,7 +495,7 @@ function RequisitionTable({ project, items, onUpdate, setSelectedRequisitionId }
      setIsSeeding(false);
   }
 
-  const filteredItems = project.requisitions.filter((r: any) => 
+  const filteredItems = items.filter((r: any) => 
     r.title.toLowerCase().includes(filter.toLowerCase())
   );
 
@@ -511,17 +514,28 @@ function RequisitionTable({ project, items, onUpdate, setSelectedRequisitionId }
         <div className="flex items-center gap-3">
           <button 
             onClick={handleSeedStatus}
-            disabled={isSeeding || project.requisitions.length > 0}
+            disabled={isSeeding || items.length > 0}
             className="px-4 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded-xl text-xs font-bold transition-all disabled:opacity-40"
           >
             {isSeeding ? "Seeding..." : "Auto-Seed"}
           </button>
-          <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/10">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/10"
+          >
             <Plus className="w-4 h-4" />
             Add Custom
           </button>
         </div>
       </div>
+
+      <AddRequisitionModal 
+        isOpen={showAddModal} 
+        onClose={() => setShowAddModal(false)} 
+        projectId={project.id} 
+        onSuccess={onUpdate}
+        buckets={project.buckets}
+      />
 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">

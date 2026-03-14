@@ -135,6 +135,29 @@ export async function updateRequisitionStatus(id: string, status: string) {
   }
 }
 
+export async function addDiligenceRequisition(projectId: string, data: { title: string; description?: string; bucket_id?: string }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
+    const requisition = await prisma.diligenceRequisition.create({
+      data: {
+        project_id: projectId,
+        title: data.title,
+        description: data.description,
+        bucket_id: data.bucket_id,
+        status: "Requested",
+      }
+    });
+
+    revalidatePath(`/diligence/${projectId}`);
+    return { success: true, requisition };
+  } catch (error: any) {
+    console.error("[addDiligenceRequisition] Error:", error);
+    return { success: false, error: error.message || "Failed to add requisition" };
+  }
+}
+
 export async function addFinding(requisitionId: string, data: { severity: string; description: string; analysis?: string; recommendation?: string }) {
   try {
     const session = await getServerSession(authOptions);
