@@ -363,7 +363,14 @@ function DiligenceProjectDetail({ id, onBack }: { id: string, onBack: () => void
       {/* Content */}
       <div className="space-y-8">
         {activeTab === "overview" && <DiligenceOverview project={project} />}
-        {activeTab === "requisitions" && <RequisitionTable project={project} onUpdate={fetchDetail} />}
+        {activeTab === "requisitions" && (
+          <RequisitionTable 
+            project={project}
+            items={project.requisitions} 
+            onUpdate={fetchDetail} 
+            setSelectedRequisitionId={setSelectedRequisitionId}
+          />
+        )}
         {activeTab === "documents" && <DocumentView project={project} />}
         {activeTab === "risks" && <RiskLog project={project} />}
         {activeTab === "report" && <ReportPreview project={project} />}
@@ -460,12 +467,19 @@ function MetaItem({ label, value, icon: Icon }: any) {
   );
 }
 
-function RequisitionTable({ project, onUpdate }: { project: any, onUpdate: () => void }) {
+interface RequisitionTableProps {
+  project: any; // Keep project for seeding
+  items: any[];
+  onUpdate: () => void;
+  setSelectedRequisitionId: (id: string) => void;
+}
+
+function RequisitionTable({ project, items, onUpdate, setSelectedRequisitionId }: RequisitionTableProps) {
   const [filter, setFilter] = useState("");
   const [isSeeding, setIsSeeding] = useState(false);
 
   async function handleSeedStatus() {
-     if (project.requisitions.length > 0) return;
+     if (items.length > 0) return;
      setIsSeeding(true);
      // Try to seed from a default M&A scenario if possible, or direct seed
      const res = await seedRequisitionsFromScenario(project.id, "M&A_DEFAULT"); // Placeholder ID
