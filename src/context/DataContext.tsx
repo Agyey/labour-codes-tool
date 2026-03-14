@@ -170,34 +170,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const togglePin = useCallback(async (id: string) => {
-    setProvisions((prev) => {
-        const prov = prev.find((x) => x.id === id);
-        if (!prov) return prev;
-        const newPinned = !prov.pinned;
-        togglePinAction(id, newPinned).then(res => {
-            if (!res.success) {
-                setProvisions(p => p.map(x => x.id === id ? { ...x, pinned: !newPinned } : x));
-                toast.error("Failed to update pin status.");
-            }
-        });
-        return prev.map((x) => (x.id === id ? { ...x, pinned: newPinned } : x));
-    });
-  }, []);
+    const prov = provisions.find(x => x.id === id);
+    if (!prov) return;
+    
+    const newPinned = !prov.pinned;
+    // Optimistic update
+    setProvisions(prev => prev.map(x => x.id === id ? { ...x, pinned: newPinned } : x));
+    
+    const res = await togglePinAction(id, newPinned);
+    if (!res.success) {
+      // Revert on failure
+      setProvisions(p => p.map(x => x.id === id ? { ...x, pinned: !newPinned } : x));
+      toast.error("Failed to update pin status.");
+    }
+  }, [provisions]);
 
   const toggleVerify = useCallback(async (id: string) => {
-    setProvisions((prev) => {
-        const prov = prev.find((x) => x.id === id);
-        if (!prov) return prev;
-        const newVerified = !prov.verified;
-        toggleVerifyAction(id, newVerified).then(res => {
-            if (!res.success) {
-                setProvisions(p => p.map(x => x.id === id ? { ...x, verified: !newVerified } : x));
-                toast.error("Failed to update verification status.");
-            }
-        });
-        return prev.map((x) => (x.id === id ? { ...x, verified: newVerified } : x));
-    });
-  }, []);
+    const prov = provisions.find(x => x.id === id);
+    if (!prov) return;
+    
+    const newVerified = !prov.verified;
+    // Optimistic update
+    setProvisions(prev => prev.map(x => x.id === id ? { ...x, verified: newVerified } : x));
+    
+    const res = await toggleVerifyAction(id, newVerified);
+    if (!res.success) {
+      // Revert on failure
+      setProvisions(p => p.map(x => x.id === id ? { ...x, verified: !newVerified } : x));
+      toast.error("Failed to update verification status.");
+    }
+  }, [provisions]);
 
   const setComplianceStatus = useCallback((id: string, status: string) => {
     setComplianceStatuses((prev) => ({ ...prev, [id]: status }));

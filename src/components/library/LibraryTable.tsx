@@ -30,7 +30,7 @@ interface LibraryTableProps {
 
 export function LibraryTable({ data }: LibraryTableProps) {
   const { setExpandedProvision, setEditingProvision } = useUI();
-  const { deleteProvision, deleteProvisions, toggleVerify, togglePin } = useDataActions();
+  const { deleteProvision, toggleVerify, togglePin } = useDataActions();
   const { canEdit } = useDataState();
   
   const [sorting, setSorting] = useState<SortingState>([{ id: "reference", desc: false }]);
@@ -83,12 +83,12 @@ export function LibraryTable({ data }: LibraryTableProps) {
     {
       accessorKey: "code",
       header: "Framework",
-      size: 120,
+      size: 100,
       cell: ({ row }) => {
         const cObj = CODES[row.original.code as keyof typeof CODES];
         return (
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cObj?.c || "#94a3b8" }} />
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cObj?.c || "#94a3b8" }} />
             <span className="font-semibold text-slate-700 dark:text-zinc-200 text-xs truncate">
               {cObj?.s || row.original.code}
             </span>
@@ -99,20 +99,20 @@ export function LibraryTable({ data }: LibraryTableProps) {
     {
       id: "type",
       header: "Type",
-      size: 100,
+      size: 90,
       cell: ({ row }) => {
         const type = row.original.provisionType || 'section';
         const config = {
-          section: { icon: Scale, styles: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20', label: 'Section' },
+          section: { icon: Scale, styles: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20', label: 'Sec' },
           rule: { icon: Gavel, styles: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20', label: 'Rule' },
           form: { icon: FileText, styles: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20', label: 'Form' },
-          register: { icon: BookOpen, styles: 'bg-rose-50 text-rose-700 dark:bg-rose-900/20', label: 'Register' },
+          register: { icon: BookOpen, styles: 'bg-rose-50 text-rose-700 dark:bg-rose-900/20', label: 'Reg' },
         }[type] || { icon: Scale, styles: 'bg-slate-50 text-slate-700 dark:bg-slate-900/20', label: type };
         
         const Icon = config.icon;
         return (
-          <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${config.styles}`}>
-            <Icon className="w-3 h-3 inline mr-1 -mt-0.5" /> {config.label}
+          <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${config.styles} flex items-center gap-1 w-fit`}>
+            <Icon className="w-3 h-3 flex-shrink-0" /> {config.label}
           </span>
         );
       },
@@ -129,19 +129,20 @@ export function LibraryTable({ data }: LibraryTableProps) {
         const p = row.original;
         const isChild = !!p.parentSection && p.provisionType !== 'section';
         return (
-          <div className={`flex flex-col ${isChild ? 'pl-2 border-l-2' : ''}`}>
+          <div className={`flex flex-col ${isChild ? 'pl-2 border-l-2 border-indigo-200' : ''}`}>
             <span className="text-[9px] text-slate-400 uppercase truncate">
               {p.provisionType === 'section' ? `Ch ${p.ch}` : `Ref S.${p.parentSection}`}
             </span>
-            <span className="text-sm font-bold text-slate-800 dark:text-zinc-100">{p.sec}</span>
+            <span className="text-sm font-bold text-slate-800 dark:text-zinc-100">{p.sec}{p.sub}</span>
           </div>
         );
       },
+      size: 80,
     },
     {
       accessorKey: "title",
       header: "Title",
-      size: 200,
+      size: 250,
       cell: ({ row }) => (
         <div className="truncate font-medium text-sm text-slate-700 dark:text-zinc-200">
           {row.getValue("title")}
@@ -151,7 +152,7 @@ export function LibraryTable({ data }: LibraryTableProps) {
     {
       accessorKey: "impact",
       header: "Impact",
-      size: 90,
+      size: 80,
       cell: ({ row }) => {
         const impact = row.getValue("impact") as string;
         return <Badge text={impact} color={IMPACT_COLORS[impact] || "#6b7280"} className="text-[9px]" />;
@@ -160,19 +161,18 @@ export function LibraryTable({ data }: LibraryTableProps) {
     {
       id: "actions",
       header: "",
-      size: 100,
+      size: 80,
       cell: ({ row }) => {
         const isExpanded = expandedRows[row.original.id];
         return (
           <div className="flex items-center justify-end gap-1">
-            <button onClick={() => setExpandedProvision(row.original.id)} className="p-1 hover:text-indigo-600"><ExternalLink className="w-4 h-4" /></button>
-            {canEdit && <button onClick={() => deleteProvision(row.original.id)} className="p-1 hover:text-rose-600"><Trash2 className="w-4 h-4" /></button>}
-            <button onClick={() => toggleExpand(row.original.id)} className="p-1">{isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button>
+            <button onClick={() => setExpandedProvision(row.original.id)} className="p-1 hover:text-indigo-600 transition-colors"><ExternalLink className="w-4 h-4" /></button>
+            <button onClick={() => toggleExpand(row.original.id)} className="p-1 hover:bg-slate-100 rounded transition-colors">{isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</button>
           </div>
         );
       },
     },
-  ], [selectedIds, data, expandedRows, canEdit, toggleExpand, toggleSelect, toggleSelectAll, setExpandedProvision, deleteProvision]);
+  ], [selectedIds, data, expandedRows, canEdit, toggleExpand, toggleSelect, toggleSelectAll, setExpandedProvision]);
 
   const table = useReactTable({
     data,
@@ -189,83 +189,87 @@ export function LibraryTable({ data }: LibraryTableProps) {
     count: rows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: useCallback((index) => {
-        const id = rows[index].original.id;
-        return expandedRows[id] ? 600 : 54;
+        const row = rows[index];
+        if (!row) return 54;
+        return expandedRows[row.original.id] ? 650 : 54;
     }, [expandedRows, rows]),
     overscan: 5,
   });
 
-  // Re-measure when expanded state changes
   useEffect(() => {
     rowVirtualizer.measure();
   }, [expandedRows, rowVirtualizer]);
 
   return (
-    <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm flex flex-col h-[75vh] min-h-[500px]">
+    <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm flex flex-col h-[75vh] min-h-[500px] overflow-hidden">
+      {/* Virtual Table Header (Fixed) */}
+      <div className="bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 z-20 flex px-2 overflow-hidden">
+          {table.getHeaderGroups().map(headerGroup => (
+            <div key={headerGroup.id} className="flex w-full">
+              {headerGroup.headers.map(header => (
+                <div key={header.id} style={{ width: header.getSize() }} className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </div>
+              ))}
+            </div>
+          ))}
+      </div>
+
       <div ref={parentRef} className="flex-1 overflow-auto relative scrollbar-thin scrollbar-thumb-slate-200">
         <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
-          <table className="w-full text-left border-collapse table-fixed">
-            <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 shadow-sm">
-                {table.getHeaderGroups().map(headerGroup => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map(header => (
-                      <th key={header.id} style={{ width: header.getSize() }} className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50 dark:bg-zinc-900">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-            </thead>
-            <tbody>
-              {rowVirtualizer.getVirtualItems().map(virtualRow => {
-                const row = rows[virtualRow.index];
-                const isExpanded = expandedRows[row.original.id];
+          {rowVirtualizer.getVirtualItems().map(virtualRow => {
+            const row = rows[virtualRow.index];
+            if (!row) return null;
+            const isExpanded = expandedRows[row.original.id];
+            
+            return (
+              <div 
+                key={row.id}
+                className={`absolute left-0 w-full transition-colors border-b border-slate-100 dark:border-zinc-800/50 flex flex-col overflow-hidden ${isExpanded ? 'bg-indigo-50/20 z-10' : 'hover:bg-slate-50 dark:hover:bg-zinc-800/30'}`}
+                style={{ height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }}
+              >
+                <div className="flex h-[54px] items-center px-2">
+                   {row.getVisibleCells().map(cell => (
+                    <div key={cell.id} style={{ width: cell.column.getSize() }} className="px-4 truncate h-full flex items-center">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  ))}
+                </div>
                 
-                return (
-                  <React.Fragment key={row.id}>
-                    <tr 
-                      className={`absolute left-0 w-full transition-colors hover:bg-slate-50 dark:hover:bg-zinc-800/30 border-b border-slate-100 dark:border-zinc-800/50 ${isExpanded ? 'bg-indigo-50/20 z-10' : ''}`}
-                      style={{ height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }}
-                    >
-                      <td colSpan={columns.length} className="p-0 align-top h-full">
-                        <div className="flex h-[54px] items-center">
-                           {row.getVisibleCells().map(cell => (
-                            <div key={cell.id} style={{ width: cell.column.getSize() }} className="px-4 truncate">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {isExpanded && (
-                          <div className="p-6 bg-slate-50/50 dark:bg-zinc-950/20 border-t border-indigo-100 dark:border-indigo-900/50 overflow-auto h-[546px]">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                              <StatuteView provision={row.original} codeShortName={CODES[row.original.code as keyof typeof CODES]?.s} />
-                              <RepealedAnalysis provision={row.original} />
-                            </div>
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 border-t border-slate-200 dark:border-zinc-800">
-                              <PenaltyInfo provision={row.original} />
-                              <RulesAndForms provision={row.original} />
-                              <ComplianceItemsList provision={row.original} />
-                            </div>
-                            <StateNotesTable provision={row.original} />
-                            <div className="mt-6 flex gap-4">
-                                <button onClick={() => toggleVerify(row.original.id)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border rounded-xl text-xs font-bold">
-                                   <CheckCircle className={`w-4 h-4 ${row.original.verified ? 'text-emerald-500' : 'text-slate-300'}`} /> {row.original.verified ? 'Verified' : 'Verify'}
-                                </button>
-                                <button onClick={() => togglePin(row.original.id)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border rounded-xl text-xs font-bold">
-                                   <Pin className={`w-4 h-4 ${row.original.pinned ? 'text-amber-500' : 'text-slate-300'}`} /> {row.original.pinned ? 'Pinned' : 'Pin'}
-                                </button>
-                                {canEdit && <button onClick={() => setEditingProvision(row.original)} className="p-2 bg-white dark:bg-zinc-800 border rounded-xl text-xs font-bold ml-auto"><Pencil className="w-4 h-4" /></button>}
-                            </div>
-                          </div>
+                {isExpanded && (
+                  <div className="p-6 bg-slate-50/50 dark:bg-zinc-950/20 border-t border-indigo-100 dark:border-indigo-900/50 overflow-y-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <StatuteView provision={row.original} codeShortName={CODES[row.original.code as keyof typeof CODES]?.s || row.original.code} />
+                      <RepealedAnalysis provision={row.original} />
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 py-6 border-t border-slate-200 dark:border-zinc-800">
+                      <PenaltyInfo provision={row.original} />
+                      <RulesAndForms provision={row.original} />
+                      <ComplianceItemsList provision={row.original} />
+                    </div>
+                    <StateNotesTable provision={row.original} />
+                    <div className="mt-6 flex gap-4">
+                        <button onClick={() => toggleVerify(row.original.id)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-xl text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors">
+                           <CheckCircle className={`w-4 h-4 ${row.original.verified ? 'text-emerald-500' : 'text-slate-300'}`} /> {row.original.verified ? 'Verified' : 'Verify'}
+                        </button>
+                        <button onClick={() => togglePin(row.original.id)} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-xl text-xs font-bold shadow-sm hover:bg-slate-50 transition-colors">
+                           <Pin className={`w-4 h-4 ${row.original.pinned ? 'text-amber-500' : 'text-slate-300'}`} /> {row.original.pinned ? 'Pinned' : 'Pin'}
+                        </button>
+                        {canEdit && <button onClick={() => setEditingProvision(row.original)} className="p-2 bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-xl text-xs font-bold ml-auto shadow-sm hover:bg-slate-50 transition-colors"><Pencil className="w-4 h-4" /></button>}
+                        {canEdit && (
+                          <button 
+                            onClick={() => { if(confirm("Delete?")) deleteProvision(row.original.id); }} 
+                            className="p-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-bold shadow-sm hover:bg-rose-100 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         )}
-                      </td>
-                    </tr>
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
