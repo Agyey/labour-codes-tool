@@ -163,6 +163,7 @@ model Provision {
   targetOf         ProvisionRelation[] @relation("target")
   stateData        StateData[]
   compliances      EntityCompliance[]
+  diligenceItems   DiligenceRequisition[]
 }
 
 model OldMapping {
@@ -510,6 +511,7 @@ model Matter {
   tasks          Task[]
   cases          LegalCase[]
   auditLogs      AuditLog[]
+  diligence      DiligenceProject?
 }
 
 model AuditLog {
@@ -658,4 +660,70 @@ model Hearing {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @default(now())
   case         LegalCase @relation(fields: [case_id], references: [id], onDelete: Cascade)
+}
+model DiligenceProject {
+  id              String                @id @default(cuid())
+  matter_id       String                @unique
+  name            String
+  client_name     String
+  target_company  String
+  type            String // VC, PE, M&A, etc.
+  jurisdiction    String?
+  status          String                @default("Setup")
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+  matter          Matter                @relation(fields: [matter_id], references: [id], onDelete: Cascade)
+  buckets         DiligenceBucket[]
+  requisitions    DiligenceRequisition[]
+}
+
+model DiligenceBucket {
+  id          String                 @id @default(cuid())
+  project_id  String
+  name        String
+  project     DiligenceProject       @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  items       DiligenceRequisition[]
+}
+
+model DiligenceRequisition {
+  id               String               @id @default(cuid())
+  project_id       String
+  bucket_id        String?
+  title            String
+  description      String?
+  legal_relevance  String?
+  entity_type      String? // Private, Public, LLP, Startup
+  applicable_law   String?
+  required_docs    String?
+  risk_flag        Boolean              @default(false)
+  status           String               @default("Requested") // Requested, Received, Under Review, Complete
+  notes            String?
+  provision_id     String? // Link to Knowledge Library
+  project          DiligenceProject     @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  bucket           DiligenceBucket?     @relation(fields: [bucket_id], references: [id])
+  provision        Provision?           @relation(fields: [provision_id], references: [id])
+  documents        DiligenceDocument[]
+  findings         DiligenceFinding[]
+}
+
+model DiligenceDocument {
+  id             String               @id @default(cuid())
+  requisition_id String
+  name           String
+  file_url       String
+  version        Int                  @default(1)
+  notes          String?
+  uploaded_at    DateTime             @default(now())
+  requisition    DiligenceRequisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+}
+
+model DiligenceFinding {
+  id             String               @id @default(cuid())
+  requisition_id String
+  severity       String               @default("No Issue") // No Issue, Minor, Moderate, High, Deal Breaker
+  description    String
+  analysis       String?
+  recommendation String?
+  created_at     DateTime             @default(now())
+  requisition    DiligenceRequisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
 }
