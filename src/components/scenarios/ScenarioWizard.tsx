@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe, Building2, Briefcase, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Play, Scale, Landmark, Settings2, Plus } from "lucide-react";
