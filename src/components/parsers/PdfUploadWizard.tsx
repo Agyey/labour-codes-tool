@@ -104,9 +104,21 @@ export function PdfUploadWizard({ onClose }: PdfUploadWizardProps) {
         newProv.parentSection = extractedSec.parentSection;
         newProv.subSections = extractedSec.subSections || [];
         
-        if (parsedResult.penalties.length > 0) {
-          newProv.penaltyNew = parsedResult.penalties[0];
-        }
+        newProv.penalties = parsedResult.penalties;
+        newProv.penaltyNew = parsedResult.penalties.join(", ");
+        
+        // Map Repealed acts into the new relational mapping structure
+        newProv.oldMappings = (parsedResult.repealedActs || []).map(actName => ({
+          act: actName,
+          sec: "",
+          subSec: "",
+          targetSubSec: "",
+          summary: "Identified via AI Parsing",
+          fullText: "",
+          change: "",
+          changeTags: [],
+          linkedProvisionId: ""
+        }));
 
         newProv.id = `inserted-${Date.now()}-${i}`;
 

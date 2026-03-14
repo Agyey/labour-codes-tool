@@ -123,6 +123,7 @@ export interface Provision {
   applicability?: string;
   penaltyOld: string;
   penaltyNew: string;
+  penalties: string[];
   timelineDates: TimelineDate[];
   notes: string;
   verified: boolean;

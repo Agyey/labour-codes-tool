@@ -154,7 +154,7 @@ export function EditorModal() {
         </div>
 
         {/* Tab Bar */}
-        <div className="px-10 py-2 border-b border-slate-50 dark:border-zinc-900 flex items-center gap-1 overflow-x-auto no-scrollbar">
+        <div className="px-10 py-3 border-b border-slate-50 dark:border-zinc-900 flex flex-wrap items-center gap-1.5 bg-slate-50/50 dark:bg-zinc-950/50">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

@@ -1,7 +1,6 @@
-"use client";
-
 import { CHANGE_TAGS, WORKFLOW_TAGS, CHANGE_TAG_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
 import { TagChip } from "@/components/shared/TagChip";
+import { Scale, Gavel, PlusCircle } from "lucide-react";
 import type { Provision } from "@/types/provision";
 
 interface StatuteFieldsProps {
@@ -26,25 +25,37 @@ export function StatuteFields({
   return (
     <>
       <div className={sectionCls}>
-        <h3 className="text-xs font-bold text-gray-700">New Provision</h3>
-        <div>
-          <label className={labelCls}>Summary</label>
-          <textarea value={form.summary || ""} onChange={(e) => update("summary", e.target.value)} rows={3} className={inputCls} />
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400">
+             <Scale className="w-4 h-4" />
+          </div>
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-zinc-200">Statutory Core</h3>
         </div>
-        <div>
-          <label className={labelCls}>Full Statutory Text</label>
-          <textarea value={form.fullText || ""} onChange={(e) => update("fullText", e.target.value)} rows={4} className={textareaCls} />
+        <div className="space-y-4">
+          <div>
+            <label className={labelCls}>Legal Summary</label>
+            <textarea value={form.summary || ""} onChange={(e) => update("summary", e.target.value)} rows={3} className={inputCls + " min-h-[80px]"} placeholder="Briefly describe the purpose of this provision..." />
+          </div>
+          <div>
+            <label className={labelCls}>Full Statutory Text</label>
+            <textarea value={form.fullText || ""} onChange={(e) => update("fullText", e.target.value)} rows={6} className={textareaCls + " font-serif leading-relaxed"} placeholder="Paste the verbatim legal text here..." />
+          </div>
         </div>
       </div>
 
       <div className={sectionCls}>
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-gray-700">Sub-sections / Provisos</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-amber-50 dark:bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400">
+               <Gavel className="w-4 h-4" />
+            </div>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-zinc-200">Sub-sections & Provisos</h3>
+          </div>
           <button 
             onClick={() => update("subSections", [...(form.subSections || []), { marker: "", text: "" }])}
-            className="text-[10px] font-bold text-blue-500 hover:text-blue-600 uppercase tracking-widest"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all cursor-pointer"
           >
-            + Add Sub-sec
+            <PlusCircle className="w-3.5 h-3.5" /> Add Sub-sec
           </button>
         </div>
         <div className="space-y-2">

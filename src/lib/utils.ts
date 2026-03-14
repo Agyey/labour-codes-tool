@@ -63,6 +63,7 @@ export function createBlankProvision(code: string): Provision {
     applicability: "",
     penaltyOld: "",
     penaltyNew: "",
+    penalties: [],
     timelineDates: [],
     notes: "",
     verified: false,
