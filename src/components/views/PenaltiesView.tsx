@@ -19,7 +19,11 @@ interface MatrixRow {
 export function PenaltiesView() {
   const { activeCode, setExpandedProvision } = useUI();
   const { provisions } = useData();
-  const cObj = CODES[activeCode];
+  const cObj = CODES[activeCode as keyof typeof CODES] || {
+    n: activeCode,
+    s: activeCode,
+    c: "#6366f1"
+  };
 
   const matrixData = useMemo(() => {
     const data: MatrixRow[] = [];

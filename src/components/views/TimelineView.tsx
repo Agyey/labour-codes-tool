@@ -9,7 +9,11 @@ import { motion } from "framer-motion";
 export function TimelineView() {
   const { activeCode } = useUI();
   const { provisions } = useData();
-  const cObj = CODES[activeCode];
+  const cObj = CODES[activeCode as keyof typeof CODES] || {
+    n: activeCode,
+    s: activeCode,
+    c: "#6366f1"
+  };
 
   const events = provisions
     .filter((x) => x.code === activeCode && (x.timelineDates || []).length > 0)

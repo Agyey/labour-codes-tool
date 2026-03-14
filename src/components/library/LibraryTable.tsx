@@ -85,7 +85,8 @@ export function LibraryTable({ data }: LibraryTableProps) {
       header: "Framework",
       size: 100,
       cell: ({ row }) => {
-        const cObj = CODES[row.original.code as keyof typeof CODES];
+        const code = row.original.code;
+        const cObj = CODES[code as keyof typeof CODES] || { s: code, c: "#94a3b8" };
         return (
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cObj?.c || "#94a3b8" }} />

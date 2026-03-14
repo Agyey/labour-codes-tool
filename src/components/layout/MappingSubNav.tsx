@@ -11,7 +11,11 @@ export function MappingSubNav() {
   const { provisions } = useData();
   const { setFilter } = useFilter();
 
-  const cObj = CODES[activeCode];
+  const cObj = CODES[activeCode as keyof typeof CODES] || {
+    n: activeCode,
+    s: activeCode,
+    c: "#6366f1"
+  };
 
   // Chapters for current code
   const chapterMap: Record<string, string> = {};
