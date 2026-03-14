@@ -55,9 +55,12 @@ export function createBlankProvision(code: string): Provision {
     forms: [],
     stateNotes: Object.fromEntries(STATES.map((s) => [s, ""])),
     stateRuleText: Object.fromEntries(STATES.map((s) => [s, ""])),
+    stateAmendments: Object.fromEntries(STATES.map((s) => [s, ""])),
+    stateInsertions: Object.fromEntries(STATES.map((s) => [s, ""])),
     stateCompStatus: Object.fromEntries(
       STATES.map((s) => [s, "Not Started" as const])
     ),
+    applicability: "",
     penaltyOld: "",
     penaltyNew: "",
     timelineDates: [],

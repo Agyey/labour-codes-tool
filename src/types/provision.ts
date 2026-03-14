@@ -23,6 +23,7 @@ export interface OldMapping {
   fullText: string;
   change: string;
   changeTags: string[];
+  linkedProvisionId?: string; // Relational link to another provision
 }
 
 export interface ComplianceItem {
@@ -116,7 +117,10 @@ export interface Provision {
   forms: FormRegister[];
   stateNotes: Record<string, string>;
   stateRuleText: Record<string, string>;
+  stateAmendments: Record<string, string>;
+  stateInsertions: Record<string, string>;
   stateCompStatus: Record<string, ComplianceStatus>;
+  applicability?: string;
   penaltyOld: string;
   penaltyNew: string;
   timelineDates: TimelineDate[];

@@ -19,12 +19,17 @@ import { TimelineFields } from "./TimelineFields";
 import { MetadataFields } from "./MetadataFields";
 
 import { HierarchyConnectors } from "./HierarchyConnectors";
+import { ApplicabilityFields } from "./ApplicabilityFields";
+import { Layout, FileText, GitPullRequest, ShieldCheck, Map, MessageSquare } from "lucide-react";
+
+type EditorTab = "BASIC" | "STATUTE" | "MAPPING" | "COMPLIANCE" | "STATE_WISE" | "DISCUSSION";
 
 export function EditorModal() {
   const { editingProvision, setEditingProvision } = useUI();
   const { saveProvision, users } = useData();
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<Provision | null>(null);
+  const [activeTab, setActiveTab] = useState<EditorTab>("BASIC");
 
   useEffect(() => {
     if (editingProvision) {
@@ -105,9 +110,19 @@ export function EditorModal() {
     update("compItems", arr);
   }
 
+  const tabs: { id: EditorTab; label: string; icon: any }[] = [
+    { id: "BASIC", label: "Basic Info", icon: Layout },
+    { id: "STATUTE", label: "Statute Info", icon: FileText },
+    { id: "MAPPING", label: "Relational Mapping", icon: GitPullRequest },
+    { id: "COMPLIANCE", label: "Compliance & Rules", icon: ShieldCheck },
+    { id: "STATE_WISE", label: "State Tracking", icon: Map },
+    { id: "DISCUSSION", label: "Discussion", icon: MessageSquare },
+  ];
+
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xl z-[1000] flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-zinc-950 rounded-[56px] w-[95%] max-w-[1100px] max-h-[92vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200 dark:border-zinc-800 animate-in zoom-in-95 duration-500 ease-out">
+        {/* Header */}
         <div className="flex items-center justify-between p-10 pb-6 border-b border-slate-50 dark:border-zinc-900">
           <div>
             <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -115,85 +130,145 @@ export function EditorModal() {
             </h2>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Intelligence Layer Editor</p>
           </div>
-          <button onClick={() => setEditingProvision(null)} className="p-4 bg-slate-50 dark:bg-zinc-900 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-3xl transition-all hover:scale-110 active:scale-90 cursor-pointer">
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-4">
+             <button
+              onClick={async () => {
+                setIsSaving(true);
+                try {
+                  await saveProvision(form);
+                  setEditingProvision(null);
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all cursor-pointer disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95"
+            >
+              <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} /> 
+              {isSaving ? "Saving..." : "Save Changes"}
+            </button>
+            <button onClick={() => setEditingProvision(null)} className="p-4 bg-slate-50 dark:bg-zinc-900 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-3xl transition-all hover:scale-110 active:scale-90 cursor-pointer">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-grow overflow-auto p-10 space-y-10 custom-scrollbar">
-          <HierarchyConnectors 
-            form={form} 
-            update={update} 
-            labelCls={labelCls} 
-            sectionCls={sectionCls} 
-          />
-
-          <BasicInfoFields form={form} update={update} inputCls={inputCls} labelCls={labelCls} sectionCls={sectionCls} />
-          
-          <StatuteFields 
-            form={form} 
-            update={update} 
-            toggleInArray={toggleInArray} 
-            inputCls={inputCls} 
-            textareaCls={textareaCls}
-            labelCls={labelCls} 
-            sectionCls={sectionCls} 
-          />
-
-          <RepealedMappingFields 
-            form={form} 
-            updateOldMapping={updateOldMapping} 
-            toggleOldMappingTag={toggleOldMappingTag} 
-            addOldMapping={() => update("oldMappings", [...form.oldMappings, createBlankOldMapping()])}
-            removeOldMapping={(idx) => update("oldMappings", form.oldMappings.filter((_, i) => i !== idx))}
-            inputCls={inputCls} 
-            textareaCls={textareaCls}
-            labelCls={labelCls} 
-            sectionCls={sectionCls} 
-          />
-
-          <PenaltyFields form={form} update={update} inputCls={inputCls} labelCls={labelCls} sectionCls={sectionCls} />
-
-          <RulesAndFormsFields 
-            form={form} 
-            addArrayItem={addArrayItem}
-            removeArrayItem={removeArrayItem}
-            updateArrayItem={updateArrayItem}
-            update={update}
-            inputCls={inputCls} 
-            labelCls={labelCls}
-            sectionCls={sectionCls} 
-          />
-
-          <ComplianceFields 
-            form={form} 
-            users={users} 
-            addCompItem={addCompItem}
-            removeCompItem={removeCompItem}
-            updateCompItem={updateCompItem}
-            inputCls={inputCls} 
-            sectionCls={sectionCls} 
-          />
-
-          <StateWideFields form={form} update={update} inputCls={inputCls} sectionCls={sectionCls} />
-
-          <TimelineFields form={form} update={update} inputCls={inputCls} sectionCls={sectionCls} />
-
-          <MetadataFields form={form} users={users} update={update} inputCls={inputCls} labelCls={labelCls} sectionCls={sectionCls} />
+        {/* Tab Bar */}
+        <div className="px-10 py-2 border-b border-slate-50 dark:border-zinc-900 flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                  isActive 
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-zinc-900 shadow-md transform translate-y-[-1px]' 
+                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-          <CommentSection 
-            comments={form.comments} 
-            onAddComment={async (body) => {
-              if (prov.id.includes("temp-")) return;
-              const res = await addComment(prov.id, body);
-              if (res.success && res.comment) {
-                setForm(prev => prev ? ({ ...prev, comments: [...(prev.comments || []), res.comment as Comment] }) : null);
-              }
-            }} 
-          />
+        {/* Content Area */}
+        <div className="flex-grow overflow-auto p-10 space-y-10 custom-scrollbar bg-slate-50/20 dark:bg-zinc-900/10">
+          {activeTab === "BASIC" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-10">
+              <HierarchyConnectors form={form} update={update} labelCls={labelCls} sectionCls={sectionCls} />
+              <BasicInfoFields form={form} update={update} inputCls={inputCls} labelCls={labelCls} sectionCls={sectionCls} />
+              <ApplicabilityFields form={form} update={update} textareaCls={textareaCls} labelCls={labelCls} sectionCls={sectionCls} />
+              <TimelineFields form={form} update={update} inputCls={inputCls} sectionCls={sectionCls} />
+              <MetadataFields form={form} users={users} update={update} inputCls={inputCls} labelCls={labelCls} sectionCls={sectionCls} />
+            </div>
+          )}
 
-          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-zinc-800 mt-6">
+          {activeTab === "STATUTE" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+               <StatuteFields 
+                form={form} 
+                update={update} 
+                toggleInArray={toggleInArray} 
+                inputCls={inputCls} 
+                textareaCls={textareaCls}
+                labelCls={labelCls} 
+                sectionCls={sectionCls} 
+              />
+            </div>
+          )}
+
+          {activeTab === "MAPPING" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <RepealedMappingFields 
+                form={form} 
+                updateOldMapping={updateOldMapping} 
+                toggleOldMappingTag={toggleOldMappingTag} 
+                addOldMapping={() => update("oldMappings", [...form.oldMappings, createBlankOldMapping()])}
+                removeOldMapping={(idx) => update("oldMappings", form.oldMappings.filter((_, i) => i !== idx))}
+                inputCls={inputCls} 
+                textareaCls={textareaCls}
+                labelCls={labelCls} 
+                sectionCls={sectionCls} 
+              />
+            </div>
+          )}
+
+          {activeTab === "COMPLIANCE" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-10">
+              <PenaltyFields form={form} update={update} inputCls={inputCls} labelCls={labelCls} sectionCls={sectionCls} />
+              <RulesAndFormsFields 
+                form={form} 
+                addArrayItem={addArrayItem}
+                removeArrayItem={removeArrayItem}
+                updateArrayItem={updateArrayItem}
+                update={update}
+                inputCls={inputCls} 
+                labelCls={labelCls}
+                sectionCls={sectionCls} 
+              />
+              <ComplianceFields 
+                form={form} 
+                users={users} 
+                addCompItem={addCompItem}
+                removeCompItem={removeCompItem}
+                updateCompItem={updateCompItem}
+                inputCls={inputCls} 
+                sectionCls={sectionCls} 
+              />
+            </div>
+          )}
+
+          {activeTab === "STATE_WISE" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <StateWideFields form={form} update={update} inputCls={inputCls} sectionCls={sectionCls} />
+            </div>
+          )}
+
+          {activeTab === "DISCUSSION" && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <CommentSection 
+                comments={form.comments} 
+                onAddComment={async (body) => {
+                  if (prov.id.includes("temp-")) return;
+                  const res = await addComment(prov.id, body);
+                  if (res.success && res.comment) {
+                    setForm(prev => prev ? ({ ...prev, comments: [...(prev.comments || []), res.comment as Comment] }) : null);
+                  }
+                }} 
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 bg-slate-50/50 dark:bg-zinc-900/50 border-t border-slate-50 dark:border-zinc-900 flex justify-end gap-3">
+            <button onClick={() => setEditingProvision(null)} className="px-8 py-3 bg-white dark:bg-zinc-900 text-slate-500 dark:text-zinc-400 rounded-2xl text-sm font-bold border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 transition-all cursor-pointer">
+              Discard Changes
+            </button>
             <button
               onClick={async () => {
                 setIsSaving(true);
@@ -205,13 +280,9 @@ export function EditorModal() {
                 }
               }}
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50"
+              className="px-10 py-3 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-sm font-bold hover:shadow-xl hover:shadow-slate-900/10 transition-all cursor-pointer disabled:opacity-50"
             >
-              <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} /> 
               {isSaving ? "Saving..." : "Save Provision"}
-            </button>
-            <button onClick={() => setEditingProvision(null)} disabled={isSaving} className="px-6 py-2.5 bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 rounded-xl text-sm hover:bg-gray-300 dark:hover:bg-zinc-600 transition-colors cursor-pointer disabled:opacity-50">
-              Cancel
             </button>
         </div>
       </div>
