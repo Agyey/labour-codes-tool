@@ -10,7 +10,10 @@ import {
   Briefcase,
   FileText,
   ShieldCheck,
-  MoreVertical
+  MoreVertical,
+  Activity,
+  Building2,
+  Landmark
 } from "lucide-react";
 import Link from "next/link";
 import { getMatters } from "@/app/actions/matters";
@@ -143,7 +146,4 @@ export default async function DueDiligenceChecklist({ params }: { params: { id: 
   );
 }
 
-// Scaffolding components to prevent missing icons in this initial version
-function Activity(props: any) { return <div className={`animate-pulse bg-slate-200 dark:bg-zinc-800 rounded ${props.className}`} style={{ width: '16px', height: '16px' }} />; }
-function Building2(props: any) { return null; }
-function Landmark(props: any) { return null; }
+

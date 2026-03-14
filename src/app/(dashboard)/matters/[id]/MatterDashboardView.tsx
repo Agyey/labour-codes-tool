@@ -18,7 +18,9 @@ import {
   FileText,
   History,
   Activity,
-  User
+  User,
+  MoreVertical,
+  ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
