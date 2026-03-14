@@ -2,7 +2,7 @@
 
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
-import { FolderKanban, Scale, ChevronRight, Activity, Pencil, Trash2, PieChart, Plus } from "lucide-react";
+import { FolderKanban, Scale, ChevronRight, Activity, Pencil, Trash2, PieChart, Plus, BarChart3, Edit2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { FrameworkModal } from "./FrameworkModal";
@@ -73,29 +73,32 @@ export function FrameworkDashboard() {
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">Legal Container</span>
                 </div>
                                 {canEdit && (
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all relative z-10">
-                    <button 
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); toast.success("Analytics coming soon!"); }}
-                      className="p-2.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <PieChart className="w-4.5 h-4.5" />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); setEditingFw(fw); setIsModalOpen(true); }}
-                      className="p-2.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <Pencil className="w-4.5 h-4.5" />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteFramework(fw.id); }}
-                      className="p-2.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-4.5 h-4.5" />
-                    </button>
-                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all relative z-20">
+                  <button 
+                    type="button"
+                    title="Analytics"
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); toast.success("Analytics coming soon!"); }}
+                    className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-all"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                  </button>
+                  <button 
+                    type="button"
+                    title="Edit Bucket"
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); setEditingFw(fw); setIsModalOpen(true); }}
+                    className="p-2 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-all"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button 
+                    type="button"
+                    title="Delete Bucket"
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteFramework(fw.id); }}
+                    className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
                 )}
               </div>
 

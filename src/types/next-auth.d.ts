@@ -17,4 +17,10 @@ declare module "next-auth" {
       image?: string | null;
     };
   }
+
+  interface JWT {
+    id: string;
+    role: string;
+    orgId?: string;
+  }
 }

@@ -23,7 +23,12 @@ export function MappingView() {
   const { filteredProvisions } = useFilter();
   const [showPdfWizard, setShowPdfWizard] = useState(false);
 
-  const cObj = CODES[activeCode];
+  const cObj = CODES[activeCode as keyof typeof CODES] || {
+    n: frameworks.find(f => f.shortName === activeCode || f.id === activeCode)?.name || activeCode,
+    s: activeCode,
+    c: "#6366f1",
+    bg: "#f5f3ff"
+  };
 
   const handleInjectMock = async () => {
     try {

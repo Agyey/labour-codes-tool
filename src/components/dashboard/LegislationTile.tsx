@@ -63,7 +63,12 @@ export function LegislationTile({ legislation, onSelect, onDelete, canEdit }: Le
         <div className="flex items-center gap-2">
           {canEdit && (
             <button 
-              onClick={(e) => { e.stopPropagation(); if (confirm("Delete this legislation tile?")) onDelete?.(); }}
+              type="button"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                e.preventDefault();
+                if (confirm("Delete this legislation tile?")) onDelete?.(); 
+              }}
               className="p-2.5 bg-slate-50 dark:bg-zinc-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-xl transition-all"
             >
               <Trash2 className="w-4 h-4" />
