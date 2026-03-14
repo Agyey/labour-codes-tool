@@ -71,9 +71,9 @@ export async function createDiligenceProject(data: z.infer<typeof CreateDiligenc
     revalidatePath("/diligence");
     
     return { success: true, projectId: diligenceProject.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error("[createDiligenceProject] Error:", error);
-    return { success: false, error: "Failed to create project" };
+    return { success: false, error: error.message || "Failed to create project" };
   }
 }
 
