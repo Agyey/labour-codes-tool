@@ -82,34 +82,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
 
   // Load from database + localStorage
-  useEffect(() => {
-    async function initData() {
-      try {
-        const [dbProvs, dbUsers, dbFrameworks, dbLegislations] = await Promise.all([
-          getProvisions(),
-          getUsers(),
-          getFrameworks(),
-          getLegislations()
-        ]);
+   const refreshData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [dbProvs, dbUsers, dbFrameworks, dbLegislations] = await Promise.all([
+        getProvisions(),
+        getUsers(),
+        getFrameworks(),
+        getLegislations()
+      ]);
 
-        if (dbProvs) setProvisions(dbProvs as Provision[]);
-        if (dbUsers) setUsers(dbUsers as User[]);
-        if (dbFrameworks) setFrameworks(dbFrameworks as any[]);
-        if (dbLegislations) setLegislations(dbLegislations as any[]);
+      if (dbProvs) setProvisions(dbProvs as Provision[]);
+      if (dbUsers) setUsers(dbUsers as User[]);
+      if (dbFrameworks) setFrameworks(dbFrameworks as any[]);
+      if (dbLegislations) setLegislations(dbLegislations as any[]);
 
-        const data = loadStorage<StorageData>(STORAGE_KEY);
-        if (data) {
-          if (data.compSt) setComplianceStatuses(data.compSt);
-          if (data.editorPw) setEditorPasswordState(data.editorPw);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+      const data = loadStorage<StorageData>(STORAGE_KEY);
+      if (data) {
+        if (data.compSt) setComplianceStatuses(data.compSt);
+        if (data.editorPw) setEditorPasswordState(data.editorPw);
       }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    initData();
   }, []);
+
+  // Load from database + localStorage
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
 
   // Auto-save local preferences with debounce (NOT provisions — those go to Postgres)
   useEffect(() => {
@@ -210,67 +213,61 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setComplianceStatuses((prev) => ({ ...prev, [id]: status }));
   }, []);
 
-  const createFramework = useCallback(async (data: any) => {
+   const createFramework = useCallback(async (data: any) => {
     const res = await createFrameworkAction(data);
     if (res.success) {
-      const refreshed = await getFrameworks();
-      setFrameworks(refreshed);
+      await refreshData();
       toast.success("Framework created.");
       return true;
     }
     toast.error(res.error || "Failed to create framework.");
     return false;
-  }, []);
+  }, [refreshData]);
 
   const updateFramework = useCallback(async (id: string, data: any) => {
     const res = await updateFrameworkAction(id, data);
     if (res.success) {
-      const refreshed = await getFrameworks();
-      setFrameworks(refreshed);
+      await refreshData();
       toast.success("Framework updated.");
       return true;
     }
     toast.error(res.error || "Failed to update framework.");
     return false;
-  }, []);
+  }, [refreshData]);
 
   const deleteFramework = useCallback(async (id: string) => {
     if (!confirm("Delete this framework and all its contents?")) return false;
     const res = await deleteFrameworkAction(id);
     if (res.success) {
-      setFrameworks(prev => prev.filter(f => f.id !== id));
+      await refreshData();
       toast.success("Framework deleted.");
       return true;
     }
     toast.error("Failed to delete framework.");
     return false;
-  }, []);
+  }, [refreshData]);
 
   const createLegislation = useCallback(async (data: any) => {
     const res = await createLegislationAction(data);
     if (res.success) {
-      const refreshed = await getFrameworks();
-      setFrameworks(refreshed);
+      await refreshData();
       toast.success("Legislation created.");
       return true;
     }
     toast.error(res.error || "Failed to create legislation.");
     return false;
-  }, []);
+  }, [refreshData]);
 
   const deleteLegislation = useCallback(async (id: string) => {
     const res = await deleteLegislationAction(id);
     if (res.success) {
-      setFrameworks(prev => prev.map(f => ({
-        ...f,
-        legislations: f.legislations?.filter(l => l.id !== id)
-      })));
+      await refreshData();
       toast.success("Legislation deleted.");
       return true;
     }
     toast.error("Failed to delete legislation.");
     return false;
-  }, []);
+  }, [refreshData]);
 
   const setEditorPassword = useCallback((pw: string) => {
     setEditorPasswordState(pw);

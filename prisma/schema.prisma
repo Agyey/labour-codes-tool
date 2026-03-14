@@ -155,13 +155,14 @@ model Provision {
   comments         Comment[]
   complianceItems  ComplianceItem[]
   oldMappings      OldMapping[]
-  framework        Framework?          @relation(fields: [framework_id], references: [id])
-  legislation      Legislation?        @relation(fields: [legislation_id], references: [id])
+  framework        Framework?          @relation(fields: [framework_id], references: [id], onDelete: Cascade)
+  legislation      Legislation?        @relation(fields: [legislation_id], references: [id], onDelete: Cascade)
   organization     Organization?       @relation(fields: [org_id], references: [id])
   edits            ProvisionEdit[]
   sourceOf         ProvisionRelation[] @relation("source")
   targetOf         ProvisionRelation[] @relation("target")
   stateData        StateData[]
+  compliances      EntityCompliance[]
 }
 
 model OldMapping {
@@ -293,6 +294,7 @@ model EntityCompliance {
   next_audit_date DateTime?
   notes           String?
   entity          Entity    @relation(fields: [entity_id], references: [id], onDelete: Cascade)
+  provision       Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
 }
 
 model AgreementTemplate {
