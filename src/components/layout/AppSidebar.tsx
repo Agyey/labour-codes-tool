@@ -101,6 +101,7 @@ const navItems = [
   { href: "/dashboard", label: "Home Dashboard", icon: Home, desc: "Firm overview & alerts", color: "bg-blue-600", textHover: "group-hover:text-blue-600" },
   { href: "/library", label: "Knowledge Library", icon: BookOpen, desc: "Structured legal databases", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" },
   { href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" },
+  { href: "/diligence", label: "Due Diligence", icon: ShieldAlert, desc: "Target audit & requisition tracking", color: "bg-indigo-500", textHover: "group-hover:text-indigo-500" },
   { href: "/matters", label: "Active Matters", icon: Layers, desc: "Collaborative workspaces & tasks", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" },
   { href: "/compliance", label: "Compliance Tracker", icon: ShieldAlert, desc: "Regulatory calendar & deadlines", color: "bg-rose-600", textHover: "group-hover:text-rose-600" },
   { href: "/entities", label: "Entity Database", icon: Building2, desc: "Manage client jurisdictions", color: "bg-cyan-600", textHover: "group-hover:text-cyan-600" },

@@ -24,6 +24,9 @@ export function AppHeader() {
   } else if (pathname.startsWith("/scenarios")) {
     title = "Scenario Engine";
     subtitle = "Automated Compliance Generation";
+  } else if (pathname.startsWith("/diligence")) {
+    title = "Due Diligence";
+    subtitle = "Target Audit & Requisition Tracker";
   } else if (pathname.startsWith("/entities")) {
     title = "Entity Database";
     subtitle = "Corporate Hygiene Management";
