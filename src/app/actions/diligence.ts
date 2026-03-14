@@ -200,12 +200,12 @@ export async function seedRequisitionsFromScenario(projectId: string, scenarioId
       }
     });
 
-    if (!scenario) return { success: false, error: "Scenario not found" };
+    if (!scenario) return { success: false, error: "Scenario template not found. Please create one in the Scenario Engine first." };
 
     const project = await prisma.diligenceProject.findUnique({ where: { id: projectId } });
-    if (!project) return { success: false, error: "Project not found" };
+    if (!project) return { success: false, error: "Diligence Project not found." };
 
-    // Create a default bucket for the scenario
+    // Create a bucket for the scenario result
     const bucket = await prisma.diligenceBucket.create({
       data: {
         project_id: projectId,
@@ -230,13 +230,13 @@ export async function seedRequisitionsFromScenario(projectId: string, scenarioId
       });
     });
 
-    await Promise.all(requisitionPromises);
+    const results = await Promise.all(requisitionPromises);
     
     revalidatePath(`/diligence/${projectId}`);
-    return { success: true, count: scenario.rules.length };
-  } catch (error) {
+    return { success: true, count: results.length };
+  } catch (error: any) {
     console.error("[seedRequisitionsFromScenario] Error:", error);
-    return { success: false, error: "Failed to seed requisitions" };
+    return { success: false, error: error.message || "Failed to seed requisitions" };
   }
 }
 
