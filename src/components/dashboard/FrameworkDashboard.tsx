@@ -61,7 +61,7 @@ export function FrameworkDashboard() {
               }}
               className="group relative flex flex-col p-8 bg-white dark:bg-zinc-900 rounded-[40px] border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 transition-all duration-500 text-left overflow-hidden cursor-pointer"
             >
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none select-none">
                 <Scale className="w-32 h-32 rotate-12" />
               </div>
 
@@ -72,26 +72,28 @@ export function FrameworkDashboard() {
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500">Legal Container</span>
                 </div>
-                
-                {canEdit && (
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {canEdit && (
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all relative z-10">
                     <button 
-                      onClick={(e) => { e.stopPropagation(); toast.success("Analytics coming soon!"); }}
-                      className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); toast.success("Analytics coming soon!"); }}
+                      className="p-2.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
                     >
-                      <PieChart className="w-4 h-4" />
+                      <PieChart className="w-4.5 h-4.5" />
                     </button>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setEditingFw(fw); setIsModalOpen(true); }}
-                      className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); setEditingFw(fw); setIsModalOpen(true); }}
+                      className="p-2.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="w-4.5 h-4.5" />
                     </button>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); deleteFramework(fw.id); }}
-                      className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteFramework(fw.id); }}
+                      className="p-2.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors cursor-pointer"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4.5 h-4.5" />
                     </button>
                   </div>
                 )}
