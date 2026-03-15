@@ -508,6 +508,10 @@ export default function App() {
 
     var cObj = CODES[code];
 
+    var timelineItems = useMemo(function () {
+        return provs.filter(function (x) { return x.code === code && (x.timelineDates || []).length > 0; }).flatMap(function (p) { return (p.timelineDates || []).map(function (d) { return { date: d.date, label: d.label, sec: p.sec, sub: p.sub, title: p.title, id: p.id }; }); }).sort(function (a, b) { return (a.date || "").localeCompare(b.date || ""); });
+    }, [provs, code]);
+
     var filtered = useMemo(function () {
         var p = provs.filter(function (x) { return x.code === code; });
         if (sevF !== "All") p = p.filter(function (x) { return x.impact === sevF; });
@@ -686,7 +690,7 @@ export default function App() {
                     {view === "timeline" && (
                         <div>
                             <h2 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Timeline — Key Dates</h2>
-                            {provs.filter(function (x) { return x.code === code && (x.timelineDates || []).length > 0; }).flatMap(function (p) { return (p.timelineDates || []).map(function (d) { return { date: d.date, label: d.label, sec: p.sec, sub: p.sub, title: p.title, id: p.id }; }); }).sort(function (a, b) { return (a.date || "").localeCompare(b.date || ""); }).map(function (d, i) {
+                            {timelineItems.map(function (d, i) {
                                 return (
                                     <div key={i} style={{ display: "flex", gap: 10, padding: "6px 0", borderBottom: "1px solid #f3f4f6", alignItems: "center" }}>
                                         <div style={{ fontWeight: 700, fontSize: 11, color: cObj.c, minWidth: 90 }}>{d.date || "TBD"}</div>
@@ -697,7 +701,7 @@ export default function App() {
                                     </div>
                                 );
                             })}
-                            {provs.filter(function (x) { return x.code === code && (x.timelineDates || []).length > 0; }).length === 0 && <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>No timeline dates added yet. Add dates via the editor.</div>}
+                            {timelineItems.length === 0 && <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>No timeline dates added yet. Add dates via the editor.</div>}
                         </div>
                     )}
 
