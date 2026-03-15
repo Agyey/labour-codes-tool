@@ -58,6 +58,7 @@ model User {
   sessions          Session[]
   assignedTasks     Task[]
   TaskInstance      TaskInstance[]
+  documents         Document[]
 }
 
 model Notification {
@@ -762,4 +763,70 @@ model DiligenceFinding {
   recommendation String?
   created_at     DateTime             @default(now())
   requisition    DiligenceRequisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+}
+
+// ──────────────────────────────────────────────
+// Document Hub — Vectorless RAG & AI Suggestions
+// ──────────────────────────────────────────────
+
+model Document {
+  id          String               @id @default(cuid())
+  name        String
+  file_name   String
+  file_size   Int
+  page_count  Int                  @default(0)
+  raw_text    String?              @db.Text
+  status      String               @default("uploaded") // uploaded | analyzing | analyzed | error
+  uploaded_at DateTime             @default(now())
+  analyzed_at DateTime?
+  uploaded_by String?
+  user        User?                @relation(fields: [uploaded_by], references: [id])
+  analyses    DocumentAnalysis[]
+  suggestions DocumentSuggestion[]
+}
+
+model DocumentAnalysis {
+  id                  String               @id @default(cuid())
+  document_id         String
+  document            Document             @relation(fields: [document_id], references: [id], onDelete: Cascade)
+  summary             String?              @db.Text
+  document_type       String?
+  structured_data     Json?
+  graph_nodes         Int                  @default(0)
+  graph_relationships Int                  @default(0)
+  created_at          DateTime             @default(now())
+  suggestions         DocumentSuggestion[]
+}
+
+model DocumentSuggestion {
+  id               String            @id @default(cuid())
+  document_id      String
+  document         Document          @relation(fields: [document_id], references: [id], onDelete: Cascade)
+  analysis_id      String?
+  analysis         DocumentAnalysis? @relation(fields: [analysis_id], references: [id])
+  type             String            // create_legislation | create_provision | create_compliance_item | create_penalty | flag_repeal
+  target_module    String            // knowledge_base | compliance_tracker
+  suggested_data   Json
+  confidence       Float             @default(0.0)
+  status           String            @default("pending") // pending | approved | rejected | edited
+  reviewed_by      String?
+  reviewed_at      DateTime?
+  rejection_reason String?
+  created_at       DateTime          @default(now())
+}
+
+// Blockchain-style tamper-proof audit chain
+model AuditChain {
+  id            String   @id @default(cuid())
+  action        String
+  entity_type   String
+  entity_id     String
+  data_snapshot String?  @db.Text
+  previous_hash String
+  current_hash  String   @unique
+  performed_by  String?
+  created_at    DateTime @default(now())
+
+  @@index([entity_type, entity_id])
+  @@index([created_at])
 }
