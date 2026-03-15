@@ -59,33 +59,33 @@ function blankOldMapping() {
 function EditorModal({ prov, onSave, onCancel, codeKey }) {
     const [f, setF] = useState(JSON.parse(JSON.stringify(prov)));
 
-    function upd(key, val) { setF(function (p) { return Object.assign({}, p, { [key]: val }); }); }
+    function upd(key, val) { setF(function (p) { return { ...p, [key]: val }; }); }
     function updNested(arr, idx, key, val) {
         setF(function (p) {
-            var n = p[arr].slice();
-            n[idx] = Object.assign({}, n[idx], { [key]: val });
-            return Object.assign({}, p, { [arr]: n });
+            var n = [...p[arr]];
+            n[idx] = { ...n[idx], [key]: val };
+            return { ...p, [arr]: n };
         });
     }
-    function addToArr(arr, item) { setF(function (p) { return Object.assign({}, p, { [arr]: p[arr].concat([item]) }); }); }
-    function rmFromArr(arr, idx) { setF(function (p) { return Object.assign({}, p, { [arr]: p[arr].filter(function (_, i) { return i !== idx; }) }); }); }
+    function addToArr(arr, item) { setF(function (p) { return { ...p, [arr]: [...p[arr], item] }; }); }
+    function rmFromArr(arr, idx) { setF(function (p) { return { ...p, [arr]: p[arr].filter(function (_, i) { return i !== idx; }) }; }); }
     function toggleInArr(key, val) {
         setF(function (p) {
             var cur = p[key] || [];
-            return Object.assign({}, p, { [key]: cur.indexOf(val) >= 0 ? cur.filter(function (x) { return x !== val; }) : cur.concat([val]) });
+            return { ...p, [key]: cur.indexOf(val) >= 0 ? cur.filter(function (x) { return x !== val; }) : [...cur, val] };
         });
     }
     function toggleOldMapTag(idx, val) {
         setF(function (p) {
-            var n = p.oldMappings.slice();
+            var n = [...p.oldMappings];
             var cur = n[idx].changeTags || [];
-            n[idx] = Object.assign({}, n[idx], { changeTags: cur.indexOf(val) >= 0 ? cur.filter(function (x) { return x !== val; }) : cur.concat([val]) });
-            return Object.assign({}, p, { oldMappings: n });
+            n[idx] = { ...n[idx], changeTags: cur.indexOf(val) >= 0 ? cur.filter(function (x) { return x !== val; }) : [...cur, val] };
+            return { ...p, oldMappings: n };
         });
     }
 
     var iStyle = { width: "100%", padding: "4px 6px", border: "1px solid #d1d5db", borderRadius: 4, fontSize: 11, boxSizing: "border-box" };
-    var tStyle = Object.assign({}, iStyle, { fontFamily: "monospace", resize: "vertical" });
+    var tStyle = { ...iStyle, fontFamily: "monospace", resize: "vertical" };
     var lStyle = { fontSize: 10, fontWeight: 700, color: "#374151", marginBottom: 2, display: "block" };
     var secStyle = { marginBottom: 10, padding: 8, background: "#f9fafb", borderRadius: 6 };
 
@@ -185,7 +185,7 @@ function EditorModal({ prov, onSave, onCancel, codeKey }) {
                     {(f.draftRules || []).map(function (r, i) {
                         return (
                             <div key={i} style={{ display: "flex", gap: 4, marginBottom: 3 }}>
-                                <input value={r.ref} onChange={function (e) { updNested("draftRules", i, "ref", e.target.value); }} placeholder="Rule ref" style={Object.assign({}, iStyle, { width: 200 })} />
+                                <input value={r.ref} onChange={function (e) { updNested("draftRules", i, "ref", e.target.value); }} placeholder="Rule ref" style={{ ...iStyle, width: 200 }} />
                                 <input value={r.summary} onChange={function (e) { updNested("draftRules", i, "summary", e.target.value); }} placeholder="Summary" style={iStyle} />
                                 <button onClick={function () { rmFromArr("draftRules", i); }} style={{ background: "#fee2e2", border: "none", borderRadius: 3, padding: "0 6px", cursor: "pointer" }}>✕</button>
                             </div>
@@ -199,7 +199,7 @@ function EditorModal({ prov, onSave, onCancel, codeKey }) {
                     {(f.repealedRules || []).map(function (r, i) {
                         return (
                             <div key={i} style={{ display: "flex", gap: 4, marginBottom: 3 }}>
-                                <input value={r.ref} onChange={function (e) { updNested("repealedRules", i, "ref", e.target.value); }} placeholder="Repealed rule" style={Object.assign({}, iStyle, { width: 200 })} />
+                                <input value={r.ref} onChange={function (e) { updNested("repealedRules", i, "ref", e.target.value); }} placeholder="Repealed rule" style={{ ...iStyle, width: 200 }} />
                                 <input value={r.summary} onChange={function (e) { updNested("repealedRules", i, "summary", e.target.value); }} placeholder="Summary" style={iStyle} />
                                 <button onClick={function () { rmFromArr("repealedRules", i); }} style={{ background: "#fee2e2", border: "none", borderRadius: 3, padding: "0 6px", cursor: "pointer" }}>✕</button>
                             </div>
@@ -213,7 +213,7 @@ function EditorModal({ prov, onSave, onCancel, codeKey }) {
                     {(f.forms || []).map(function (r, i) {
                         return (
                             <div key={i} style={{ display: "flex", gap: 4, marginBottom: 3 }}>
-                                <input value={r.ref} onChange={function (e) { updNested("forms", i, "ref", e.target.value); }} placeholder="Form ref" style={Object.assign({}, iStyle, { width: 200 })} />
+                                <input value={r.ref} onChange={function (e) { updNested("forms", i, "ref", e.target.value); }} placeholder="Form ref" style={{ ...iStyle, width: 200 }} />
                                 <input value={r.summary} onChange={function (e) { updNested("forms", i, "summary", e.target.value); }} placeholder="Description" style={iStyle} />
                                 <button onClick={function () { rmFromArr("forms", i); }} style={{ background: "#fee2e2", border: "none", borderRadius: 3, padding: "0 6px", cursor: "pointer" }}>✕</button>
                             </div>
@@ -229,9 +229,9 @@ function EditorModal({ prov, onSave, onCancel, codeKey }) {
                         var item = typeof c === "string" ? { task: c, assignee: "", due: "" } : c;
                         return (
                             <div key={i} style={{ display: "flex", gap: 4, marginBottom: 3, alignItems: "center" }}>
-                                <input value={item.task || ""} onChange={function (e) { var n = (f.compItems || []).slice(); n[i] = Object.assign({}, item, { task: e.target.value }); upd("compItems", n); }} placeholder="Task" style={iStyle} />
-                                <input value={item.assignee || ""} onChange={function (e) { var n = (f.compItems || []).slice(); n[i] = Object.assign({}, item, { assignee: e.target.value }); upd("compItems", n); }} placeholder="Assignee" style={Object.assign({}, iStyle, { width: 100 })} />
-                                <input type="date" value={item.due || ""} onChange={function (e) { var n = (f.compItems || []).slice(); n[i] = Object.assign({}, item, { due: e.target.value }); upd("compItems", n); }} style={Object.assign({}, iStyle, { width: 130 })} />
+                                <input value={item.task || ""} onChange={function (e) { var n = [...(f.compItems || [])]; n[i] = { ...item, task: e.target.value }; upd("compItems", n); }} placeholder="Task" style={iStyle} />
+                                <input value={item.assignee || ""} onChange={function (e) { var n = [...(f.compItems || [])]; n[i] = { ...item, assignee: e.target.value }; upd("compItems", n); }} placeholder="Assignee" style={{ ...iStyle, width: 100 }} />
+                                <input type="date" value={item.due || ""} onChange={function (e) { var n = [...(f.compItems || [])]; n[i] = { ...item, due: e.target.value }; upd("compItems", n); }} style={{ ...iStyle, width: 130 }} />
                                 <button onClick={function () { rmFromArr("compItems", i); }} style={{ background: "#fee2e2", border: "none", borderRadius: 3, padding: "0 6px", cursor: "pointer" }}>✕</button>
                             </div>
                         );
@@ -257,9 +257,9 @@ function EditorModal({ prov, onSave, onCancel, codeKey }) {
                                     return (
                                         <tr key={s} style={{ borderBottom: "1px solid #e5e7eb" }}>
                                             <td style={{ padding: 4, fontWeight: 600 }}>{s}</td>
-                                            <td style={{ padding: 4 }}><input value={(f.stateNotes || {})[s] || ""} onChange={function (e) { upd("stateNotes", Object.assign({}, f.stateNotes || {}, { [s]: e.target.value })); }} style={iStyle} /></td>
-                                            <td style={{ padding: 4 }}><input value={(f.stateRuleText || {})[s] || ""} onChange={function (e) { upd("stateRuleText", Object.assign({}, f.stateRuleText || {}, { [s]: e.target.value })); }} style={iStyle} /></td>
-                                            <td style={{ padding: 4 }}><select value={(f.stateCompStatus || {})[s] || "Not Started"} onChange={function (e) { upd("stateCompStatus", Object.assign({}, f.stateCompStatus || {}, { [s]: e.target.value })); }} style={iStyle}>{CST.map(function (x) { return <option key={x} value={x}>{x}</option>; })}</select></td>
+                                            <td style={{ padding: 4 }}><input value={(f.stateNotes || {})[s] || ""} onChange={function (e) { upd("stateNotes", { ...(f.stateNotes || {}), [s]: e.target.value }); }} style={iStyle} /></td>
+                                            <td style={{ padding: 4 }}><input value={(f.stateRuleText || {})[s] || ""} onChange={function (e) { upd("stateRuleText", { ...(f.stateRuleText || {}), [s]: e.target.value }); }} style={iStyle} /></td>
+                                            <td style={{ padding: 4 }}><select value={(f.stateCompStatus || {})[s] || "Not Started"} onChange={function (e) { upd("stateCompStatus", { ...(f.stateCompStatus || {}), [s]: e.target.value }); }} style={iStyle}>{CST.map(function (x) { return <option key={x} value={x}>{x}</option>; })}</select></td>
                                         </tr>
                                     );
                                 })}
@@ -274,7 +274,7 @@ function EditorModal({ prov, onSave, onCancel, codeKey }) {
                     {(f.timelineDates || []).map(function (d, i) {
                         return (
                             <div key={i} style={{ display: "flex", gap: 4, marginBottom: 3 }}>
-                                <input type="date" value={d.date || ""} onChange={function (e) { updNested("timelineDates", i, "date", e.target.value); }} style={Object.assign({}, iStyle, { width: 140 })} />
+                                <input type="date" value={d.date || ""} onChange={function (e) { updNested("timelineDates", i, "date", e.target.value); }} style={{ ...iStyle, width: 140 }} />
                                 <input value={d.label || ""} onChange={function (e) { updNested("timelineDates", i, "label", e.target.value); }} placeholder="What happens on this date" style={iStyle} />
                                 <button onClick={function () { rmFromArr("timelineDates", i); }} style={{ background: "#fee2e2", border: "none", borderRadius: 3, padding: "0 6px", cursor: "pointer" }}>✕</button>
                             </div>
@@ -486,8 +486,8 @@ export default function App() {
         return function () { clearTimeout(t); };
     }, [provs, compSt, editorPw, loading]);
 
-    var setCS = useCallback(function (id, v) { setCompSt(function (p) { return Object.assign({}, p, { [id]: v }); }); }, []);
-    var togText = useCallback(function (k) { setShowText(function (p) { return Object.assign({}, p, { [k]: !p[k] }); }); }, []);
+    var setCS = useCallback(function (id, v) { setCompSt(function (p) { return { ...p, [id]: v }; }); }, []);
+    var togText = useCallback(function (k) { setShowText(function (p) { return { ...p, [k]: !p[k] }; }); }, []);
 
     var cObj = CODES[code];
 
@@ -540,8 +540,8 @@ export default function App() {
         setEditForm(null);
     }
     function delP(id) { if (confirm("Delete this provision?")) setProvs(function (p) { return p.filter(function (x) { return x.id !== id; }); }); }
-    function togPin(id) { setProvs(function (p) { return p.map(function (x) { return x.id === id ? Object.assign({}, x, { pinned: !x.pinned }) : x; }); }); }
-    function togVerify(id) { setProvs(function (p) { return p.map(function (x) { return x.id === id ? Object.assign({}, x, { verified: !x.verified }) : x; }); }); }
+    function togPin(id) { setProvs(function (p) { return p.map(function (x) { return x.id === id ? { ...x, pinned: !x.pinned } : x; }); }); }
+    function togVerify(id) { setProvs(function (p) { return p.map(function (x) { return x.id === id ? { ...x, verified: !x.verified } : x; }); }); }
 
     var canEdit = mode === "admin" && (!editorPw || pwOk);
 
