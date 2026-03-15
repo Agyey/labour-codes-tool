@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const backendFormData = new FormData();
     backendFormData.append("file", file);
 
-    const backendUrl = `http://localhost:8000/api/documents/upload?framework_id=${frameworkId}`;
+    const backendUrl = `http://localhost:8001/api/documents/upload?framework_id=${frameworkId}`;
     console.log("Forwarding to Python Backend:", backendUrl);
     
     // We increase timeout or await it here since it's synchronous

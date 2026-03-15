@@ -1,8 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    gemini_api_key: str
     database_url: str
-    openai_api_key: str
     redis_url: str = "redis://localhost:6379/0"
     
     model_config = SettingsConfigDict(

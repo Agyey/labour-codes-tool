@@ -1,13 +1,14 @@
 import fitz  # PyMuPDF
 import json
 from loguru import logger
-from openai import AsyncOpenAI
+from google import genai
+from google.genai import types
 from src.settings import settings
 from src.models import ExtractedLegislation
 from src.database import db
 
-# Initialize OpenAI Client
-client = AsyncOpenAI(api_key=settings.openai_api_key)
+# Initialize Gemini Client
+client = genai.Client(api_key=settings.gemini_api_key)
 
 async def process_pdf(file_path: str, framework_id: str) -> ExtractedLegislation:
     logger.info(f"Starting PDF extraction for {file_path}")
@@ -16,25 +17,20 @@ async def process_pdf(file_path: str, framework_id: str) -> ExtractedLegislation
         for page in doc:
             text_content += page.get_text() + "\n"
 
-    logger.info(f"Extracted {len(text_content)} characters. Contacting LLM for structured extraction.")
+    logger.info(f"Extracted {len(text_content)} characters. Contacting Gemini for structured extraction.")
 
-    # Using OpenAI's structured outputs with Pydantic
-    completion = await client.beta.chat.completions.parse(
-        model="gpt-4o",  # or gpt-4o-mini depending on cost/performance
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an expert Indian legal document parser. Extract the full hierarchy, including all actionable compliance tasks."
-            },
-            {
-                "role": "user",
-                "content": text_content
-            }
-        ],
-        response_format=ExtractedLegislation,
+    # Using Gemini's structured outputs with Pydantic
+    response = await client.aio.models.generate_content(
+        model="gemini-2.5-pro",
+        contents=text_content,
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ExtractedLegislation,
+            system_instruction="You are an expert Indian legal document parser. Extract the full hierarchy, including all actionable compliance tasks."
+        ),
     )
 
-    extracted_data = completion.choices[0].message.parsed
+    extracted_data = ExtractedLegislation.model_validate_json(response.text)
     if not extracted_data:
         raise ValueError("Failed to extract structured data from PDF.")
 
