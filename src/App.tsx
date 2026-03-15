@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { ST, blankProv } from "./utils";
 
 /* ========== STORAGE ========== */
 const SK = "lc-v5";
@@ -13,7 +14,6 @@ const CODES = {
     CoSS: { n: "Code on Social Security, 2020", s: "CoSS", c: "#059669", bg: "#ecfdf5", secs: 164, chs: 14, assent: "28 Sep 2020", eff: "21 Nov 2025", dr: "30 Dec 2025", ra: "Central Govt u/s 154-159", acts: ["Employee Compensation Act, 1923", "ESI Act, 1948", "EPF & MP Act, 1952", "Employment Exchanges Act, 1959", "Maternity Benefit Act, 1961", "Payment of Gratuity Act, 1972", "Cine Workers WF Act, 1981", "B&OCW Cess Act, 1996", "Unorganised Workers SS Act, 2008"] },
     OSHW: { n: "OSH & Working Conditions Code, 2020", s: "OSHW", c: "#dc2626", bg: "#fef2f2", secs: 143, chs: 15, assent: "28 Sep 2020", eff: "21 Nov 2025", dr: "30 Dec 2025", ra: "Central Govt u/s 133-134", acts: ["Factories Act, 1948", "Mines Act, 1952", "Dock Workers Act, 1986", "B&OCW(RE) Act, 1996", "Plantations Labour Act, 1951", "Contract Labour Act, 1970", "ISMW Act, 1979", "Working Journalist Act, 1955", "WJ(FRW) Act, 1958", "Motor Transport Workers Act, 1961", "Sales Promotion Employees Act, 1976", "Beedi & Cigar Workers Act, 1966", "Cine Workers & CTW Act, 1981"] }
 };
-const ST = ["Centre", "Delhi", "Karnataka", "Maharashtra", "Tamil Nadu", "Telangana"];
 const IMP = ["Critical", "High", "Medium", "Low"];
 const CST = ["Not Started", "In Progress", "Compliant", "N/A"];
 const RA = ["Central Government", "State Government", "Appropriate Government", "Central & State Government", "Not Applicable"];
@@ -50,23 +50,6 @@ function Prog({ val, max, color }) {
     );
 }
 
-/* ========== BLANK PROVISION ========== */
-function blankProv(code) {
-    return {
-        id: code + "-" + Date.now(), code: code, ch: "", chName: "", sec: "", sub: "", title: "",
-        ruleAuth: "Appropriate Government", summary: "", fullText: "",
-        oldMappings: [],
-        impact: "Medium", changeTags: [], workflowTags: [],
-        compItems: [],
-        draftRules: [], repealedRules: [], forms: [],
-        stateNotes: Object.fromEntries(ST.map(function (s) { return [s, ""]; })),
-        stateRuleText: Object.fromEntries(ST.map(function (s) { return [s, ""]; })),
-        stateCompStatus: Object.fromEntries(ST.map(function (s) { return [s, "Not Started"]; })),
-        penaltyOld: "", penaltyNew: "",
-        timelineDates: [],
-        notes: "", verified: false, pinned: false, assignee: "", dueDate: ""
-    };
-}
 
 function blankOldMapping() {
     return { act: "", sec: "", summary: "", fullText: "", change: "", changeTags: [] };
