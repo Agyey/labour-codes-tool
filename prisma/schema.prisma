@@ -3,6 +3,12 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
+generator client_python {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+  interface            = "asyncio"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")

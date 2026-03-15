@@ -1,34 +1,13 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-
-export interface ParsedSubSection {
-  marker: string;
-  text: string;
-}
-
-export interface ParsedSection {
-  ch: string;
-  chName: string;
-  sec: string;
-  title: string;
-  text: string;
-  type: 'section' | 'rule';
-  parentSection?: string;
-  subSections: ParsedSubSection[];
-}
-
-export interface ParsedData {
-  metadata: { title: string; year: string; documentType: 'act' | 'rules' | 'unknown' };
-  chapters: { num: string; title: string }[];
-  sections: ParsedSection[];
-  penalties: string[];
-  repealedActs: string[];
-  stats: { duplicatesRemoved: number; totalRawMatches: number };
-}
+import { useUI } from "@/context/UIContext";
+import { useData } from "@/context/DataContext";
 
 export function usePdfParser() {
   const [isParsing, setIsParsing] = useState(false);
-  const [parsedResult, setParsedResult] = useState<ParsedData | null>(null);
+  const [parsedResult, setParsedResult] = useState<any>(null);
+  const { activeCode } = useUI();
+  const { frameworks } = useData();
 
   const uploadAndParse = async (file: File) => {
     if (!file || file.type !== "application/pdf") {
@@ -41,8 +20,14 @@ export function usePdfParser() {
 
     const formData = new FormData();
     formData.append("file", file);
+    
+    // Pass active code or framework
+    const currentFramework = frameworks.find(f => f.shortName === activeCode || f.id === activeCode);
+    const frameworkId = currentFramework ? currentFramework.id : activeCode;
+    formData.append("framework_id", frameworkId);
 
     try {
+      // Hits the Next.js proxy -> Python Backend
       const response = await fetch("/api/parser", {
         method: "POST",
         body: formData,
@@ -55,11 +40,7 @@ export function usePdfParser() {
       }
 
       setParsedResult(json.data);
-      const stats = json.data.stats;
-      const statsMsg = stats.duplicatesRemoved > 0 
-        ? ` (${stats.duplicatesRemoved} index duplicates removed)` 
-        : '';
-      toast.success(`Parsed ${json.data.sections.length} ${json.data.metadata.documentType === 'rules' ? 'rules' : 'sections'}${statsMsg}`);
+      toast.success(json.message || `Parsed and Auto-Populated Success!`);
       return json.data;
     } catch (error: any) {
       console.error(error);
