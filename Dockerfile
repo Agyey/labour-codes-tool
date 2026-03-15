@@ -1,35 +1,51 @@
-# Build stage
-FROM node:20-slim AS build
-
+# Stage 1: Install dependencies
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Copy package management files
 COPY package.json package-lock.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy the rest of the application code
+# Stage 2: Build the application
+FROM node:20-alpine AS builder
+RUN apk add --no-cache openssl
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the application
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Environment variables must be provided at build time for Next.js
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
+# Build Next.js 14 app
 RUN npm run build
 
-# Default to building the production bundle, but allow overriding
-# ARG BUILD_CMD="npm run build"
-# RUN ${BUILD_CMD}
+# Stage 3: Runner
+FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
+WORKDIR /app
 
-# Production server stage
-FROM nginx:alpine
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Copy the nginx config we created
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy the build output from the build stage to nginx's serving directory
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Expose port (Optional, Railway maps dynamcally but it's good practice)
-EXPOSE $PORT
+# Manually copy Prisma engines to standalone node_modules
+# Next.js standalone often misses these
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
