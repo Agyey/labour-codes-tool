@@ -31,4 +31,4 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()  # type: ignore[call-arg]  # Populated strictly by pydantic-settings from ENV variables
+settings = Settings()  # Populated strictly by pydantic-settings from ENV variables

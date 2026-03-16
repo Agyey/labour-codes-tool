@@ -12,7 +12,7 @@ import json
 
 import typing
 import prisma
-import fitz  # type: ignore[import-untyped]
+import fitz
 from loguru import logger
 from google import genai
 from google.genai import types
