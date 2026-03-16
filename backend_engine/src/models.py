@@ -88,6 +88,13 @@ class ExtractedChapter(BaseModel):
     sections: list[ExtractedSection] = Field(default_factory=list)
 
 
+class ExtractedChange(BaseModel):
+    difference_type: str = Field(description="addition | modification | deletion")
+    description: str = Field(description="Description of what changed compared to previous laws")
+    previous_reference: str = Field(default="", description="Reference to the old law/act it replaces")
+    new_reference: str = Field(default="", description="Reference to the new section/rule")
+
+
 class ExtractedLegislation(BaseModel):
     name: str = Field(description="Full name of the legislation/act")
     short_name: str = Field(description="Short name or acronym")
@@ -97,6 +104,7 @@ class ExtractedLegislation(BaseModel):
     chapters: list[ExtractedChapter] = Field(default_factory=list)
     definitions: list[ExtractedDefinition] = Field(default_factory=list)
     penalties: list[ExtractedPenalty] = Field(default_factory=list)
+    key_changes: list[ExtractedChange] = Field(default_factory=list, description="Major differences or amendments compared to previous acts")
     effective_date: str = Field(default="", description="Date of enforcement if mentioned")
     repealed_acts: list[str] = Field(default_factory=list, description="Names of acts repealed by this legislation")
 

@@ -62,7 +62,10 @@ export function usePdfParser() {
               if (status === "error" || pollCount >= maxPolls) {
                   toast.error("Analysis failed or timed out.");
               } else if (pollData.analysis?.structured_data) {
-                  setParsedResult(pollData.analysis.structured_data);
+                  setParsedResult({
+                    ...pollData.analysis.structured_data,
+                    suggestions: pollData.suggestions || []
+                  });
                   toast.success("Parsed and Auto-Populated Success!");
               }
             }
@@ -89,6 +92,7 @@ export function usePdfParser() {
   return {
     isParsing,
     parsedResult,
+    setParsedResult,
     uploadAndParse,
     resetParser: () => setParsedResult(null)
   };

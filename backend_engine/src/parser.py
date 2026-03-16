@@ -39,6 +39,7 @@ Rules:
 6. Note any acts that this legislation repeals or amends.
 7. Preserve exact section numbers and legal citations.
 8. The summary at each level should be self-contained enough for an LLM to decide whether to drill deeper.
+9. CRITICAL: Identify major differences, additions, or deletions compared to previous laws (if mentioned or deducible). Map these to 'key_changes'.
 """
 
 
@@ -72,6 +73,7 @@ async def analyze_document(document_id: str, raw_text: str) -> ExtractedLegislat
         f"Extraction complete: {extracted.name} — "
         f"{len(extracted.chapters)} chapters, "
         f"{len(extracted.definitions)} definitions, "
+        f"{len(extracted.key_changes)} key changes, "
         f"{len(extracted.penalties)} penalties"
     )
     return extracted
@@ -95,7 +97,7 @@ async def build_graph_and_suggestions(document_id: str, extracted: ExtractedLegi
     )
 
     # 3. Generate suggestions (AI suggests, human validates)
-    suggestion_count = 0
+    suggestion_count: int = 0
 
     # Suggestion: Create legislation entry
     await db.documentsuggestion.create(
@@ -115,6 +117,26 @@ async def build_graph_and_suggestions(document_id: str, extracted: ExtractedLegi
         }
     )
     suggestion_count += 1
+
+    # Suggestion: Key differences / amendments
+    for change in extracted.key_changes:
+        await db.documentsuggestion.create(
+            data={
+                "document_id": document_id,
+                "analysis_id": analysis.id,
+                "type": SuggestionType.UPDATE_PROVISION,
+                "target_module": "knowledge_base",
+                "suggested_data": {
+                    "difference_type": change.difference_type,
+                    "description": change.description,
+                    "previous_reference": change.previous_reference,
+                    "new_reference": change.new_reference,
+                },
+                "confidence": 0.88,
+                "status": "pending",
+            }
+        )
+        suggestion_count += 1
 
     # Suggestion: Create provisions for each section
     for chapter in extracted.chapters:
