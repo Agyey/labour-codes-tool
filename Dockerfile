@@ -14,7 +14,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma Client
-RUN npx prisma generate
+RUN npx prisma generate --generator client
 
 # Environment variables must be provided at build time for Next.js
 ARG NEXT_PUBLIC_SITE_URL

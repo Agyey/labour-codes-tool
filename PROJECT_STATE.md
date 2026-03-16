@@ -54,3 +54,4 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 11. [x] **Vectorless RAG Auto-Population (Knowledge & Compliance)**: Deployed Python backend with LLM structural tree parsing, automatically pushing into Prisma DB models.
 12. [ ] **Statelessness Audit**: Audit server actions for disk writes.
 13. [ ] **Type Hardening**: Refine recursive types for comments.
+14. [x] **Deployment Fix**: Fixed Docker build failing on Prisma Python client generation for Railway.
