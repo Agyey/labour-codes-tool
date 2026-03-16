@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Upload, FileText, Loader2, Search, ChevronRight } from "lucide-react";
+import { Upload, FileText, Loader2, Search, ChevronRight, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Document } from "@/types/document";
 import { StatusBadge } from "@/components/documents/StatusBadge";
@@ -55,6 +55,21 @@ export default function DocumentsPage() {
       }
     } catch { toast.error("Upload failed"); }
     finally { setUploading(false); }
+  }, [fetchDocuments]);
+
+  const handleDelete = useCallback(async (e: React.MouseEvent, docId: string, docName: string) => {
+    e.stopPropagation();
+    if (!confirm(`Delete "${docName}" and all its analysis? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/documents?id=${docId}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Document deleted");
+        fetchDocuments();
+      } else {
+        const err = await res.json();
+        toast.error(err.detail || err.error || "Delete failed");
+      }
+    } catch { toast.error("Delete failed"); }
   }, [fetchDocuments]);
 
   const filteredDocs = useMemo(() => {
@@ -165,6 +180,13 @@ export default function DocumentsPage() {
                 </p>
               </div>
               <StatusBadge status={doc.status} />
+              <button
+                onClick={(e) => handleDelete(e, doc.id, doc.name)}
+                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                title="Delete document"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
               <ChevronRight className="w-5 h-5 text-slate-300 dark:text-zinc-700 group-hover:text-indigo-500 transition-colors" />
             </motion.div>
           ))}

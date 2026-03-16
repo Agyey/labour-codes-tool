@@ -60,8 +60,17 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const suggestionId = req.nextUrl.searchParams.get("suggestionId");
-    const action = req.nextUrl.searchParams.get("action"); // approve | reject
+    const action = req.nextUrl.searchParams.get("action"); // approve | reject | cancel
+    const docId = req.nextUrl.searchParams.get("id");
     const frameworkId = req.nextUrl.searchParams.get("frameworkId") || "";
+
+    // Cancel analysis
+    if (action === "cancel" && docId) {
+      const res = await fetch(`${BACKEND_URL}/api/documents/${docId}/cancel`, { method: "PATCH" });
+      const data = await res.json();
+      if (!res.ok) return NextResponse.json(data, { status: res.status });
+      return NextResponse.json(data);
+    }
 
     if (!suggestionId || !action) {
       return NextResponse.json({ error: "Missing suggestionId or action" }, { status: 400 });
@@ -77,6 +86,23 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Suggestion API error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Missing document id" }, { status: 400 });
+    }
+
+    const res = await fetch(`${BACKEND_URL}/api/documents/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) return NextResponse.json(data, { status: res.status });
+    return NextResponse.json(data);
+  } catch (error: any) {
+    console.error("Document delete error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

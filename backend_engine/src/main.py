@@ -4,7 +4,8 @@ Endpoints:
   POST   /api/documents/upload          Upload a PDF
   GET    /api/documents                 List all documents
   GET    /api/documents/{id}            Document detail + analysis + suggestions
-  POST   /api/documents/{id}/analyze    Trigger AI analysis
+  POST   /api/documents/{id}/analyze    Trigger AI analysis (background)
+  GET    /api/documents/{id}/analyze/stream  SSE streaming analysis
   GET    /api/documents/{id}/tree       Get Neo4j graph tree
   PATCH  /api/suggestions/{id}/approve  Approve a suggestion → materialize
   PATCH  /api/suggestions/{id}/reject   Reject a suggestion
@@ -12,16 +13,20 @@ Endpoints:
   GET    /health                        Health check
 """
 
+import json
 import os
 import prisma
 import shutil
 import tempfile
 import typing
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from src.database import db, connect_db, disconnect_db
@@ -60,6 +65,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ──────────────────────────────────────────────
+# SSE Helper
+# ──────────────────────────────────────────────
+
+
+def _sse_event(event: str, data: dict[str, typing.Any]) -> str:
+    """Format a single SSE event."""
+    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
 # ──────────────────────────────────────────────
@@ -239,7 +254,50 @@ async def get_document(document_id: str) -> dict[str, typing.Any]:
 
 
 # ──────────────────────────────────────────────
-# AI Analysis (Trigger)
+# Document Delete & Cancel Analysis
+# ──────────────────────────────────────────────
+
+
+@app.delete("/api/documents/{document_id}")
+async def delete_document(document_id: str) -> dict[str, str]:
+    """Delete a document and all associated analysis, suggestions, and audit records."""
+    doc = await db.document.find_unique(where={"id": document_id})
+    if not doc:
+        raise HTTPException(404, "Document not found.")
+
+    # Cascade: delete suggestions first, then analysis, then document
+    await db.documentsuggestion.delete_many(where={"document_id": document_id})
+    await db.documentanalysis.delete_many(where={"document_id": document_id})
+    await db.document.delete(where={"id": document_id})
+
+    await record_audit(
+        action="document_deleted",
+        entity_type="document",
+        entity_id=document_id,
+        data={"name": doc.name, "file_name": doc.file_name},
+    )
+
+    logger.info(f"Document deleted: {document_id} ({doc.name})")
+    return {"message": "Document deleted.", "id": document_id}
+
+
+@app.patch("/api/documents/{document_id}/cancel")
+async def cancel_analysis(document_id: str) -> dict[str, str]:
+    """Cancel an in-progress analysis by resetting status to 'uploaded'."""
+    doc = await db.document.find_unique(where={"id": document_id})
+    if not doc:
+        raise HTTPException(404, "Document not found.")
+    if doc.status != "analyzing":
+        raise HTTPException(400, f"Document is not currently analyzing (status: {doc.status}).")
+
+    await db.document.update(where={"id": document_id}, data={"status": "uploaded"})
+
+    logger.info(f"Analysis cancelled for document: {document_id}")
+    return {"message": "Analysis cancelled.", "status": "uploaded"}
+
+
+# ──────────────────────────────────────────────
+# AI Analysis — Background (legacy)
 # ──────────────────────────────────────────────
 
 
@@ -253,8 +311,6 @@ async def run_analysis_task(document_id: str, raw_text: str) -> None:
         await build_graph_and_suggestions(document_id, extracted)
 
         # 3. Mark as analyzed
-        from datetime import datetime, timezone
-
         await db.document.update(
             where={"id": document_id},
             data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
@@ -287,6 +343,153 @@ async def trigger_analysis(
         "document_id": document_id,
         "status": "analyzing",
     }
+
+
+# ──────────────────────────────────────────────
+# AI Analysis — SSE Streaming
+# ──────────────────────────────────────────────
+
+
+async def _analysis_stream(document_id: str, raw_text: str) -> AsyncGenerator[str, None]:
+    """Generator that runs the full analysis pipeline and yields SSE progress events."""
+    try:
+        # Phase 1: Start
+        yield _sse_event("progress", {
+            "phase": "init",
+            "status": "running",
+            "message": "Initializing document analysis pipeline...",
+            "detail": f"Document ID: {document_id[:8]}... | {len(raw_text):,} characters to process",
+        })
+
+        # Phase 2: Gemini extraction
+        yield _sse_event("progress", {
+            "phase": "extraction",
+            "status": "running",
+            "message": "Sending document to Gemini 2.5 Pro...",
+            "detail": "Extracting full legal hierarchy: chapters, sections, definitions, penalties, compliance obligations",
+        })
+
+        extracted = await analyze_document(document_id, raw_text)
+
+        yield _sse_event("progress", {
+            "phase": "extraction",
+            "status": "done",
+            "message": f"Extraction complete — {extracted.name}",
+            "detail": (
+                f"{len(extracted.chapters)} chapters · "
+                f"{sum(len(ch.sections) for ch in extracted.chapters)} sections · "
+                f"{len(extracted.definitions)} definitions · "
+                f"{len(extracted.penalties)} penalties · "
+                f"{len(extracted.key_changes)} key changes"
+            ),
+        })
+
+        # Phase 3: Structure preview — show the tree being built
+        yield _sse_event("progress", {
+            "phase": "structure",
+            "status": "running",
+            "message": "Constructing document structure tree...",
+            "detail": "Building vectorless RAG hierarchy for intelligent traversal",
+        })
+
+        # Emit tree structure
+        tree_preview: list[dict[str, typing.Any]] = []
+        for ch in extracted.chapters:
+            sections_preview = [
+                {"number": s.section_number, "title": s.title}
+                for s in ch.sections
+            ]
+            tree_preview.append({
+                "chapter": ch.chapter_number,
+                "name": ch.chapter_name,
+                "sections": sections_preview,
+            })
+
+        yield _sse_event("tree", {
+            "phase": "structure",
+            "status": "done",
+            "message": f"Document tree: {len(tree_preview)} chapters mapped",
+            "chapters": tree_preview,
+        })
+
+        # Phase 4: Neo4j graph building
+        yield _sse_event("progress", {
+            "phase": "graph",
+            "status": "running",
+            "message": "Building knowledge graph in Neo4j...",
+            "detail": "Creating nodes and relationships for chapters, sections, and sub-sections",
+        })
+
+        result = await build_graph_and_suggestions(document_id, extracted)
+
+        yield _sse_event("progress", {
+            "phase": "graph",
+            "status": "done",
+            "message": "Knowledge graph built successfully",
+            "detail": (
+                f"{result['graph_stats']['nodes']} nodes · "
+                f"{result['graph_stats']['relationships']} relationships · "
+                f"{result['suggestion_count']} suggestions generated"
+            ),
+        })
+
+        # Phase 5: Finalize
+        yield _sse_event("progress", {
+            "phase": "finalize",
+            "status": "running",
+            "message": "Finalizing analysis and recording audit trail...",
+            "detail": "Updating document status and creating tamper-proof audit record",
+        })
+
+        await db.document.update(
+            where={"id": document_id},
+            data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
+        )
+
+        yield _sse_event("progress", {
+            "phase": "finalize",
+            "status": "done",
+            "message": "Analysis complete!",
+            "detail": f"{result['suggestion_count']} suggestions ready for your review",
+        })
+
+        # Final event
+        yield _sse_event("complete", {
+            "suggestion_count": result["suggestion_count"],
+            "graph_nodes": result["graph_stats"]["nodes"],
+            "graph_relationships": result["graph_stats"]["relationships"],
+            "analysis_id": result["analysis_id"],
+        })
+
+    except Exception as e:
+        logger.error(f"Streaming analysis failed for {document_id}: {e}")
+        await db.document.update(where={"id": document_id}, data={"status": "error"})
+        yield _sse_event("error", {
+            "message": f"Analysis failed: {str(e)}",
+        })
+
+
+@app.get("/api/documents/{document_id}/analyze/stream")
+async def stream_analysis(document_id: str) -> StreamingResponse:
+    """SSE endpoint that streams real-time analysis progress."""
+    doc = await db.document.find_unique(where={"id": document_id})
+    if not doc:
+        raise HTTPException(404, "Document not found.")
+    if not doc.raw_text:
+        raise HTTPException(400, "Document has no extracted text.")
+
+    # Update status to analyzing
+    await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
+
+    return StreamingResponse(
+        _analysis_stream(document_id, doc.raw_text),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 # ──────────────────────────────────────────────
@@ -332,8 +535,6 @@ async def approve_suggestion(
         raise HTTPException(400, "Suggestion data is empty.")
 
     data = typing.cast(dict[str, typing.Any], suggestion.suggested_data)
-    from datetime import datetime, timezone
-
     try:
         match suggestion.type:
             case "create_legislation":
@@ -433,8 +634,6 @@ async def reject_suggestion(
     suggestion = await db.documentsuggestion.find_unique(where={"id": suggestion_id})
     if not suggestion:
         raise HTTPException(404, "Suggestion not found.")
-
-    from datetime import datetime, timezone
 
     await db.documentsuggestion.update(
         where={"id": suggestion_id},
