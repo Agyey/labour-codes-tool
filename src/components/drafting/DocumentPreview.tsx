@@ -2,12 +2,28 @@
 
 import { useMemo } from "react";
 import { Download, RefreshCcw } from "lucide-react";
+import DOMPurify from "dompurify";
 
 interface DocumentPreviewProps {
   rawHtml: string;
   values: Record<string, string>;
   onReset: () => void;
 }
+
+/**
+ * Allowed tags for DOMPurify — supports legal document formatting
+ * but blocks all script/event-handler attack vectors.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PURIFY_CONFIG: any = {
+  ALLOWED_TAGS: [
+    "p", "br", "strong", "em", "u", "s", "mark", "span", "div",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td",
+    "blockquote", "pre", "code", "sub", "sup", "hr",
+  ],
+  ALLOWED_ATTR: ["class", "style"],
+};
 
 export function DocumentPreview({ rawHtml, values, onReset }: DocumentPreviewProps) {
   
@@ -31,7 +47,8 @@ export function DocumentPreview({ rawHtml, values, onReset }: DocumentPreviewPro
       `<span class="text-rose-500 font-bold underline decoration-wavy decoration-rose-300">$&</span>`
     );
 
-    return html;
+    // 🛡️ Sanitize to prevent XSS — strip scripts, event handlers, iframes, etc.
+    return DOMPurify.sanitize(html, PURIFY_CONFIG);
   }, [rawHtml, values]);
 
   return (

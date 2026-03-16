@@ -24,10 +24,21 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query, BackgroundTasks
+from fastapi import (
+    FastAPI,
+    File,
+    Request,
+    UploadFile,
+    HTTPException,
+    Query,
+    BackgroundTasks,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from loguru import logger
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from src.database import db, connect_db, disconnect_db
 from src.graph_service import close_driver, traverse_for_query
@@ -52,15 +63,20 @@ async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None, None]:
     logger.info("All connections closed.")
 
 
+# 🛡️ Rate limiter — uses IP-based keying
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
-    title="Labour Codes Document Hub",
-    version="1.0.0",
+    title="Document Hub API",
+    version="0.1.0",
     lifespan=lifespan,
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,7 +109,10 @@ async def health_check() -> dict[str, str]:
 
 
 @app.post("/api/documents/upload")
-async def upload_document(file: UploadFile = File(...)) -> dict[str, typing.Any]:
+@limiter.limit(f"{settings.rate_limit_rpm}/minute")
+async def upload_document(
+    request: Request, file: UploadFile = File(...)
+) -> dict[str, typing.Any]:
     """Upload a PDF. Stores text, returns document ID for subsequent analysis."""
     if not file.filename:
         raise HTTPException(400, "No filename provided.")
@@ -168,7 +187,7 @@ async def upload_document(file: UploadFile = File(...)) -> dict[str, typing.Any]
 
     except Exception as e:
         logger.error(f"Upload error: {e}")
-        raise HTTPException(500, f"Upload failed: {str(e)}")
+        raise HTTPException(500, "Upload failed. Please try again.")
 
 
 # ──────────────────────────────────────────────
@@ -508,7 +527,8 @@ async def _analysis_stream(
 
 
 @app.get("/api/documents/{document_id}/analyze/stream")
-async def stream_analysis(document_id: str) -> StreamingResponse:
+@limiter.limit("5/minute")
+async def stream_analysis(request: Request, document_id: str) -> StreamingResponse:
     """SSE endpoint that streams real-time analysis progress."""
     doc = await db.document.find_unique(where={"id": document_id})
     if not doc:
@@ -557,7 +577,9 @@ async def get_tree(
 
 
 @app.patch("/api/suggestions/{suggestion_id}/approve")
+@limiter.limit(f"{settings.rate_limit_rpm}/minute")
 async def approve_suggestion(
+    request: Request,
     suggestion_id: str,
     framework_id: str = Query(default=""),
     provision_id: str = Query(default=""),

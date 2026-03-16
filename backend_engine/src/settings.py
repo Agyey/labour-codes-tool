@@ -7,7 +7,7 @@ class Settings(BaseSettings):
 
     # --- Core ---
     gemini_api_key: SecretStr
-    database_url: str
+    database_url: SecretStr
 
     # --- Graph DB (Neo4j) ---
     neo4j_uri: str = "bolt://localhost:7687"

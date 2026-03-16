@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
 
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (error: any) {
-    console.error("Document API error:", error);
+    logger.error("Document API error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json(data, { status: res.status });
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Document API error:", error);
+    logger.error("Document API error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -85,7 +86,7 @@ export async function PATCH(req: NextRequest) {
     if (!res.ok) return NextResponse.json(data, { status: res.status });
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Suggestion API error:", error);
+    logger.error("Suggestion API error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -102,7 +103,7 @@ export async function DELETE(req: NextRequest) {
     if (!res.ok) return NextResponse.json(data, { status: res.status });
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Document delete error:", error);
+    logger.error("Document delete error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
