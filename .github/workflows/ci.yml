@@ -63,19 +63,19 @@ jobs:
       - name: Install Dependencies
         run: |
           uv sync --all-extras --dev
-          uv pip install -r requirements.txt
+          uv pip install --python .venv -r requirements.txt
 
       - name: Ruff Lint
-        run: uv run ruff check .
+        run: .venv/bin/ruff check .
 
       - name: Ruff Format Check
-        run: uv run ruff format --check .
+        run: .venv/bin/ruff format --check .
 
       - name: MyPy Strict Check
-        run: uv run mypy src --strict
+        run: .venv/bin/mypy src --strict
 
       - name: Pytest
-        run: uv run pytest --cov=src
+        run: .venv/bin/pytest --cov=src
 
   # ───────────────────── Security Audit ─────────────────────
   security:
