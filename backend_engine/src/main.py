@@ -23,7 +23,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from src.database import db, connect_db, disconnect_db
-from src.graph_service import close_driver, get_document_tree, traverse_for_query
+from src.graph_service import close_driver, traverse_for_query
 from src.parser import extract_text_from_pdf, analyze_document, build_graph_and_suggestions
 from src.audit_chain import record_audit, verify_chain_integrity
 from src.settings import settings

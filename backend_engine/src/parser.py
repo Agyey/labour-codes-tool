@@ -8,7 +8,6 @@ Flow:
   5. Record audit trail
 """
 import json
-import hashlib
 
 import fitz  # PyMuPDF
 from loguru import logger
