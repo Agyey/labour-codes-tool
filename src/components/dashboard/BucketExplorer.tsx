@@ -28,6 +28,10 @@ export function BucketExplorer() {
     return legislations.filter(l => l.frameworkId === framework.id);
   }, [legislations, framework]);
 
+  const totalProvisions = useMemo(() => {
+    return bucketLegislations.reduce((acc, l) => acc + ((l as any).provisions?.length || 0), 0);
+  }, [bucketLegislations]);
+
   if (!framework) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -117,7 +121,7 @@ export function BucketExplorer() {
                 <div className="flex justify-between items-center bg-white/10 p-4 rounded-3xl backdrop-blur-sm">
                    <span className="text-xs font-bold uppercase tracking-widest opacity-70">Total Provisions</span>
                    <span className="text-xl font-black">
-                     {legislations.filter(l => l.frameworkId === framework.id).reduce((acc, l) => acc + ((l as any).provisions?.length || 0), 0)}
+                     {totalProvisions}
                    </span>
                 </div>
                 <div className="flex justify-between items-center bg-white/10 p-4 rounded-3xl backdrop-blur-sm">
