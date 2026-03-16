@@ -18,7 +18,7 @@ async def get_last_hash() -> str:
     """Get the hash of the last entry in the chain (genesis if empty)."""
     last = await db.auditchain.find_first(order={"created_at": "desc"})
     if last:
-        return last.current_hash
+        return str(last.current_hash)
     return "0" * 64  # Genesis hash
 
 
