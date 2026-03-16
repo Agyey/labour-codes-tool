@@ -31,6 +31,7 @@ interface StreamEvent {
   status: "running" | "done";
   message: string;
   detail?: string;
+  elapsed?: string;
   chapters?: Array<{
     chapter: string;
     name: string;
@@ -149,6 +150,11 @@ function StreamingProgress({
                   }`}>
                     {evt.message}
                   </span>
+                  {evt.elapsed && (
+                    <span className="text-[10px] text-zinc-600 ml-auto flex-shrink-0 tabular-nums">
+                      {evt.elapsed}
+                    </span>
+                  )}
                 </div>
 
                 {/* Detail text */}
@@ -251,9 +257,30 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
     }
   }, [docId]);
 
+  // Poll for status when document is "analyzing" but we have no active stream
+  // (user navigated away and came back)
   useEffect(() => {
     fetchDetail();
   }, [fetchDetail]);
+
+  useEffect(() => {
+    if (detail?.document?.status === "analyzing" && !analyzing) {
+      const interval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/documents?id=${docId}`);
+          const data = await res.json();
+          setDetail(data);
+          if (data.document.status !== "analyzing") {
+            clearInterval(interval);
+            if (data.document.status === "analyzed") {
+              toast.success("Analysis completed!");
+            }
+          }
+        } catch { /* ignore */ }
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [detail?.document?.status, analyzing, docId]);
 
   // Streaming analysis handler
   const handleAnalyze = useCallback(async () => {
@@ -446,7 +473,8 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
     { key: "structure", label: "Structure", count: null },
   ];
 
-  const showStreamPanel = analyzing || streamEvents.length > 0;
+  const showStreamPanel = analyzing || (streamEvents.length > 0 && !streamComplete);
+  const showAnalyzingBanner = doc.status === "analyzing" && !analyzing && streamEvents.length === 0;
 
   return (
     <div className="space-y-6">
@@ -502,6 +530,23 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
           </button>
         )}
       </div>
+
+      {/* Banner: user returned while analysis is in progress */}
+      {showAnalyzingBanner && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 flex items-center gap-4"
+        >
+          <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+          <div>
+            <p className="text-sm font-semibold text-indigo-300">Analysis in progress...</p>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              The document is being analyzed. Results will appear automatically when complete.
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Streaming progress panel */}
       {showStreamPanel && (

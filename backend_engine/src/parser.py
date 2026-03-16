@@ -62,7 +62,7 @@ async def analyze_document(document_id: str, raw_text: str) -> ExtractedLegislat
     logger.info(f"Analyzing document {document_id}: {len(raw_text)} characters")
 
     response = await _client.aio.models.generate_content(
-        model="gemini-2.5-pro",
+        model="gemini-2.5-flash",
         contents=raw_text,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",

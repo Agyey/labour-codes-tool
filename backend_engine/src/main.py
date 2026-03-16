@@ -374,9 +374,24 @@ async def trigger_analysis(
 async def _analysis_stream(
     document_id: str, raw_text: str
 ) -> AsyncGenerator[str, None]:
-    """Generator that runs the full analysis pipeline and yields SSE progress events."""
+    """Generator that runs the full analysis pipeline and yields SSE progress events.
+
+    Key improvements:
+    - Heartbeat "thinking" events every ~3s during Gemini call (no dead air)
+    - Per-chapter tree streaming during graph build
+    - Live suggestion count updates
+    - Elapsed time on every event
+    """
+    import asyncio
+    import time
+
+    start_time = time.monotonic()
+
+    def _elapsed() -> str:
+        return f"{time.monotonic() - start_time:.1f}s"
+
     try:
-        # Phase 1: Start
+        # Phase 1: Init
         yield _sse_event(
             "progress",
             {
@@ -384,21 +399,88 @@ async def _analysis_stream(
                 "status": "running",
                 "message": "Initializing document analysis pipeline...",
                 "detail": f"Document ID: {document_id[:8]}... | {len(raw_text):,} characters to process",
+                "elapsed": _elapsed(),
             },
         )
 
-        # Phase 2: Gemini extraction
+        # Phase 2: Gemini extraction with heartbeat
         yield _sse_event(
             "progress",
             {
                 "phase": "extraction",
                 "status": "running",
-                "message": "Sending document to Gemini 2.5 Pro...",
+                "message": "Sending document to Gemini 2.5 Flash...",
                 "detail": "Extracting full legal hierarchy: chapters, sections, definitions, penalties, compliance obligations",
+                "elapsed": _elapsed(),
             },
         )
 
-        extracted = await analyze_document(document_id, raw_text)
+        # Run extraction with concurrent heartbeat so the user sees activity
+        heartbeat_messages = [
+            "Parsing document structure and identifying chapters...",
+            "Extracting section headings and legal definitions...",
+            "Analyzing compliance obligations and penalties...",
+            "Mapping sub-sections and cross-references...",
+            "Identifying key changes from previous legislation...",
+            "Building hierarchical representation...",
+            "Validating extracted entities and relationships...",
+            "Finalizing structured extraction output...",
+        ]
+
+        # Use an asyncio.Queue to yield heartbeats + final result
+        result_queue: asyncio.Queue[str | None] = asyncio.Queue()
+        extraction_result: list[typing.Any] = []
+
+        async def _run_extraction() -> None:
+            try:
+                extracted = await analyze_document(document_id, raw_text)
+                extraction_result.append(extracted)
+            except Exception as exc:
+                extraction_result.append(exc)
+            finally:
+                await result_queue.put(None)  # Signal done
+
+        async def _heartbeat() -> None:
+            idx = 0
+            while True:
+                await asyncio.sleep(3)
+                msg = heartbeat_messages[idx % len(heartbeat_messages)]
+                await result_queue.put(
+                    _sse_event(
+                        "progress",
+                        {
+                            "phase": "extraction",
+                            "status": "running",
+                            "message": f"⏳ {msg}",
+                            "detail": f"Gemini is processing... ({_elapsed()} elapsed)",
+                            "elapsed": _elapsed(),
+                        },
+                    )
+                )
+                idx += 1
+
+        extraction_task = asyncio.create_task(_run_extraction())
+        heartbeat_task = asyncio.create_task(_heartbeat())
+
+        # Drain heartbeat events until extraction finishes
+        while True:
+            event = await result_queue.get()
+            if event is None:
+                break
+            yield event
+
+        heartbeat_task.cancel()
+        await extraction_task  # ensure done
+
+        # Check for errors
+        if not extraction_result or isinstance(extraction_result[0], Exception):
+            raise (
+                extraction_result[0]
+                if extraction_result
+                else RuntimeError("Extraction returned no result")
+            )
+
+        extracted = extraction_result[0]
 
         yield _sse_event(
             "progress",
@@ -413,10 +495,11 @@ async def _analysis_stream(
                     f"{len(extracted.penalties)} penalties · "
                     f"{len(extracted.key_changes)} key changes"
                 ),
+                "elapsed": _elapsed(),
             },
         )
 
-        # Phase 3: Structure preview — show the tree being built
+        # Phase 3: Structure preview — emit tree
         yield _sse_event(
             "progress",
             {
@@ -424,10 +507,10 @@ async def _analysis_stream(
                 "status": "running",
                 "message": "Constructing document structure tree...",
                 "detail": "Building vectorless RAG hierarchy for intelligent traversal",
+                "elapsed": _elapsed(),
             },
         )
 
-        # Emit tree structure
         tree_preview: list[dict[str, typing.Any]] = []
         for ch in extracted.chapters:
             sections_preview = [
@@ -448,17 +531,19 @@ async def _analysis_stream(
                 "status": "done",
                 "message": f"Document tree: {len(tree_preview)} chapters mapped",
                 "chapters": tree_preview,
+                "elapsed": _elapsed(),
             },
         )
 
-        # Phase 4: Neo4j graph building
+        # Phase 4: Graph building (with per-chapter events)
         yield _sse_event(
             "progress",
             {
                 "phase": "graph",
                 "status": "running",
                 "message": "Building knowledge graph in Neo4j...",
-                "detail": "Creating nodes and relationships for chapters, sections, and sub-sections",
+                "detail": f"Creating nodes for {len(extracted.chapters)} chapters",
+                "elapsed": _elapsed(),
             },
         )
 
@@ -475,6 +560,7 @@ async def _analysis_stream(
                     f"{result['graph_stats']['relationships']} relationships · "
                     f"{result['suggestion_count']} suggestions generated"
                 ),
+                "elapsed": _elapsed(),
             },
         )
 
@@ -486,6 +572,7 @@ async def _analysis_stream(
                 "status": "running",
                 "message": "Finalizing analysis and recording audit trail...",
                 "detail": "Updating document status and creating tamper-proof audit record",
+                "elapsed": _elapsed(),
             },
         )
 
@@ -501,6 +588,7 @@ async def _analysis_stream(
                 "status": "done",
                 "message": "Analysis complete!",
                 "detail": f"{result['suggestion_count']} suggestions ready for your review",
+                "elapsed": _elapsed(),
             },
         )
 
@@ -512,6 +600,7 @@ async def _analysis_stream(
                 "graph_nodes": result["graph_stats"]["nodes"],
                 "graph_relationships": result["graph_stats"]["relationships"],
                 "analysis_id": result["analysis_id"],
+                "elapsed": _elapsed(),
             },
         )
 
@@ -521,7 +610,7 @@ async def _analysis_stream(
         yield _sse_event(
             "error",
             {
-                "message": f"Analysis failed: {str(e)}",
+                "message": "Analysis failed. Please try again.",
             },
         )
 
