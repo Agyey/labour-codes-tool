@@ -214,25 +214,16 @@ async def get_document(document_id: str):
 # ──────────────────────────────────────────────
 # AI Analysis (Trigger)
 # ──────────────────────────────────────────────
+from fastapi import BackgroundTasks
 
-@app.post("/api/documents/{document_id}/analyze")
-async def trigger_analysis(document_id: str):
-    """Trigger Gemini analysis on an uploaded document."""
-    doc = await db.document.find_unique(where={"id": document_id})
-    if not doc:
-        raise HTTPException(404, "Document not found.")
-    if not doc.raw_text:
-        raise HTTPException(400, "Document has no extracted text.")
-
-    # Update status
-    await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
-
+async def run_analysis_task(document_id: str, raw_text: str):
+    """Background task to run the Gemini analysis and graph building."""
     try:
         # 1. AI extraction
-        extracted = await analyze_document(document_id, doc.raw_text)
+        extracted = await analyze_document(document_id, raw_text)
 
         # 2. Build graph + generate suggestions
-        result = await build_graph_and_suggestions(document_id, extracted)
+        await build_graph_and_suggestions(document_id, extracted)
 
         # 3. Mark as analyzed
         from datetime import datetime, timezone
@@ -241,17 +232,30 @@ async def trigger_analysis(document_id: str):
             data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
         )
 
-        return {
-            "message": "Analysis complete. Suggestions generated for review.",
-            "analysis_id": result["analysis_id"],
-            "graph_stats": result["graph_stats"],
-            "suggestion_count": result["suggestion_count"],
-        }
-
     except Exception as e:
         await db.document.update(where={"id": document_id}, data={"status": "error"})
-        logger.error(f"Analysis failed for {document_id}: {e}")
-        raise HTTPException(500, f"Analysis failed: {str(e)}")
+        logger.error(f"Analysis background task failed for {document_id}: {e}")
+
+@app.post("/api/documents/{document_id}/analyze")
+async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks):
+    """Trigger Gemini analysis on an uploaded document (Background)."""
+    doc = await db.document.find_unique(where={"id": document_id})
+    if not doc:
+        raise HTTPException(404, "Document not found.")
+    if not doc.raw_text:
+        raise HTTPException(400, "Document has no extracted text.")
+
+    # Update status to analyzing
+    await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
+
+    # Schedule the background task
+    background_tasks.add_task(run_analysis_task, document_id, doc.raw_text)
+
+    return {
+        "message": "Analysis started in background. Please poll for status.",
+        "document_id": document_id,
+        "status": "analyzing"
+    }
 
 
 # ──────────────────────────────────────────────
