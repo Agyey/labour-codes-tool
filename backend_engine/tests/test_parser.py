@@ -60,15 +60,55 @@ async def test_build_graph_and_suggestions(mocker):
     
     from src.models import ExtractedLegislation
     
+    from src.models import (
+        ExtractedLegislation, ExtractedChapter, ExtractedSection, 
+        ExtractedSubSection, ExtractedComplianceTask, ExtractedPenalty, ExtractedChange, ExtractedDefinition
+    )
+    
     extracted = ExtractedLegislation(
         name="test",
         short_name="t",
         year=2024,
+        document_type="act",
         summary="sum",
-        chapters=[],
-        definitions=[],
+        chapters=[
+            ExtractedChapter(
+                chapter_number="I",
+                chapter_name="Pre",
+                summary="summary",
+                sections=[
+                    ExtractedSection(
+                        section_number="1",
+                        title="T1",
+                        summary="S1",
+                        full_text="F1",
+                        sub_sections=[
+                            ExtractedSubSection(
+                                sub_section_number="a",
+                                full_text="sub-f",
+                                summary="sub-s",
+                                compliance_tasks=[
+                                    ExtractedComplianceTask(task="SubTask", due_logic="logic", severity="low")
+                                ]
+                            )
+                        ],
+                        compliance_tasks=[
+                            ExtractedComplianceTask(task="Task1", due_logic="logic", severity="high")
+                        ],
+                        penalties=[
+                            ExtractedPenalty(description="Fine", fine_amount="100", imprisonment="No")
+                        ]
+                    )
+                ]
+            )
+        ],
+        definitions=[
+            ExtractedDefinition(term="Employer", definition="The boss", section_ref="s2")
+        ],
+        key_changes=[
+            ExtractedChange(difference_type="Amendment", description="Changed something", previous_reference="Old Act", new_reference="New Act")
+        ],
         penalties=[],
-        key_changes=[],
         effective_date="now",
         repealed_acts=["old act"]
     )

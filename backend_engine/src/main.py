@@ -410,6 +410,8 @@ async def approve_suggestion(
             "status": "approved",
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Approval failed: {e}")
         raise HTTPException(500, f"Approval failed: {str(e)}")
