@@ -22,7 +22,7 @@
     "jspdf": "^4.2.0",
     "lucide-react": "^0.344.0",
     "mammoth": "^1.12.0",
-    "next": "^14.2.35",
+    "next": "^15.0.0-rc.1",
     "next-auth": "^4.24.13",
     "next-themes": "^0.4.6",
     "pdf-parse-fork": "^1.2.0",
@@ -41,7 +41,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "eslint": "^8.56.0",
-    "eslint-config-next": "^14.2.35",
+    "eslint-config-next": "^15.0.0-rc.1",
     "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.0"
