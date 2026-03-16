@@ -1,16 +1,46 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
+const providersArray: any[] = [
+  GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID || "mock-client-id",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "mock-client-secret",
+  }),
+];
+
+if (process.env.NODE_ENV !== "production") {
+  providersArray.push(
+    CredentialsProvider({
+      name: "Local Dev Bypass",
+      credentials: {
+        email: { label: "Email", type: "text", placeholder: "admin@dev.local" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email) return null;
+        let user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email: credentials.email,
+              name: "Local Dev",
+              role: "admin",
+            },
+          });
+        }
+        return user;
+      },
+    }),
+  );
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
+  providers: providersArray,
   callbacks: {
     async signIn({ user }) {
       console.log("[AUTH] SignIn attempt:", user.email);
@@ -21,29 +51,44 @@ export const authOptions: NextAuthOptions = {
       ) {
         console.log("[AUTH] Auto-assigning admin role to:", user.email);
         // Ensure role is admin in db
-        await prisma.user.update({
-          where: { email: user.email },
-          data: { role: "admin" },
-        }).catch((e) => {
-          console.log("[AUTH] Update for admin role failed (might be new user):", e.message);
-        }); 
+        await prisma.user
+          .update({
+            where: { email: user.email },
+            data: { role: "admin" },
+          })
+          .catch((e) => {
+            console.log(
+              "[AUTH] Update for admin role failed (might be new user):",
+              e.message,
+            );
+          });
       }
       return true;
     },
     async jwt({ token, user, trigger, session }) {
-      console.log("[AUTH] JWT Callback. Trigger:", trigger, "User present:", !!user);
+      console.log(
+        "[AUTH] JWT Callback. Trigger:",
+        trigger,
+        "User present:",
+        !!user,
+      );
       if (user) {
         token.id = user.id;
         token.role = (user as any).role || "viewer";
-        
+
         // Fetch orgId if not present
         const orgUser = await prisma.organizationUser.findFirst({
           where: { user_id: user.id },
-          select: { org_id: true }
+          select: { org_id: true },
         });
         token.orgId = orgUser?.org_id;
-        
-        console.log("[AUTH] Initial JWT role assigned:", token.role, "Org:", token.orgId);
+
+        console.log(
+          "[AUTH] Initial JWT role assigned:",
+          token.role,
+          "Org:",
+          token.orgId,
+        );
       }
       if (trigger === "update" && session?.role) {
         token.role = session.role;
@@ -68,10 +113,12 @@ export const authOptions: NextAuthOptions = {
         user.email === "shreeyash1998@gmail.com" ||
         user.email === "agyey1997@gmail.com"
       ) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { role: "admin" },
-        }).catch(console.error);
+        await prisma.user
+          .update({
+            where: { id: user.id },
+            data: { role: "admin" },
+          })
+          .catch(console.error);
       }
     },
   },

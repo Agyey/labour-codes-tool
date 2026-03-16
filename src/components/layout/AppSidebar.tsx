@@ -15,6 +15,7 @@ import {
   Gavel,
   Users,
   Calendar,
+  FileUp,
   LucideIcon
 } from "lucide-react";
 
@@ -99,6 +100,7 @@ export function AppSidebar() {
 // Grouped items for mapping
 const navItems = [
   { href: "/dashboard", label: "Home Dashboard", icon: Home, desc: "Firm overview & alerts", color: "bg-blue-600", textHover: "group-hover:text-blue-600" },
+  { href: "/documents", label: "Document Hub", icon: FileUp, desc: "Upload & analyze legal docs", color: "bg-purple-600", textHover: "group-hover:text-purple-600" },
   { href: "/library", label: "Knowledge Library", icon: BookOpen, desc: "Structured legal databases", color: "bg-emerald-600", textHover: "group-hover:text-emerald-600" },
   { href: "/scenarios", label: "Scenario Engine", icon: Network, desc: "Auto-generate compliance tasks", color: "bg-amber-600", textHover: "group-hover:text-amber-600" },
   { href: "/diligence", label: "Due Diligence", icon: ShieldAlert, desc: "Target audit & requisition tracking", color: "bg-indigo-500", textHover: "group-hover:text-indigo-500" },

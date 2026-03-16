@@ -1,14 +1,22 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   async function signInWithGoogle() {
-    setIsLoading(true)
-    await signIn('google', { callbackUrl: '/dashboard' })
+    setIsLoading(true);
+    await signIn("google", { callbackUrl: "/dashboard" });
+  }
+
+  async function bypassLogin() {
+    setIsLoading(true);
+    await signIn("credentials", {
+      email: "admin@dev.local",
+      callbackUrl: "/dashboard",
+    });
   }
 
   return (
@@ -69,8 +77,18 @@ export default function LoginPage() {
             )}
             Sign in with Google
           </button>
+
+          {process.env.NODE_ENV !== "production" && (
+            <button
+              onClick={bypassLogin}
+              disabled={isLoading}
+              className="w-full flex justify-center py-3.5 px-4 border border-emerald-500 text-sm font-semibold rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm items-center gap-3"
+            >
+              🚀 Local Developer Bypass
+            </button>
+          )}
         </div>
-        
+
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -85,5 +103,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
