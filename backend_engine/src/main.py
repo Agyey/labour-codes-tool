@@ -412,4 +412,5 @@ async def verify_audit():
 
 
 if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8001, reload=True)  # nosec B104
+    port = int(os.environ.get("PORT", 8001))
+    uvicorn.run("src.main:app", host="0.0.0.0", port=port, reload=False)  # nosec B104
