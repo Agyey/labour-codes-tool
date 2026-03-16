@@ -21,4 +21,4 @@ COPY . .
 RUN prisma generate --schema=schema.prisma
 
 # Uvicorn will listen on the port provided by Railway
-CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8001}"]
+CMD ["sh", "-c", "prisma db push --schema=schema.prisma && uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8001}"]
