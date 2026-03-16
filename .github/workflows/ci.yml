@@ -61,7 +61,9 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Dependencies
-        run: uv sync --all-extras --dev
+        run: |
+          uv sync --all-extras --dev
+          uv pip install -r requirements.txt
 
       - name: Ruff Lint
         run: uv run ruff check .
