@@ -75,7 +75,10 @@ async def upload_document(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(400, "No filename provided.")
 
-    ext = os.path.splitext(file.filename)[1].lower()
+    # 🛡️ Sentinel: Sanitize filename to prevent path traversal
+    safe_filename = os.path.basename(file.filename.replace('\\', '/'))
+
+    ext = os.path.splitext(safe_filename)[1].lower()
     if ext not in settings.allowed_file_types:
         raise HTTPException(400, f"Unsupported file type: {ext}. Allowed: {settings.allowed_file_types}")
 
@@ -88,7 +91,7 @@ async def upload_document(file: UploadFile = File(...)):
     try:
         # Save temp file for text extraction
         temp_dir = tempfile.mkdtemp()
-        file_path = os.path.join(temp_dir, file.filename)
+        file_path = os.path.join(temp_dir, safe_filename)
         with open(file_path, "wb") as buffer:
             buffer.write(contents)
 
@@ -101,8 +104,8 @@ async def upload_document(file: UploadFile = File(...)):
         # Store in Postgres
         document = await db.document.create(
             data={
-                "name": os.path.splitext(file.filename)[0],
-                "file_name": file.filename,
+                "name": os.path.splitext(safe_filename)[0],
+                "file_name": safe_filename,
                 "file_size": len(contents),
                 "page_count": page_count,
                 "raw_text": raw_text,
@@ -115,10 +118,10 @@ async def upload_document(file: UploadFile = File(...)):
             action="document_uploaded",
             entity_type="document",
             entity_id=document.id,
-            data={"file_name": file.filename, "size": len(contents), "pages": page_count},
+            data={"file_name": safe_filename, "size": len(contents), "pages": page_count},
         )
 
-        logger.info(f"Document uploaded: {document.id} — {file.filename} ({page_count} pages)")
+        logger.info(f"Document uploaded: {document.id} — {safe_filename} ({page_count} pages)")
 
         return {
             "id": document.id,
