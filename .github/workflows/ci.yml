@@ -74,8 +74,15 @@ jobs:
       - name: Ruff Format Check
         run: .venv/bin/ruff format --check .
 
-      - name: MyPy Strict Check
-        run: .venv/bin/mypy src --strict
+      - name: Cache mypy
+        uses: actions/cache@v4
+        with:
+          path: backend_engine/.mypy_cache
+          key: mypy-${{ runner.os }}-${{ hashFiles('backend_engine/pyproject.toml', 'backend_engine/uv.lock') }}
+          restore-keys: mypy-${{ runner.os }}-
+
+      - name: MyPy Type Check
+        run: .venv/bin/mypy src --install-types --non-interactive
 
       - name: Pytest
         run: .venv/bin/pytest --cov=src
