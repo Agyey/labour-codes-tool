@@ -65,6 +65,9 @@ jobs:
           uv sync --all-extras --dev
           uv pip install --python .venv -r requirements.txt
 
+      - name: Prisma Generate Python Client
+        run: .venv/bin/prisma generate --schema=../prisma/schema.prisma
+
       - name: Ruff Lint
         run: .venv/bin/ruff check .
 
