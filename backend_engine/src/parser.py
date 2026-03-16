@@ -208,6 +208,25 @@ async def build_graph_and_suggestions(document_id: str, extracted: ExtractedLegi
         )
         suggestion_count += 1
 
+    # Suggestion: Create definitions
+    for defn in extracted.definitions:
+        await db.documentsuggestion.create(
+            data={
+                "document_id": document_id,
+                "analysis_id": analysis.id,
+                "type": SuggestionType.CREATE_DEFINITION,
+                "target_module": "knowledge_base",
+                "suggested_data": {
+                    "term": defn.term,
+                    "definition": defn.definition,
+                    "section_ref": defn.section_ref,
+                },
+                "confidence": 0.90,
+                "status": "pending",
+            }
+        )
+        suggestion_count += 1
+
     # 4. Record in audit chain
     await record_audit(
         action="document_analyzed",

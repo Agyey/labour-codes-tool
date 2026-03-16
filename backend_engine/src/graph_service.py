@@ -80,6 +80,32 @@ async def create_document_tree(document_id: str, extracted_data: dict) -> dict:
         )
         node_count += 1
 
+        # 1b. Create Definition nodes
+        for def_idx, defn in enumerate(extracted_data.get("definitions", [])):
+            def_uid = f"doc_{document_id}_def_{def_idx}"
+            await session.run(
+                """
+                MERGE (df:Definition {uid: $uid})
+                SET df.term = $term,
+                    df.definition = $definition,
+                    df.section_ref = $ref,
+                    df.node_type = 'definition',
+                    df.content_hash = $hash
+                WITH df
+                MATCH (d:Document {uid: $doc_uid})
+                MERGE (d)-[:HAS_DEFINITION]->(df)
+                """,
+                uid=def_uid,
+                term=defn.get("term", ""),
+                definition=defn.get("definition", ""),
+                ref=defn.get("section_ref", ""),
+                hash=_content_hash(defn.get("definition", "")),
+                doc_uid=f"doc_{document_id}",
+            )
+            node_count += 1
+            rel_count += 1
+
+
         # 2. Create Chapter nodes + relationships
         for ch_idx, chapter in enumerate(extracted_data.get("chapters", [])):
             ch_uid = f"doc_{document_id}_ch_{ch_idx}"
@@ -136,8 +162,59 @@ async def create_document_tree(document_id: str, extracted_data: dict) -> dict:
                 node_count += 1
                 rel_count += 1
 
+                # 3b. Create Section Compliance Task nodes
+                for t_idx, task in enumerate(section.get("compliance_tasks", [])):
+                    t_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_task_{t_idx}"
+                    await session.run(
+                        """
+                        MERGE (ct:ComplianceTask {uid: $uid})
+                        SET ct.task = $task,
+                            ct.due_logic = $due_logic,
+                            ct.severity = $severity,
+                            ct.node_type = 'compliance_task',
+                            ct.content_hash = $hash
+                        WITH ct
+                        MATCH (s:Section {uid: $sec_uid})
+                        MERGE (s)-[:HAS_COMPLIANCE_TASK]->(ct)
+                        """,
+                        uid=t_uid,
+                        task=task.get("task", ""),
+                        due_logic=task.get("due_logic", ""),
+                        severity=task.get("severity", "medium"),
+                        hash=_content_hash(task.get("task", "")),
+                        sec_uid=sec_uid,
+                    )
+                    node_count += 1
+                    rel_count += 1
+
+                # 3c. Create Penalty nodes
+                for p_idx, penalty in enumerate(section.get("penalties", [])):
+                    p_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_pen_{p_idx}"
+                    await session.run(
+                        """
+                        MERGE (p:Penalty {uid: $uid})
+                        SET p.description = $desc,
+                            p.fine_amount = $fine,
+                            p.imprisonment = $imp,
+                            p.node_type = 'penalty',
+                            p.content_hash = $hash
+                        WITH p
+                        MATCH (s:Section {uid: $sec_uid})
+                        MERGE (s)-[:HAS_PENALTY]->(p)
+                        """,
+                        uid=p_uid,
+                        desc=penalty.get("description", ""),
+                        fine=penalty.get("fine_amount", ""),
+                        imp=penalty.get("imprisonment", ""),
+                        hash=_content_hash(penalty.get("description", "")),
+                        sec_uid=sec_uid,
+                    )
+                    node_count += 1
+                    rel_count += 1
+
                 # 4. Create SubSection nodes
                 for sub_idx, sub in enumerate(section.get("sub_sections", [])):
+
                     sub_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_sub_{sub_idx}"
                     await session.run(
                         """
@@ -162,6 +239,31 @@ async def create_document_tree(document_id: str, extracted_data: dict) -> dict:
                     )
                     node_count += 1
                     rel_count += 1
+
+                    # 4b. Create SubSection Compliance Task nodes
+                    for st_idx, stask in enumerate(sub.get("compliance_tasks", [])):
+                        st_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_sub_{sub_idx}_task_{st_idx}"
+                        await session.run(
+                            """
+                            MERGE (ct:ComplianceTask {uid: $uid})
+                            SET ct.task = $task,
+                                ct.due_logic = $due_logic,
+                                ct.severity = $severity,
+                                ct.node_type = 'compliance_task',
+                                ct.content_hash = $hash
+                            WITH ct
+                            MATCH (ss:SubSection {uid: $sub_uid})
+                            MERGE (ss)-[:HAS_COMPLIANCE_TASK]->(ct)
+                            """,
+                            uid=st_uid,
+                            task=stask.get("task", ""),
+                            due_logic=stask.get("due_logic", ""),
+                            severity=stask.get("severity", "medium"),
+                            hash=_content_hash(stask.get("task", "")),
+                            sub_uid=sub_uid,
+                        )
+                        node_count += 1
+                        rel_count += 1
 
     logger.info(
         f"Graph tree built: {node_count} nodes, {rel_count} relationships "

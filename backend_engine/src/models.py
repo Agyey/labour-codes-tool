@@ -29,6 +29,7 @@ class SuggestionType(StrEnum):
     CREATE_PROVISION = "create_provision"
     CREATE_COMPLIANCE_ITEM = "create_compliance_item"
     CREATE_PENALTY = "create_penalty"
+    CREATE_DEFINITION = "create_definition"
     FLAG_REPEAL = "flag_repeal"
     UPDATE_PROVISION = "update_provision"
 

@@ -277,7 +277,11 @@ async def get_tree(document_id: str, chapter: str | None = None):
 # ──────────────────────────────────────────────
 
 @app.patch("/api/suggestions/{suggestion_id}/approve")
-async def approve_suggestion(suggestion_id: str, framework_id: str = Query(default="")):
+async def approve_suggestion(
+    suggestion_id: str, 
+    framework_id: str = Query(default=""), 
+    provision_id: str = Query(default="")
+):
     """Approve a suggestion and materialize it into the target module."""
     suggestion = await db.documentsuggestion.find_unique(where={"id": suggestion_id})
     if not suggestion:
@@ -290,6 +294,8 @@ async def approve_suggestion(suggestion_id: str, framework_id: str = Query(defau
 
     try:
         if suggestion.type == "create_legislation":
+            if not framework_id:
+                raise HTTPException(400, "framework_id is required to create legislation.")
             await db.legislation.create(
                 data={
                     "name": data["name"],
@@ -320,12 +326,23 @@ async def approve_suggestion(suggestion_id: str, framework_id: str = Query(defau
             )
 
         elif suggestion.type == "create_compliance_item":
+            if not provision_id:
+                raise HTTPException(400, "provision_id is required to create a compliance item.")
             await db.complianceitem.create(
                 data={
+                    "provision_id": provision_id,
                     "task": f"{data['task']} ({data['due_logic']})",
                     "status": "Not Started",
                 }
             )
+
+        elif suggestion.type == "create_penalty":
+            logger.info(f"Penalty suggestion approved. Modifying provision tracking for section {data.get('section')}")
+            # Real implementation would update the associated Provision or Penalty module 
+            
+        elif suggestion.type == "create_definition":
+            logger.info(f"Definition suggestion approved: {data.get('term')}")
+            # Real implementation would store the definition in a Knowledge Base or Glossary
 
         elif suggestion.type == "flag_repeal":
             logger.info(f"Flagging repeal: {data.get('repealed_act_name')}")
