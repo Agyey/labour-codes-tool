@@ -44,20 +44,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: analyzeJson.detail || "Analysis failed" }, { status: analyzeRes.status });
     }
 
-    // 3. Fetch the fully structured data
-    const docUrl = `${BACKEND_URL}/api/documents/${documentId}`;
-    const docRes = await fetch(docUrl);
-    const docJson = await docRes.json();
-
-    if (!docRes.ok || !docJson.analysis) {
-        return NextResponse.json({ error: "Failed to fetch document analysis details" }, { status: 500 });
-    }
-
-    // Return the structured data back to the UI (expected format)
+    // Return immediately to allow UI to poll
     return NextResponse.json({ 
       success: true, 
-      message: "Parsed and Auto-Populated Success!",
-      data: docJson.analysis.structured_data
+      message: "Analysis started in background!",
+      documentId: documentId,
+      status: "analyzing"
     });
 
   } catch (error: any) {
@@ -67,3 +59,24 @@ export async function POST(req: NextRequest) {
     }, { status: 500 });
   }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "No document ID provided" }, { status: 400 });
+
+    const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
+    const docUrl = `${BACKEND_URL}/api/documents/${id}`;
+    const docRes = await fetch(docUrl);
+    const docJson = await docRes.json();
+
+    if (!docRes.ok) {
+        return NextResponse.json({ error: "Failed to fetch document status" }, { status: docRes.status });
+    }
+
+    return NextResponse.json(docJson);
+  } catch (error: any) {
+    return NextResponse.json({ error: "Polling Error: " + error.message }, { status: 500 });
+  }
+}
+
