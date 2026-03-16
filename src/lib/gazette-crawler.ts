@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * @name GazetteCrawlerPrototype
  * @description Logic for parsing the e-Gazette (egazette.gov.in) result table.

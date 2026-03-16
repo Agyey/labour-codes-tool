@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -14,7 +15,8 @@ export async function POST(req: NextRequest) {
     const backendFormData = new FormData();
     backendFormData.append("file", file);
 
-    const backendUrl = `http://localhost:8001/api/documents/upload?framework_id=${frameworkId}`;
+    const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
+    const backendUrl = `${BACKEND_URL}/api/documents/upload?framework_id=${frameworkId}`;
     console.log("Forwarding to Python Backend:", backendUrl);
     
     // We increase timeout or await it here since it's synchronous

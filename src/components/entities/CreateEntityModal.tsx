@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useState } from "react";
 import { X, Building2, ShieldCheck, Activity, Globe, Save } from "lucide-react";

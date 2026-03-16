@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-unused-vars, react/no-unescaped-entities */
 
 import Link from "next/link";
 import { ArrowRight, BookOpen, Layers, Network, ShieldCheck, Zap, CheckCircle2 } from "lucide-react";

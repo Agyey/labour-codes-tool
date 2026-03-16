@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Clock, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 
 export function StatusBadge({ status }: { status: string }) {

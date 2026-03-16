@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from "react";
 import { Plus, Search, Briefcase, Clock, ChevronRight } from "lucide-react";

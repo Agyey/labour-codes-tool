@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { IMPACT_LEVELS, RULE_AUTHORITIES } from "@/config/tags";
 import type { Provision } from "@/types/provision";

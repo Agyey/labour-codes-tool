@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # --- Graph DB (Neo4j) ---
     neo4j_uri: str = "bolt://localhost:7687"
     neo4j_user: str = "neo4j"
-    neo4j_password: SecretStr = SecretStr("labourcodes2024")
+    neo4j_password: SecretStr
 
     # --- Task Queue (Redis / Celery) ---
     redis_url: str = "redis://localhost:6379/0"

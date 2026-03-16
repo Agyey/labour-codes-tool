@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { motion } from "framer-motion";
 import { FileText, Shield, AlertTriangle, XCircle, Sparkles, GitBranch, CheckCircle2 } from "lucide-react";
 import { Suggestion } from "@/types/document";

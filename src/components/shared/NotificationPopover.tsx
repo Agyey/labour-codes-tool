@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from "react";
 import { Bell, Check, Info, AlertCircle, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";

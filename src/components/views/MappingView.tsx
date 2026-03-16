@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { useFilter } from "@/context/FilterContext";

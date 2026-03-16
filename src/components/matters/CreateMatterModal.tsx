@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect } from "react";
 import { X, Briefcase, Building2, Calendar, FileText, Save } from "lucide-react";

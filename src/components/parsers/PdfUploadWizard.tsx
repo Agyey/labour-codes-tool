@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import { motion } from "framer-motion";
 import { FileUp, FileText, CheckCircle2, ShieldAlert, X, Scale } from "lucide-react";

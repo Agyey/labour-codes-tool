@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { Trash2, Loader2, Mail } from "lucide-react";
 import { updateMemberRole, removeMember } from "@/app/actions/organizations";

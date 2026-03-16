@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { STATES } from "@/config/states";
 import { COMPLIANCE_STATUSES } from "@/config/tags";

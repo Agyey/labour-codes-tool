@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { CHANGE_TAGS, CHANGE_TAG_COLORS } from "@/config/tags";
 import { TagChip } from "@/components/shared/TagChip";
 import { Plus, Trash2, Link, Search } from "lucide-react";

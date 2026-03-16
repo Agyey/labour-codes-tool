@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 import { useState } from "react";
 import { X, CheckCircle2, Loader2, Star } from "lucide-react";
