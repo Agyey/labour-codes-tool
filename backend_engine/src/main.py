@@ -293,59 +293,60 @@ async def approve_suggestion(
     from datetime import datetime, timezone
 
     try:
-        if suggestion.type == "create_legislation":
-            if not framework_id:
-                raise HTTPException(400, "framework_id is required to create legislation.")
-            await db.legislation.create(
-                data={
-                    "name": data["name"],
-                    "short_name": data["short_name"],
-                    "year": data["year"],
-                    "type": data.get("type", "act"),
-                    "framework_id": framework_id,
-                }
-            )
+        match suggestion.type:
+            case "create_legislation":
+                if not framework_id:
+                    raise HTTPException(400, "framework_id is required to create legislation.")
+                await db.legislation.create(
+                    data={
+                        "name": data["name"],
+                        "short_name": data["short_name"],
+                        "year": data["year"],
+                        "type": data.get("type", "act"),
+                        "framework_id": framework_id,
+                    }
+                )
 
-        elif suggestion.type == "create_provision":
-            await db.provision.create(
-                data={
-                    "code": data.get("short_name", ""),
-                    "chapter": data["chapter"],
-                    "chapter_name": data["chapter_name"],
-                    "section": data["section"],
-                    "sub_section": "1",
-                    "title": data["title"],
-                    "summary": data["summary"],
-                    "full_text": data["full_text"],
-                    "sub_sections": json.dumps(data.get("sub_sections", [])),
-                    "impact": "Pending Review",
-                    "rule_authority": "Appropriate Government",
-                    "status": "active",
-                    "provision_type": "section",
-                }
-            )
+            case "create_provision":
+                await db.provision.create(
+                    data={
+                        "code": data.get("short_name", ""),
+                        "chapter": data["chapter"],
+                        "chapter_name": data["chapter_name"],
+                        "section": data["section"],
+                        "sub_section": "1",
+                        "title": data["title"],
+                        "summary": data["summary"],
+                        "full_text": data["full_text"],
+                        "sub_sections": json.dumps(data.get("sub_sections", [])),
+                        "impact": "Pending Review",
+                        "rule_authority": "Appropriate Government",
+                        "status": "active",
+                        "provision_type": "section",
+                    }
+                )
 
-        elif suggestion.type == "create_compliance_item":
-            if not provision_id:
-                raise HTTPException(400, "provision_id is required to create a compliance item.")
-            await db.complianceitem.create(
-                data={
-                    "provision_id": provision_id,
-                    "task": f"{data['task']} ({data['due_logic']})",
-                    "status": "Not Started",
-                }
-            )
+            case "create_compliance_item":
+                if not provision_id:
+                    raise HTTPException(400, "provision_id is required to create a compliance item.")
+                await db.complianceitem.create(
+                    data={
+                        "provision_id": provision_id,
+                        "task": f"{data['task']} ({data['due_logic']})",
+                        "status": "Not Started",
+                    }
+                )
 
-        elif suggestion.type == "create_penalty":
-            logger.info(f"Penalty suggestion approved. Modifying provision tracking for section {data.get('section')}")
-            # Real implementation would update the associated Provision or Penalty module 
-            
-        elif suggestion.type == "create_definition":
-            logger.info(f"Definition suggestion approved: {data.get('term')}")
-            # Real implementation would store the definition in a Knowledge Base or Glossary
+            case "create_penalty":
+                logger.info(f"Penalty suggestion approved. Modifying provision tracking for section {data.get('section')}")
+                # Real implementation would update the associated Provision or Penalty module 
+                
+            case "create_definition":
+                logger.info(f"Definition suggestion approved: {data.get('term')}")
+                # Real implementation would store the definition in a Knowledge Base or Glossary
 
-        elif suggestion.type == "flag_repeal":
-            logger.info(f"Flagging repeal: {data.get('repealed_act_name')}")
+            case "flag_repeal":
+                logger.info(f"Flagging repeal: {data.get('repealed_act_name')}")
 
         # Update suggestion status
         await db.documentsuggestion.update(
