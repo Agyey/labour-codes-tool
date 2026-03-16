@@ -66,6 +66,8 @@ jobs:
           uv pip install --python .venv -r requirements.txt
 
       - name: Prisma Generate Python Client
+        env:
+          PATH: "${{ github.workspace }}/backend_engine/.venv/bin:${{ env.PATH }}"
         run: .venv/bin/prisma generate --schema=../prisma/schema.prisma
 
       - name: Ruff Lint
