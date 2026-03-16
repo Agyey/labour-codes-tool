@@ -40,6 +40,8 @@ jobs:
           DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci_db"
           NEXTAUTH_SECRET: "ci-test-secret-minimum-32-characters-long"
           NEXTAUTH_URL: "http://localhost:3000"
+          GOOGLE_CLIENT_ID: "mock-google-client-id"
+          GOOGLE_CLIENT_SECRET: "mock-google-client-secret"
         run: npm run build
 
   # ───────────────────── Backend Checks ─────────────────────

@@ -47,7 +47,9 @@ def _content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-async def create_document_tree(document_id: str, extracted_data: dict[str, typing.Any]) -> dict[str, int]:
+async def create_document_tree(
+    document_id: str, extracted_data: dict[str, typing.Any]
+) -> dict[str, int]:
     """Build the full vectorless RAG tree in Neo4j from extracted data.
 
     Returns a summary dict with node/relationship counts.

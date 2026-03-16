@@ -12,7 +12,6 @@ Endpoints:
   GET    /health                        Health check
 """
 
-import json
 import os
 import prisma
 import shutil
@@ -85,7 +84,7 @@ async def upload_document(file: UploadFile = File(...)) -> dict[str, typing.Any]
         raise HTTPException(400, "No filename provided.")
 
     # 🛡️ Sentinel: Sanitize filename to prevent path traversal
-    safe_filename = os.path.basename(file.filename.replace('\\', '/'))
+    safe_filename = os.path.basename(file.filename.replace("\\", "/"))
 
     ext = os.path.splitext(safe_filename)[1].lower()
     if ext not in settings.allowed_file_types:
@@ -267,7 +266,9 @@ async def run_analysis_task(document_id: str, raw_text: str) -> None:
 
 
 @app.post("/api/documents/{document_id}/analyze")
-async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks) -> dict[str, str]:
+async def trigger_analysis(
+    document_id: str, background_tasks: BackgroundTasks
+) -> dict[str, str]:
     """Trigger Gemini analysis on an uploaded document (Background)."""
     doc = await db.document.find_unique(where={"id": document_id})
     if not doc:
@@ -294,7 +295,9 @@ async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks) 
 
 
 @app.get("/api/documents/{document_id}/tree")
-async def get_tree(document_id: str, chapter: str | None = None) -> dict[str, typing.Any]:
+async def get_tree(
+    document_id: str, chapter: str | None = None
+) -> dict[str, typing.Any]:
     """Get the vectorless RAG tree from Neo4j."""
     try:
         if chapter:
@@ -423,7 +426,9 @@ async def approve_suggestion(
 
 
 @app.patch("/api/suggestions/{suggestion_id}/reject")
-async def reject_suggestion(suggestion_id: str, reason: str = Query(default="")) -> dict[str, str]:
+async def reject_suggestion(
+    suggestion_id: str, reason: str = Query(default="")
+) -> dict[str, str]:
     """Reject a suggestion with optional reason."""
     suggestion = await db.documentsuggestion.find_unique(where={"id": suggestion_id})
     if not suggestion:

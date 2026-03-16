@@ -111,12 +111,14 @@ async def build_graph_and_suggestions(
             "analysis_id": analysis.id,
             "type": SuggestionType.CREATE_LEGISLATION,
             "target_module": "knowledge_base",
-            "suggested_data": prisma.Json({
-                "name": extracted.name,
-                "short_name": extracted.short_name,
-                "year": extracted.year,
-                "type": extracted.document_type,
-            }),
+            "suggested_data": prisma.Json(
+                {
+                    "name": extracted.name,
+                    "short_name": extracted.short_name,
+                    "year": extracted.year,
+                    "type": extracted.document_type,
+                }
+            ),
             "confidence": 0.95,
             "status": "pending",
         }
@@ -131,12 +133,14 @@ async def build_graph_and_suggestions(
                 "analysis_id": analysis.id,
                 "type": SuggestionType.UPDATE_PROVISION,
                 "target_module": "knowledge_base",
-                "suggested_data": prisma.Json({
-                    "difference_type": change.difference_type,
-                    "description": change.description,
-                    "previous_reference": change.previous_reference,
-                    "new_reference": change.new_reference,
-                }),
+                "suggested_data": prisma.Json(
+                    {
+                        "difference_type": change.difference_type,
+                        "description": change.description,
+                        "previous_reference": change.previous_reference,
+                        "new_reference": change.new_reference,
+                    }
+                ),
                 "confidence": 0.88,
                 "status": "pending",
             }
@@ -160,15 +164,17 @@ async def build_graph_and_suggestions(
                     "analysis_id": analysis.id,
                     "type": SuggestionType.CREATE_PROVISION,
                     "target_module": "knowledge_base",
-                    "suggested_data": prisma.Json({
-                        "chapter": chapter.chapter_number,
-                        "chapter_name": chapter.chapter_name,
-                        "section": section.section_number,
-                        "title": section.title,
-                        "summary": section.summary,
-                        "full_text": section.full_text,
-                        "sub_sections": sub_sections_data,
-                    }),
+                    "suggested_data": prisma.Json(
+                        {
+                            "chapter": chapter.chapter_number,
+                            "chapter_name": chapter.chapter_name,
+                            "section": section.section_number,
+                            "title": section.title,
+                            "summary": section.summary,
+                            "full_text": section.full_text,
+                            "sub_sections": sub_sections_data,
+                        }
+                    ),
                     "confidence": 0.85,
                     "status": "pending",
                 }
@@ -187,12 +193,14 @@ async def build_graph_and_suggestions(
                         "analysis_id": analysis.id,
                         "type": SuggestionType.CREATE_COMPLIANCE_ITEM,
                         "target_module": "compliance_tracker",
-                        "suggested_data": prisma.Json({
-                            "section": section.section_number,
-                            "task": task.task,
-                            "due_logic": task.due_logic,
-                            "severity": task.severity,
-                        }),
+                        "suggested_data": prisma.Json(
+                            {
+                                "section": section.section_number,
+                                "task": task.task,
+                                "due_logic": task.due_logic,
+                                "severity": task.severity,
+                            }
+                        ),
                         "confidence": 0.80,
                         "status": "pending",
                     }
@@ -207,12 +215,14 @@ async def build_graph_and_suggestions(
                         "analysis_id": analysis.id,
                         "type": SuggestionType.CREATE_PENALTY,
                         "target_module": "knowledge_base",
-                        "suggested_data": prisma.Json({
-                            "section": section.section_number,
-                            "description": penalty.description,
-                            "fine_amount": penalty.fine_amount,
-                            "imprisonment": penalty.imprisonment,
-                        }),
+                        "suggested_data": prisma.Json(
+                            {
+                                "section": section.section_number,
+                                "description": penalty.description,
+                                "fine_amount": penalty.fine_amount,
+                                "imprisonment": penalty.imprisonment,
+                            }
+                        ),
                         "confidence": 0.90,
                         "status": "pending",
                     }
@@ -242,11 +252,13 @@ async def build_graph_and_suggestions(
                 "analysis_id": analysis.id,
                 "type": SuggestionType.CREATE_DEFINITION,
                 "target_module": "knowledge_base",
-                "suggested_data": prisma.Json({
-                    "term": defn.term,
-                    "definition": defn.definition,
-                    "section_ref": defn.section_ref,
-                }),
+                "suggested_data": prisma.Json(
+                    {
+                        "term": defn.term,
+                        "definition": defn.definition,
+                        "section_ref": defn.section_ref,
+                    }
+                ),
                 "confidence": 0.90,
                 "status": "pending",
             }
