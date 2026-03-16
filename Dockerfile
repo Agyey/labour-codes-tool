@@ -20,7 +20,14 @@ RUN npx prisma generate --generator client
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
-# Build Next.js 14 app
+# Provide build-time placeholders so next build can collect page data.
+# Real values are injected at runtime by Railway.
+ENV GOOGLE_CLIENT_ID="build-placeholder"
+ENV GOOGLE_CLIENT_SECRET="build-placeholder"
+ENV NEXTAUTH_SECRET="build-placeholder-secret-minimum-32-chars"
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
+
+# Build Next.js app
 RUN npm run build
 
 # Stage 3: Runner
