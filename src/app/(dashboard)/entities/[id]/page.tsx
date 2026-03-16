@@ -20,8 +20,9 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function EntityDetailView({ params }: { params: { id: string } }) {
-  const entity = await getEntityDetails(params.id);
+export default async function EntityDetailView({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const entity = await getEntityDetails(id);
 
   if (!entity) return notFound();
 

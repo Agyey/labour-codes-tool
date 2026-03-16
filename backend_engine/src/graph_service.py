@@ -5,6 +5,7 @@ Every legal document is stored as a hierarchical graph:
 
 Navigation = LLM-guided tree traversal, NOT vector similarity.
 """
+
 import hashlib
 from datetime import datetime, timezone
 
@@ -104,7 +105,6 @@ async def create_document_tree(document_id: str, extracted_data: dict) -> dict:
             )
             node_count += 1
             rel_count += 1
-
 
         # 2. Create Chapter nodes + relationships
         for ch_idx, chapter in enumerate(extracted_data.get("chapters", [])):
@@ -214,8 +214,9 @@ async def create_document_tree(document_id: str, extracted_data: dict) -> dict:
 
                 # 4. Create SubSection nodes
                 for sub_idx, sub in enumerate(section.get("sub_sections", [])):
-
-                    sub_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_sub_{sub_idx}"
+                    sub_uid = (
+                        f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_sub_{sub_idx}"
+                    )
                     await session.run(
                         """
                         MERGE (ss:SubSection {uid: $uid})
@@ -290,7 +291,9 @@ async def get_document_tree(document_id: str) -> list[dict]:
     return records
 
 
-async def traverse_for_query(document_id: str, target_chapter: str | None = None) -> list[dict]:
+async def traverse_for_query(
+    document_id: str, target_chapter: str | None = None
+) -> list[dict]:
     """Vectorless RAG traversal: drill down to specific branch."""
     driver = await get_driver()
     async with driver.session() as session:

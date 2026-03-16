@@ -3,6 +3,7 @@
 Every significant action (approve suggestion, create provision, etc.)
 is hashed into an immutable chain stored in Postgres.
 """
+
 import hashlib
 import json
 from datetime import datetime, timezone
@@ -20,7 +21,14 @@ async def get_last_hash() -> str:
     return "0" * 64  # Genesis hash
 
 
-def compute_hash(previous_hash: str, action: str, entity_type: str, entity_id: str, data: dict, timestamp: str) -> str:
+def compute_hash(
+    previous_hash: str,
+    action: str,
+    entity_type: str,
+    entity_id: str,
+    data: dict,
+    timestamp: str,
+) -> str:
     """Compute SHA-256 hash for the chain entry."""
     payload = json.dumps(
         {
@@ -48,7 +56,9 @@ async def record_audit(
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
 
-    current_hash = compute_hash(previous_hash, action, entity_type, entity_id, data, now_iso)
+    current_hash = compute_hash(
+        previous_hash, action, entity_type, entity_id, data, now_iso
+    )
 
     await db.auditchain.create(
         data={
@@ -63,7 +73,9 @@ async def record_audit(
         }
     )
 
-    logger.info(f"Audit chain: {action} on {entity_type}/{entity_id} → {current_hash[:16]}...")
+    logger.info(
+        f"Audit chain: {action} on {entity_type}/{entity_id} → {current_hash[:16]}..."
+    )
     return current_hash
 
 

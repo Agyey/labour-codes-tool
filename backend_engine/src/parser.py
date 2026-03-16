@@ -7,6 +7,7 @@ Flow:
   4. Generate suggestions (NOT auto-inject)
   5. Record audit trail
 """
+
 import json
 
 import fitz  # PyMuPDF
@@ -79,7 +80,9 @@ async def analyze_document(document_id: str, raw_text: str) -> ExtractedLegislat
     return extracted
 
 
-async def build_graph_and_suggestions(document_id: str, extracted: ExtractedLegislation) -> dict:
+async def build_graph_and_suggestions(
+    document_id: str, extracted: ExtractedLegislation
+) -> dict:
     """Build Neo4j tree and generate approval-pending suggestions."""
     # 1. Build the vectorless RAG tree in Neo4j
     graph_stats = await create_document_tree(document_id, extracted.model_dump())

@@ -173,7 +173,7 @@ export function LibraryTable({ data }: LibraryTableProps) {
         );
       },
     },
-  ], [selectedIds, data, expandedRows, canEdit, toggleExpand, toggleSelect, toggleSelectAll, setExpandedProvision]);
+  ], [selectedIds, data, expandedRows, toggleExpand, toggleSelect, toggleSelectAll, setExpandedProvision]);
 
   const table = useReactTable({
     data,

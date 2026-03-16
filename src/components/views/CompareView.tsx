@@ -33,6 +33,7 @@ export function CompareView() {
       setCodeA(comparePayload.sideA.code);
       setProvA(comparePayload.sideA.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comparePayload]);
 
   const handleRegisterAct = async (e: React.FormEvent) => {

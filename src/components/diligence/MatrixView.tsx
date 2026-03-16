@@ -25,6 +25,7 @@ export function MatrixView({ requisition, project, onBack, onUpdate }: any) {
 
   useEffect(() => {
     fetchMatrix();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requisition.id]);
 
   async function fetchMatrix() {

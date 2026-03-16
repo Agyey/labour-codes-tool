@@ -5,6 +5,7 @@ Strict typing for:
   - API request/response schemas
   - Suggestion workflow schemas
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,6 +17,7 @@ from pydantic import BaseModel, Field
 # ──────────────────────────────────────────────
 # Enums
 # ──────────────────────────────────────────────
+
 
 class DocumentStatus(StrEnum):
     UPLOADED = "uploaded"
@@ -45,23 +47,34 @@ class SuggestionStatus(StrEnum):
 # Gemini Extraction Schemas (Structured Output)
 # ──────────────────────────────────────────────
 
+
 class ExtractedComplianceTask(BaseModel):
     task: str = Field(description="The compliance obligation or task")
-    due_logic: str = Field(description="When this task is due (e.g. 'Within 30 days of registration')")
-    severity: str = Field(default="medium", description="low | medium | high | critical")
+    due_logic: str = Field(
+        description="When this task is due (e.g. 'Within 30 days of registration')"
+    )
+    severity: str = Field(
+        default="medium", description="low | medium | high | critical"
+    )
 
 
 class ExtractedPenalty(BaseModel):
     description: str = Field(description="Description of the penalty clause")
     fine_amount: str = Field(default="", description="Fine amount if specified")
-    imprisonment: str = Field(default="", description="Imprisonment duration if specified")
-    applicable_section: str = Field(default="", description="Section this penalty applies to")
+    imprisonment: str = Field(
+        default="", description="Imprisonment duration if specified"
+    )
+    applicable_section: str = Field(
+        default="", description="Section this penalty applies to"
+    )
 
 
 class ExtractedDefinition(BaseModel):
     term: str = Field(description="The legal term being defined")
     definition: str = Field(description="The full legal definition")
-    section_ref: str = Field(default="", description="Section reference for this definition")
+    section_ref: str = Field(
+        default="", description="Section reference for this definition"
+    )
 
 
 class ExtractedSubSection(BaseModel):
@@ -84,34 +97,52 @@ class ExtractedSection(BaseModel):
 class ExtractedChapter(BaseModel):
     chapter_number: str = Field(description="Number of the chapter (e.g. 'III')")
     chapter_name: str = Field(description="Name or title of the chapter")
-    summary: str = Field(description="Concise summary of the chapter for vectorless RAG traversal")
+    summary: str = Field(
+        description="Concise summary of the chapter for vectorless RAG traversal"
+    )
     sections: list[ExtractedSection] = Field(default_factory=list)
 
 
 class ExtractedChange(BaseModel):
     difference_type: str = Field(description="addition | modification | deletion")
-    description: str = Field(description="Description of what changed compared to previous laws")
-    previous_reference: str = Field(default="", description="Reference to the old law/act it replaces")
-    new_reference: str = Field(default="", description="Reference to the new section/rule")
+    description: str = Field(
+        description="Description of what changed compared to previous laws"
+    )
+    previous_reference: str = Field(
+        default="", description="Reference to the old law/act it replaces"
+    )
+    new_reference: str = Field(
+        default="", description="Reference to the new section/rule"
+    )
 
 
 class ExtractedLegislation(BaseModel):
     name: str = Field(description="Full name of the legislation/act")
     short_name: str = Field(description="Short name or acronym")
     year: int = Field(description="Year the legislation was passed")
-    document_type: str = Field(default="act", description="act | rules | amendment | notification | code")
+    document_type: str = Field(
+        default="act", description="act | rules | amendment | notification | code"
+    )
     summary: str = Field(description="Executive overview for vectorless RAG traversal")
     chapters: list[ExtractedChapter] = Field(default_factory=list)
     definitions: list[ExtractedDefinition] = Field(default_factory=list)
     penalties: list[ExtractedPenalty] = Field(default_factory=list)
-    key_changes: list[ExtractedChange] = Field(default_factory=list, description="Major differences or amendments compared to previous acts")
-    effective_date: str = Field(default="", description="Date of enforcement if mentioned")
-    repealed_acts: list[str] = Field(default_factory=list, description="Names of acts repealed by this legislation")
+    key_changes: list[ExtractedChange] = Field(
+        default_factory=list,
+        description="Major differences or amendments compared to previous acts",
+    )
+    effective_date: str = Field(
+        default="", description="Date of enforcement if mentioned"
+    )
+    repealed_acts: list[str] = Field(
+        default_factory=list, description="Names of acts repealed by this legislation"
+    )
 
 
 # ──────────────────────────────────────────────
 # API Response Schemas
 # ──────────────────────────────────────────────
+
 
 class DocumentResponse(BaseModel):
     id: str
@@ -155,6 +186,7 @@ class DocumentDetailResponse(BaseModel):
 # ──────────────────────────────────────────────
 # Audit Chain (Blockchain-style tamper proof log)
 # ──────────────────────────────────────────────
+
 
 class AuditEntry(BaseModel):
     action: str

@@ -117,13 +117,13 @@ export interface Provision {
   forms: FormRegister[];
   stateNotes: Record<string, string>;
   stateRuleText: Record<string, string>;
-  stateAmendments: Record<string, string>;
-  stateInsertions: Record<string, string>;
+  stateAmendments?: Record<string, string>;
+  stateInsertions?: Record<string, string>;
   stateCompStatus: Record<string, ComplianceStatus>;
   applicability?: string;
   penaltyOld: string;
   penaltyNew: string;
-  penalties: string[];
+  penalties?: string[];
   timelineDates: TimelineDate[];
   notes: string;
   verified: boolean;

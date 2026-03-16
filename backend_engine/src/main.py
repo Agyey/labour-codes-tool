@@ -11,6 +11,7 @@ Endpoints:
   GET    /api/audit/chain               Audit chain integrity check
   GET    /health                        Health check
 """
+
 import json
 import os
 import shutil
@@ -18,13 +19,17 @@ import tempfile
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, HTTPException, Query
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from src.database import db, connect_db, disconnect_db
 from src.graph_service import close_driver, traverse_for_query
-from src.parser import extract_text_from_pdf, analyze_document, build_graph_and_suggestions
+from src.parser import (
+    extract_text_from_pdf,
+    analyze_document,
+    build_graph_and_suggestions,
+)
 from src.audit_chain import record_audit, verify_chain_integrity
 from src.settings import settings
 
@@ -60,6 +65,7 @@ app.add_middleware(
 # Health
 # ──────────────────────────────────────────────
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "document-hub"}
@@ -69,6 +75,7 @@ async def health_check():
 # Document Upload
 # ──────────────────────────────────────────────
 
+
 @app.post("/api/documents/upload")
 async def upload_document(file: UploadFile = File(...)):
     """Upload a PDF. Stores text, returns document ID for subsequent analysis."""
@@ -77,13 +84,18 @@ async def upload_document(file: UploadFile = File(...)):
 
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in settings.allowed_file_types:
-        raise HTTPException(400, f"Unsupported file type: {ext}. Allowed: {settings.allowed_file_types}")
+        raise HTTPException(
+            400, f"Unsupported file type: {ext}. Allowed: {settings.allowed_file_types}"
+        )
 
     # Check file size
     contents = await file.read()
     size_mb = len(contents) / (1024 * 1024)
     if size_mb > settings.max_upload_size_mb:
-        raise HTTPException(413, f"File too large: {size_mb:.1f}MB. Max: {settings.max_upload_size_mb}MB")
+        raise HTTPException(
+            413,
+            f"File too large: {size_mb:.1f}MB. Max: {settings.max_upload_size_mb}MB",
+        )
 
     try:
         # Save temp file for text extraction
@@ -115,10 +127,16 @@ async def upload_document(file: UploadFile = File(...)):
             action="document_uploaded",
             entity_type="document",
             entity_id=document.id,
-            data={"file_name": file.filename, "size": len(contents), "pages": page_count},
+            data={
+                "file_name": file.filename,
+                "size": len(contents),
+                "pages": page_count,
+            },
         )
 
-        logger.info(f"Document uploaded: {document.id} — {file.filename} ({page_count} pages)")
+        logger.info(
+            f"Document uploaded: {document.id} — {file.filename} ({page_count} pages)"
+        )
 
         return {
             "id": document.id,
@@ -137,6 +155,7 @@ async def upload_document(file: UploadFile = File(...)):
 # ──────────────────────────────────────────────
 # Document List / Detail
 # ──────────────────────────────────────────────
+
 
 @app.get("/api/documents")
 async def list_documents():
@@ -194,8 +213,12 @@ async def get_document(document_id: str):
             "structured_data": analysis.structured_data,
             "graph_nodes": analysis.graph_nodes,
             "graph_relationships": analysis.graph_relationships,
-            "created_at": analysis.created_at.isoformat() if analysis.created_at else None,
-        } if analysis else None,
+            "created_at": analysis.created_at.isoformat()
+            if analysis.created_at
+            else None,
+        }
+        if analysis
+        else None,
         "suggestions": [
             {
                 "id": s.id,
@@ -214,7 +237,7 @@ async def get_document(document_id: str):
 # ──────────────────────────────────────────────
 # AI Analysis (Trigger)
 # ──────────────────────────────────────────────
-from fastapi import BackgroundTasks
+
 
 async def run_analysis_task(document_id: str, raw_text: str):
     """Background task to run the Gemini analysis and graph building."""
@@ -227,6 +250,7 @@ async def run_analysis_task(document_id: str, raw_text: str):
 
         # 3. Mark as analyzed
         from datetime import datetime, timezone
+
         await db.document.update(
             where={"id": document_id},
             data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
@@ -235,6 +259,7 @@ async def run_analysis_task(document_id: str, raw_text: str):
     except Exception as e:
         await db.document.update(where={"id": document_id}, data={"status": "error"})
         logger.error(f"Analysis background task failed for {document_id}: {e}")
+
 
 @app.post("/api/documents/{document_id}/analyze")
 async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks):
@@ -254,13 +279,14 @@ async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks):
     return {
         "message": "Analysis started in background. Please poll for status.",
         "document_id": document_id,
-        "status": "analyzing"
+        "status": "analyzing",
     }
 
 
 # ──────────────────────────────────────────────
 # Neo4j Graph Tree
 # ──────────────────────────────────────────────
+
 
 @app.get("/api/documents/{document_id}/tree")
 async def get_tree(document_id: str, chapter: str | None = None):
@@ -280,11 +306,12 @@ async def get_tree(document_id: str, chapter: str | None = None):
 # Suggestion Approval / Rejection
 # ──────────────────────────────────────────────
 
+
 @app.patch("/api/suggestions/{suggestion_id}/approve")
 async def approve_suggestion(
-    suggestion_id: str, 
-    framework_id: str = Query(default=""), 
-    provision_id: str = Query(default="")
+    suggestion_id: str,
+    framework_id: str = Query(default=""),
+    provision_id: str = Query(default=""),
 ):
     """Approve a suggestion and materialize it into the target module."""
     suggestion = await db.documentsuggestion.find_unique(where={"id": suggestion_id})
@@ -300,7 +327,9 @@ async def approve_suggestion(
         match suggestion.type:
             case "create_legislation":
                 if not framework_id:
-                    raise HTTPException(400, "framework_id is required to create legislation.")
+                    raise HTTPException(
+                        400, "framework_id is required to create legislation."
+                    )
                 await db.legislation.create(
                     data={
                         "name": data["name"],
@@ -332,7 +361,9 @@ async def approve_suggestion(
 
             case "create_compliance_item":
                 if not provision_id:
-                    raise HTTPException(400, "provision_id is required to create a compliance item.")
+                    raise HTTPException(
+                        400, "provision_id is required to create a compliance item."
+                    )
                 await db.complianceitem.create(
                     data={
                         "provision_id": provision_id,
@@ -342,9 +373,11 @@ async def approve_suggestion(
                 )
 
             case "create_penalty":
-                logger.info(f"Penalty suggestion approved. Modifying provision tracking for section {data.get('section')}")
-                # Real implementation would update the associated Provision or Penalty module 
-                
+                logger.info(
+                    f"Penalty suggestion approved. Modifying provision tracking for section {data.get('section')}"
+                )
+                # Real implementation would update the associated Provision or Penalty module
+
             case "create_definition":
                 logger.info(f"Definition suggestion approved: {data.get('term')}")
                 # Real implementation would store the definition in a Knowledge Base or Glossary
@@ -369,7 +402,10 @@ async def approve_suggestion(
             data={"type": suggestion.type, "target": suggestion.target_module},
         )
 
-        return {"message": "Suggestion approved and materialized.", "status": "approved"}
+        return {
+            "message": "Suggestion approved and materialized.",
+            "status": "approved",
+        }
 
     except Exception as e:
         logger.error(f"Approval failed: {e}")
@@ -407,6 +443,7 @@ async def reject_suggestion(suggestion_id: str, reason: str = Query(default=""))
 # ──────────────────────────────────────────────
 # Audit Chain
 # ──────────────────────────────────────────────
+
 
 @app.get("/api/audit/verify")
 async def verify_audit():

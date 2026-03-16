@@ -33,6 +33,7 @@ export function NotificationPopover({ userId }: { userId: string }) {
     // Poll for new notifications every 60 seconds
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
