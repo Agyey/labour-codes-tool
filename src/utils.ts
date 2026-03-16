@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 export const ST = ["Centre", "Delhi", "Karnataka", "Maharashtra", "Tamil Nadu", "Telangana"];
 
