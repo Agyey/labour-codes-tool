@@ -288,7 +288,9 @@ async def cancel_analysis(document_id: str) -> dict[str, str]:
     if not doc:
         raise HTTPException(404, "Document not found.")
     if doc.status != "analyzing":
-        raise HTTPException(400, f"Document is not currently analyzing (status: {doc.status}).")
+        raise HTTPException(
+            400, f"Document is not currently analyzing (status: {doc.status})."
+        )
 
     await db.document.update(where={"id": document_id}, data={"status": "uploaded"})
 
@@ -350,123 +352,159 @@ async def trigger_analysis(
 # ──────────────────────────────────────────────
 
 
-async def _analysis_stream(document_id: str, raw_text: str) -> AsyncGenerator[str, None]:
+async def _analysis_stream(
+    document_id: str, raw_text: str
+) -> AsyncGenerator[str, None]:
     """Generator that runs the full analysis pipeline and yields SSE progress events."""
     try:
         # Phase 1: Start
-        yield _sse_event("progress", {
-            "phase": "init",
-            "status": "running",
-            "message": "Initializing document analysis pipeline...",
-            "detail": f"Document ID: {document_id[:8]}... | {len(raw_text):,} characters to process",
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "init",
+                "status": "running",
+                "message": "Initializing document analysis pipeline...",
+                "detail": f"Document ID: {document_id[:8]}... | {len(raw_text):,} characters to process",
+            },
+        )
 
         # Phase 2: Gemini extraction
-        yield _sse_event("progress", {
-            "phase": "extraction",
-            "status": "running",
-            "message": "Sending document to Gemini 2.5 Pro...",
-            "detail": "Extracting full legal hierarchy: chapters, sections, definitions, penalties, compliance obligations",
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "extraction",
+                "status": "running",
+                "message": "Sending document to Gemini 2.5 Pro...",
+                "detail": "Extracting full legal hierarchy: chapters, sections, definitions, penalties, compliance obligations",
+            },
+        )
 
         extracted = await analyze_document(document_id, raw_text)
 
-        yield _sse_event("progress", {
-            "phase": "extraction",
-            "status": "done",
-            "message": f"Extraction complete — {extracted.name}",
-            "detail": (
-                f"{len(extracted.chapters)} chapters · "
-                f"{sum(len(ch.sections) for ch in extracted.chapters)} sections · "
-                f"{len(extracted.definitions)} definitions · "
-                f"{len(extracted.penalties)} penalties · "
-                f"{len(extracted.key_changes)} key changes"
-            ),
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "extraction",
+                "status": "done",
+                "message": f"Extraction complete — {extracted.name}",
+                "detail": (
+                    f"{len(extracted.chapters)} chapters · "
+                    f"{sum(len(ch.sections) for ch in extracted.chapters)} sections · "
+                    f"{len(extracted.definitions)} definitions · "
+                    f"{len(extracted.penalties)} penalties · "
+                    f"{len(extracted.key_changes)} key changes"
+                ),
+            },
+        )
 
         # Phase 3: Structure preview — show the tree being built
-        yield _sse_event("progress", {
-            "phase": "structure",
-            "status": "running",
-            "message": "Constructing document structure tree...",
-            "detail": "Building vectorless RAG hierarchy for intelligent traversal",
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "structure",
+                "status": "running",
+                "message": "Constructing document structure tree...",
+                "detail": "Building vectorless RAG hierarchy for intelligent traversal",
+            },
+        )
 
         # Emit tree structure
         tree_preview: list[dict[str, typing.Any]] = []
         for ch in extracted.chapters:
             sections_preview = [
-                {"number": s.section_number, "title": s.title}
-                for s in ch.sections
+                {"number": s.section_number, "title": s.title} for s in ch.sections
             ]
-            tree_preview.append({
-                "chapter": ch.chapter_number,
-                "name": ch.chapter_name,
-                "sections": sections_preview,
-            })
+            tree_preview.append(
+                {
+                    "chapter": ch.chapter_number,
+                    "name": ch.chapter_name,
+                    "sections": sections_preview,
+                }
+            )
 
-        yield _sse_event("tree", {
-            "phase": "structure",
-            "status": "done",
-            "message": f"Document tree: {len(tree_preview)} chapters mapped",
-            "chapters": tree_preview,
-        })
+        yield _sse_event(
+            "tree",
+            {
+                "phase": "structure",
+                "status": "done",
+                "message": f"Document tree: {len(tree_preview)} chapters mapped",
+                "chapters": tree_preview,
+            },
+        )
 
         # Phase 4: Neo4j graph building
-        yield _sse_event("progress", {
-            "phase": "graph",
-            "status": "running",
-            "message": "Building knowledge graph in Neo4j...",
-            "detail": "Creating nodes and relationships for chapters, sections, and sub-sections",
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "graph",
+                "status": "running",
+                "message": "Building knowledge graph in Neo4j...",
+                "detail": "Creating nodes and relationships for chapters, sections, and sub-sections",
+            },
+        )
 
         result = await build_graph_and_suggestions(document_id, extracted)
 
-        yield _sse_event("progress", {
-            "phase": "graph",
-            "status": "done",
-            "message": "Knowledge graph built successfully",
-            "detail": (
-                f"{result['graph_stats']['nodes']} nodes · "
-                f"{result['graph_stats']['relationships']} relationships · "
-                f"{result['suggestion_count']} suggestions generated"
-            ),
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "graph",
+                "status": "done",
+                "message": "Knowledge graph built successfully",
+                "detail": (
+                    f"{result['graph_stats']['nodes']} nodes · "
+                    f"{result['graph_stats']['relationships']} relationships · "
+                    f"{result['suggestion_count']} suggestions generated"
+                ),
+            },
+        )
 
         # Phase 5: Finalize
-        yield _sse_event("progress", {
-            "phase": "finalize",
-            "status": "running",
-            "message": "Finalizing analysis and recording audit trail...",
-            "detail": "Updating document status and creating tamper-proof audit record",
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "finalize",
+                "status": "running",
+                "message": "Finalizing analysis and recording audit trail...",
+                "detail": "Updating document status and creating tamper-proof audit record",
+            },
+        )
 
         await db.document.update(
             where={"id": document_id},
             data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
         )
 
-        yield _sse_event("progress", {
-            "phase": "finalize",
-            "status": "done",
-            "message": "Analysis complete!",
-            "detail": f"{result['suggestion_count']} suggestions ready for your review",
-        })
+        yield _sse_event(
+            "progress",
+            {
+                "phase": "finalize",
+                "status": "done",
+                "message": "Analysis complete!",
+                "detail": f"{result['suggestion_count']} suggestions ready for your review",
+            },
+        )
 
         # Final event
-        yield _sse_event("complete", {
-            "suggestion_count": result["suggestion_count"],
-            "graph_nodes": result["graph_stats"]["nodes"],
-            "graph_relationships": result["graph_stats"]["relationships"],
-            "analysis_id": result["analysis_id"],
-        })
+        yield _sse_event(
+            "complete",
+            {
+                "suggestion_count": result["suggestion_count"],
+                "graph_nodes": result["graph_stats"]["nodes"],
+                "graph_relationships": result["graph_stats"]["relationships"],
+                "analysis_id": result["analysis_id"],
+            },
+        )
 
     except Exception as e:
         logger.error(f"Streaming analysis failed for {document_id}: {e}")
         await db.document.update(where={"id": document_id}, data={"status": "error"})
-        yield _sse_event("error", {
-            "message": f"Analysis failed: {str(e)}",
-        })
+        yield _sse_event(
+            "error",
+            {
+                "message": f"Analysis failed: {str(e)}",
+            },
+        )
 
 
 @app.get("/api/documents/{document_id}/analyze/stream")
