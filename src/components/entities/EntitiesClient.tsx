@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   Building2, 
   Search, 
@@ -25,15 +25,23 @@ export function EntitiesClient({ initialEntities: entities }: EntitiesClientProp
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredEntities = entities.filter(e => 
-    e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (e.industry && e.industry.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredEntities = useMemo(() =>
+    entities.filter(e =>
+      e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (e.industry && e.industry.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  , [entities, searchQuery]);
 
   const totalEntities = entities.length;
-  const healthyCount = entities.filter(e => e.status === "Healthy").length;
-  const warningCount = entities.filter(e => e.status === "Warning").length;
-  const criticalCount = entities.filter(e => e.status === "Critical").length;
+  const { healthyCount, warningCount, criticalCount } = useMemo(() => {
+    let h = 0, w = 0, c = 0;
+    for (const e of entities) {
+      if (e.status === "Healthy") h++;
+      else if (e.status === "Warning") w++;
+      else if (e.status === "Critical") c++;
+    }
+    return { healthyCount: h, warningCount: w, criticalCount: c };
+  }, [entities]);
 
   const stats = [
     { label: "Total Entities", value: totalEntities.toString(), icon: Building2, color: "text-slate-600" },

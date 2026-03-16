@@ -22,10 +22,11 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function DueDiligenceChecklist({ params }: { params: { id: string } }) {
+export default async function DueDiligenceChecklist({ params }: { params: Promise<{ id: string }> }) {
   // Scaffolding: Fetch real matter data
   const matters = await getMatters();
-  const matter = matters.find(m => m.id === params.id);
+  const { id } = await params;
+  const matter = matters.find(m => m.id === id);
 
   if (!matter) return notFound();
 
@@ -46,7 +47,7 @@ export default async function DueDiligenceChecklist({ params }: { params: { id: 
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
       {/* breadcrumb */}
       <Link 
-        href={`/matters/${params.id}`} 
+        href={`/matters/${id}`} 
         className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-4 group w-fit"
       >
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />

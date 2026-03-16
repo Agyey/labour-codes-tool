@@ -11,35 +11,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No PDF file provided" }, { status: 400 });
     }
 
-    // Forward the file directly to the Python Backend Engine
+    const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
+
+    // 1. Upload the file to the Backend Engine
     const backendFormData = new FormData();
     backendFormData.append("file", file);
 
-    const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
-    const backendUrl = `${BACKEND_URL}/api/documents/upload?framework_id=${frameworkId}`;
-    console.log("Forwarding to Python Backend:", backendUrl);
+    const uploadUrl = `${BACKEND_URL}/api/documents/upload?framework_id=${frameworkId}`;
+    console.log("Forwarding to Python Backend for Upload:", uploadUrl);
     
-    // We increase timeout or await it here since it's synchronous
-    const response = await fetch(backendUrl, {
+    const uploadRes = await fetch(uploadUrl, {
       method: "POST",
       body: backendFormData,
       // @ts-ignore
       duplex: "half"
     });
 
-    const json = await response.json();
-
-    if (!response.ok) {
-      console.error("Backend Error:", json);
-      return NextResponse.json({ error: json.detail || "Backend failed" }, { status: response.status });
+    const uploadJson = await uploadRes.json();
+    if (!uploadRes.ok) {
+      return NextResponse.json({ error: uploadJson.detail || "Backend upload failed" }, { status: uploadRes.status });
     }
 
-    // Since the python backend directly auto-populates the knowledge base
-    // and compliance tracker, we just return the success message.
+    const documentId = uploadJson.id;
+
+    // 2. Trigger Document Analysis
+    console.log(`Triggering analysis for document ${documentId}...`);
+    const analyzeUrl = `${BACKEND_URL}/api/documents/${documentId}/analyze`;
+    const analyzeRes = await fetch(analyzeUrl, { method: "POST" });
+    const analyzeJson = await analyzeRes.json();
+
+    if (!analyzeRes.ok) {
+        return NextResponse.json({ error: analyzeJson.detail || "Analysis failed" }, { status: analyzeRes.status });
+    }
+
+    // Return immediately to allow UI to poll
     return NextResponse.json({ 
       success: true, 
-      message: json.message,
-      data: json.data 
+      message: "Analysis started in background!",
+      documentId: documentId,
+      status: "analyzing"
     });
 
   } catch (error: any) {
@@ -49,3 +59,24 @@ export async function POST(req: NextRequest) {
     }, { status: 500 });
   }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "No document ID provided" }, { status: 400 });
+
+    const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
+    const docUrl = `${BACKEND_URL}/api/documents/${id}`;
+    const docRes = await fetch(docUrl);
+    const docJson = await docRes.json();
+
+    if (!docRes.ok) {
+        return NextResponse.json({ error: "Failed to fetch document status" }, { status: docRes.status });
+    }
+
+    return NextResponse.json(docJson);
+  } catch (error: any) {
+    return NextResponse.json({ error: "Polling Error: " + error.message }, { status: 500 });
+  }
+}
+

@@ -34,11 +34,11 @@ export function HierarchyConnectors({ form, update, labelCls, sectionCls }: Hier
               value={form.frameworkId || ""}
               onChange={(e) => {
                 const fid = e.target.value;
-                update("frameworkId", fid || null);
+                update("frameworkId", fid || undefined);
                 // Clear legislation if it doesn't belong to the new framework
                 const leg = legislations.find(l => l.id === form.legislationId);
                 if (leg && leg.frameworkId !== fid) {
-                  update("legislationId", null);
+                  update("legislationId", undefined);
                 }
               }}
               className="w-full appearance-none p-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 transition-all cursor-pointer pr-10"

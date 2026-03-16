@@ -1,0 +1,106 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # ───────────────────── Frontend Checks ─────────────────────
+  frontend:
+    name: Frontend (Lint → Type Check → Build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Prisma Generate
+        run: npx prisma generate
+
+      - name: ESLint
+        run: npx eslint . --max-warnings=0
+
+      - name: TypeScript Type Check
+        run: npx tsc --noEmit
+
+      - name: Next.js Build
+        env:
+          DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci_db"
+          NEXTAUTH_SECRET: "ci-test-secret-minimum-32-characters-long"
+          NEXTAUTH_URL: "http://localhost:3000"
+        run: npm run build
+
+  # ───────────────────── Backend Checks ─────────────────────
+  backend:
+    name: Backend (Lint → Format → Security)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend_engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ruff Lint
+        run: ruff check .
+
+      - name: Ruff Format Check
+        run: ruff format --check .
+
+  # ───────────────────── Security Audit ─────────────────────
+  security:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: NPM Audit (Critical / High)
+        run: npm audit --audit-level=high || true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: pip-audit
+        run: |
+          pip install pip-audit
+          pip install -r backend_engine/requirements.txt
+          pip-audit || true
+
+  # ───────────────────── Secret Scan ─────────────────────
+  secrets-scan:
+    name: Hardcoded Secrets Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified

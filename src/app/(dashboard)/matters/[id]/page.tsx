@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function MatterDealRoomPage({ params }: { params: { id: string } }) {
-  const matter = await getMatterDetails(params.id);
+export default async function MatterDealRoomPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const matter = await getMatterDetails(id);
 
   if (!matter) {
     return notFound();

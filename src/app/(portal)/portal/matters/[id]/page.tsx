@@ -16,8 +16,11 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function ClientMatterView({ params }: { params: { id: string } }) {
+import { use } from "react";
+
+export default function ClientMatterView({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { id } = use(params);
   const [activeTab, setActiveTab] = useState<"overview" | "documents">("overview");
 
   const matter = {

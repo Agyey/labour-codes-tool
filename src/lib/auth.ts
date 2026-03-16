@@ -4,11 +4,22 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
+
+const isProd = process.env.NODE_ENV === "production";
+
+// In production, Google OAuth secrets MUST be present — no fallbacks.
+const googleClientId = process.env.GOOGLE_CLIENT_ID || (isProd ? "" : "mock-client-id");
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || (isProd ? "" : "mock-client-secret");
+
+if (isProd && (!googleClientId || !googleClientSecret)) {
+  throw new Error("[FATAL] GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in production.");
+}
 
 const providersArray: any[] = [
   GoogleProvider({
-    clientId: process.env.GOOGLE_CLIENT_ID || "mock-client-id",
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "mock-client-secret",
+    clientId: googleClientId,
+    clientSecret: googleClientSecret,
   }),
 ];
 
@@ -44,13 +55,13 @@ export const authOptions: NextAuthOptions = {
   providers: providersArray,
   callbacks: {
     async signIn({ user }) {
-      console.log("[AUTH] SignIn attempt:", user.email);
+      logger.info("Auth sign-in attempt", { email: user.email });
       // Auto-assign admin roles to our specified emails
       if (
         user.email === "shreeyash1998@gmail.com" ||
         user.email === "agyey1997@gmail.com"
       ) {
-        console.log("[AUTH] Auto-assigning admin role to:", user.email);
+        logger.info("Auto-assigning admin role", { email: user.email });
         // Ensure role is admin in db
         await prisma.user
           .update({
@@ -58,21 +69,13 @@ export const authOptions: NextAuthOptions = {
             data: { role: "admin" },
           })
           .catch((e) => {
-            console.log(
-              "[AUTH] Update for admin role failed (might be new user):",
-              e.message,
-            );
+            logger.warn("Admin role update failed (might be new user)", { error: e.message });
           });
       }
       return true;
     },
     async jwt({ token, user, trigger, session }) {
-      console.log(
-        "[AUTH] JWT Callback. Trigger:",
-        trigger,
-        "User present:",
-        !!user,
-      );
+      logger.debug("JWT callback", { trigger, hasUser: !!user });
       if (user) {
         token.id = user.id;
         token.role = (user as any).role || "viewer";
@@ -84,21 +87,16 @@ export const authOptions: NextAuthOptions = {
         });
         token.orgId = orgUser?.org_id;
 
-        console.log(
-          "[AUTH] Initial JWT role assigned:",
-          token.role,
-          "Org:",
-          token.orgId,
-        );
+        logger.debug("JWT role assigned", { role: token.role, orgId: token.orgId });
       }
       if (trigger === "update" && session?.role) {
         token.role = session.role;
-        console.log("[AUTH] JWT role updated via trigger:", token.role);
+        logger.debug("JWT role updated via trigger", { role: token.role });
       }
       return token;
     },
     async session({ session, token }) {
-      console.log("[AUTH] Session Callback. Token role:", token?.role);
+      logger.debug("Session callback", { role: token?.role });
       if (session?.user && token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;

@@ -62,6 +62,7 @@ export default function Home() {
   useEffect(() => {
     setActiveProduct("MAPPING");
     setActiveView("dashboard");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
