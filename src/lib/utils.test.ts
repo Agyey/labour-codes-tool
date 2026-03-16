@@ -65,12 +65,12 @@ describe("utils", () => {
   it("calculateStats aggregates correctly", () => {
     const p1 = createBlankProvision("CODE");
     p1.id = "p1";
-    p1.compItems = [{ id: "1" } as any, { id: "2" } as any];
+    p1.compItems = [{ id: "1" } as never, { id: "2" } as never];
     p1.verified = true;
     
     const p2 = createBlankProvision("CODE");
     p2.id = "p2";
-    p2.compItems = [{ id: "3" } as any];
+    p2.compItems = [{ id: "3" } as never];
     p2.pinned = true;
 
     const statuses = {

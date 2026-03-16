@@ -8,6 +8,7 @@ Strict typing for:
 
 from __future__ import annotations
 
+import typing
 from datetime import datetime
 from enum import StrEnum
 
@@ -160,8 +161,8 @@ class AnalysisResponse(BaseModel):
     document_id: str
     summary: str | None
     document_type: str | None
-    structured_data: dict | None
-    graph_stats: dict | None
+    structured_data: dict[str, typing.Any] | None
+    graph_stats: dict[str, typing.Any] | None
     created_at: datetime
 
 
@@ -170,7 +171,7 @@ class SuggestionResponse(BaseModel):
     document_id: str
     type: SuggestionType
     target_module: str
-    suggested_data: dict
+    suggested_data: dict[str, typing.Any]
     confidence: float
     status: SuggestionStatus
     created_at: datetime
@@ -180,7 +181,7 @@ class DocumentDetailResponse(BaseModel):
     document: DocumentResponse
     analysis: AnalysisResponse | None = None
     suggestions: list[SuggestionResponse] = Field(default_factory=list)
-    graph_stats: dict | None = None
+    graph_stats: dict[str, typing.Any] | None = None
 
 
 # ──────────────────────────────────────────────

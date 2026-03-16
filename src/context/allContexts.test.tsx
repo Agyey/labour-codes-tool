@@ -5,7 +5,6 @@ import { UIProvider } from "./UIContext";
 import { AppProvider } from "./AppContext";
 import { FilterProvider } from "./FilterContext";
 import { LegalOSProvider } from "./LegalOSContext";
-import { useSession } from "next-auth/react";
 
 vi.mock("next-auth/react", () => ({
   useSession: vi.fn().mockReturnValue({ data: { user: { id: "test", role: "admin" } } }),
@@ -32,7 +31,7 @@ vi.mock("@/app/actions/users", () => ({
 }));
 
 vi.mock("@/lib/utils", async (importOriginal) => {
-  const actual = await importOriginal<any>();
+  const actual = await importOriginal<typeof import("@/lib/utils")>();
   return { ...actual, loadStorage: vi.fn(), saveStorage: vi.fn() };
 });
 

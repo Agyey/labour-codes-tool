@@ -7,18 +7,19 @@ Navigation = LLM-guided tree traversal, NOT vector similarity.
 """
 
 import hashlib
+import typing
 from datetime import datetime, timezone
 
 from loguru import logger
-from neo4j import AsyncGraphDatabase
+from neo4j import AsyncGraphDatabase, AsyncDriver
 
 from src.settings import settings
 
 
-_driver = None
+_driver: AsyncDriver | None = None
 
 
-async def get_driver():
+async def get_driver() -> AsyncDriver:
     """Lazy singleton for the Neo4j async driver."""
     global _driver
     if _driver is None:
@@ -32,7 +33,7 @@ async def get_driver():
     return _driver
 
 
-async def close_driver():
+async def close_driver() -> None:
     """Gracefully close the Neo4j driver."""
     global _driver
     if _driver is not None:
@@ -46,7 +47,7 @@ def _content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-async def create_document_tree(document_id: str, extracted_data: dict) -> dict:
+async def create_document_tree(document_id: str, extracted_data: dict[str, typing.Any]) -> dict[str, int]:
     """Build the full vectorless RAG tree in Neo4j from extracted data.
 
     Returns a summary dict with node/relationship counts.
@@ -273,7 +274,7 @@ async def create_document_tree(document_id: str, extracted_data: dict) -> dict:
     return {"nodes": node_count, "relationships": rel_count}
 
 
-async def get_document_tree(document_id: str) -> list[dict]:
+async def get_document_tree(document_id: str) -> list[dict[str, typing.Any]]:
     """Retrieve the full tree for a document (for UI rendering)."""
     driver = await get_driver()
     async with driver.session() as session:
@@ -293,7 +294,7 @@ async def get_document_tree(document_id: str) -> list[dict]:
 
 async def traverse_for_query(
     document_id: str, target_chapter: str | None = None
-) -> list[dict]:
+) -> list[dict[str, typing.Any]]:
     """Vectorless RAG traversal: drill down to specific branch."""
     driver = await get_driver()
     async with driver.session() as session:

@@ -14,8 +14,10 @@ Endpoints:
 
 import json
 import os
+import prisma
 import shutil
 import tempfile
+import typing
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -35,7 +37,7 @@ from src.settings import settings
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None, None]:
     """Startup / shutdown lifecycle."""
     logger.add("backend-engine.log", serialize=True, rotation="10 MB")
     await connect_db()
@@ -67,7 +69,7 @@ app.add_middleware(
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     return {"status": "ok", "service": "document-hub"}
 
 
@@ -77,7 +79,7 @@ async def health_check():
 
 
 @app.post("/api/documents/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(file: UploadFile = File(...)) -> dict[str, typing.Any]:
     """Upload a PDF. Stores text, returns document ID for subsequent analysis."""
     if not file.filename:
         raise HTTPException(400, "No filename provided.")
@@ -161,7 +163,7 @@ async def upload_document(file: UploadFile = File(...)):
 
 
 @app.get("/api/documents")
-async def list_documents():
+async def list_documents() -> list[dict[str, typing.Any]]:
     """List all uploaded documents."""
     docs = await db.document.find_many(order={"uploaded_at": "desc"})
     return [
@@ -180,7 +182,7 @@ async def list_documents():
 
 
 @app.get("/api/documents/{document_id}")
-async def get_document(document_id: str):
+async def get_document(document_id: str) -> dict[str, typing.Any]:
     """Get document detail with analysis and suggestions."""
     doc = await db.document.find_unique(where={"id": document_id})
     if not doc:
@@ -242,7 +244,7 @@ async def get_document(document_id: str):
 # ──────────────────────────────────────────────
 
 
-async def run_analysis_task(document_id: str, raw_text: str):
+async def run_analysis_task(document_id: str, raw_text: str) -> None:
     """Background task to run the Gemini analysis and graph building."""
     try:
         # 1. AI extraction
@@ -265,7 +267,7 @@ async def run_analysis_task(document_id: str, raw_text: str):
 
 
 @app.post("/api/documents/{document_id}/analyze")
-async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks):
+async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks) -> dict[str, str]:
     """Trigger Gemini analysis on an uploaded document (Background)."""
     doc = await db.document.find_unique(where={"id": document_id})
     if not doc:
@@ -292,7 +294,7 @@ async def trigger_analysis(document_id: str, background_tasks: BackgroundTasks):
 
 
 @app.get("/api/documents/{document_id}/tree")
-async def get_tree(document_id: str, chapter: str | None = None):
+async def get_tree(document_id: str, chapter: str | None = None) -> dict[str, typing.Any]:
     """Get the vectorless RAG tree from Neo4j."""
     try:
         if chapter:
@@ -315,7 +317,7 @@ async def approve_suggestion(
     suggestion_id: str,
     framework_id: str = Query(default=""),
     provision_id: str = Query(default=""),
-):
+) -> dict[str, str]:
     """Approve a suggestion and materialize it into the target module."""
     suggestion = await db.documentsuggestion.find_unique(where={"id": suggestion_id})
     if not suggestion:
@@ -323,7 +325,10 @@ async def approve_suggestion(
     if suggestion.status != "pending":
         raise HTTPException(400, f"Suggestion already {suggestion.status}.")
 
-    data = suggestion.suggested_data
+    if suggestion.suggested_data is None:
+        raise HTTPException(400, "Suggestion data is empty.")
+
+    data = typing.cast(dict[str, typing.Any], suggestion.suggested_data)
     from datetime import datetime, timezone
 
     try:
@@ -335,10 +340,10 @@ async def approve_suggestion(
                     )
                 await db.legislation.create(
                     data={
-                        "name": data["name"],
-                        "short_name": data["short_name"],
-                        "year": data["year"],
-                        "type": data.get("type", "act"),
+                        "name": str(data.get("name", "")),
+                        "short_name": str(data.get("short_name", "")),
+                        "year": int(data.get("year", 0)),
+                        "type": str(data.get("type", "act")),
                         "framework_id": framework_id,
                     }
                 )
@@ -346,15 +351,15 @@ async def approve_suggestion(
             case "create_provision":
                 await db.provision.create(
                     data={
-                        "code": data.get("short_name", ""),
-                        "chapter": data["chapter"],
-                        "chapter_name": data["chapter_name"],
-                        "section": data["section"],
+                        "code": str(data.get("short_name", "")),
+                        "chapter": str(data.get("chapter", "")),
+                        "chapter_name": str(data.get("chapter_name", "")),
+                        "section": str(data.get("section", "")),
                         "sub_section": "1",
-                        "title": data["title"],
-                        "summary": data["summary"],
-                        "full_text": data["full_text"],
-                        "sub_sections": json.dumps(data.get("sub_sections", [])),
+                        "title": str(data.get("title", "")),
+                        "summary": str(data.get("summary", "")),
+                        "full_text": str(data.get("full_text", "")),
+                        "sub_sections": prisma.Json(data.get("sub_sections", [])),
                         "impact": "Pending Review",
                         "rule_authority": "Appropriate Government",
                         "status": "active",
@@ -370,7 +375,7 @@ async def approve_suggestion(
                 await db.complianceitem.create(
                     data={
                         "provision_id": provision_id,
-                        "task": f"{data['task']} ({data['due_logic']})",
+                        "task": f"{data.get('task')} ({data.get('due_logic')})",
                         "status": "Not Started",
                     }
                 )
@@ -418,7 +423,7 @@ async def approve_suggestion(
 
 
 @app.patch("/api/suggestions/{suggestion_id}/reject")
-async def reject_suggestion(suggestion_id: str, reason: str = Query(default="")):
+async def reject_suggestion(suggestion_id: str, reason: str = Query(default="")) -> dict[str, str]:
     """Reject a suggestion with optional reason."""
     suggestion = await db.documentsuggestion.find_unique(where={"id": suggestion_id})
     if not suggestion:
@@ -451,7 +456,7 @@ async def reject_suggestion(suggestion_id: str, reason: str = Query(default=""))
 
 
 @app.get("/api/audit/verify")
-async def verify_audit():
+async def verify_audit() -> dict[str, typing.Any]:
     """Verify the integrity of the audit chain."""
     result = await verify_chain_integrity()
     return result

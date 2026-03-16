@@ -12,7 +12,7 @@ vi.mock('./prisma', () => ({
 
 describe('audit', () => {
   it('logs activity to db', async () => {
-    vi.mocked(prisma.auditLog.create).mockResolvedValue({ id: '1' } as any);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({ id: '1' } as never);
     await logActivity({ action: 'test', entityType: 'user' });
     expect(prisma.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ action: 'test', entity_type: 'user', metadata: {} }),

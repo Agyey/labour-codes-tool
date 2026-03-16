@@ -55,3 +55,23 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 12. [ ] **Statelessness Audit**: Audit server actions for disk writes.
 13. [ ] **Type Hardening**: Refine recursive types for comments.
 14. [x] **Deployment Fix**: Fixed Docker build failing on Prisma Python client generation for Railway.
+15. [ ] **Codebase Health & Strict Typing**: Resolve 56 `mypy --strict` errors, type definitions for `dict`, `Json`, and functions.
+16. [ ] **Frontend Decomp**: Break down `provisions.ts` (653 lines), `CompareView.tsx` (349 lines), `DataContext.tsx` (334 lines), and `ScenarioWizard.tsx` (305 lines).
+17. [ ] **Lint Config**: Eliminate explicit `any` and unused variables causing ESLint warnings.
+
+## Refactor Roadmap (Target: Q1 2026)
+### 1. Critical Interventions (Strict Typing & Observability)
+- Fix backend `mypy --strict` errors:
+  - Resolve `Missing type parameters for generic type "dict"` in `src/models.py`.
+  - Add missing return type annotations (`-> None` or specific types) in `src/graph_service.py` and `src/main.py`.
+  - Handle `pydantic-settings` instantiation arguments to appease `mypy`.
+  - Strongly type `Json` parsing from Prisma schemas where `.get()` is erroneously called.
+- Fix ESLint typing failures: Replace `any` casts in tests and components (`DataContext`).
+
+### 2. High-Impact Refactors (Atomic Architecture)
+- **Frontend Decomposition**: Break down `src/app/actions/provisions.ts` (653 lines) into smaller, domain-specific server action files.
+- **Component Splits**: Break down `src/components/views/CompareView.tsx` and decouple `src/context/DataContext.tsx`.
+
+### 3. Standardization Sweep
+- Consolidate useMemo/useCallback inside React components exceeding 200 lines to guarantee performance.
+- Audit remaining inline Python tasks for explicit types.

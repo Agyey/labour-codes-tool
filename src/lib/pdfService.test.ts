@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { generatePDF } from './pdfService';
 import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 
 vi.mock('html2canvas', () => ({
   default: vi.fn().mockResolvedValue({
