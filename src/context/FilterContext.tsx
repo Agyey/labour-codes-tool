@@ -56,36 +56,43 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const filteredProvisions = useMemo(() => {
-    let result = provisions.filter((x) => x.code === activeCode);
+    const q = (searchQuery || "").toLowerCase();
 
-    if (filters.impact !== "All") result = result.filter((x) => x.impact === filters.impact);
-    if (filters.changeTag !== "All") result = result.filter((x) => (x.changeTags || []).includes(filters.changeTag));
-    if (filters.workflowTag !== "All") result = result.filter((x) => (x.workflowTags || []).includes(filters.workflowTag));
-    if (filters.ruleAuthority !== "All") result = result.filter((x) => x.ruleAuth === filters.ruleAuthority);
-    if (filters.chapter !== "All") result = result.filter((x) => x.ch === filters.chapter);
-    if (filters.state !== "All") result = result.filter((x) => (x.stateNotes || {})[filters.state] || (x.stateRuleText || {})[filters.state]);
+    return provisions.filter((x) => {
+      // 1. Check code matching
+      if (x.code !== activeCode) return false;
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (x) =>
-          x.title.toLowerCase().includes(q) ||
-          x.sec.toLowerCase().includes(q) ||
-          (x.sub || "").toLowerCase().includes(q) ||
-          x.summary.toLowerCase().includes(q) ||
-          (x.oldMappings || []).some(
+      // 2. Apply explicit filters
+      if (filters.impact !== "All" && x.impact !== filters.impact) return false;
+      if (filters.changeTag !== "All" && !(x.changeTags || []).includes(filters.changeTag)) return false;
+      if (filters.workflowTag !== "All" && !(x.workflowTags || []).includes(filters.workflowTag)) return false;
+      if (filters.ruleAuthority !== "All" && x.ruleAuth !== filters.ruleAuthority) return false;
+      if (filters.chapter !== "All" && x.ch !== filters.chapter) return false;
+      if (filters.state !== "All" && !((x.stateNotes || {})[filters.state] || (x.stateRuleText || {})[filters.state])) return false;
+
+      // 3. Apply search query
+      if (q) {
+        if (
+          !x.title.toLowerCase().includes(q) &&
+          !x.sec.toLowerCase().includes(q) &&
+          !(x.sub || "").toLowerCase().includes(q) &&
+          !x.summary.toLowerCase().includes(q) &&
+          !(x.oldMappings || []).some(
             (m) =>
               m.act.toLowerCase().includes(q) ||
               m.summary.toLowerCase().includes(q) ||
               m.change.toLowerCase().includes(q)
-          ) ||
-          (x.compItems || []).some((c) =>
+          ) &&
+          !(x.compItems || []).some((c) =>
             (c.task || "").toLowerCase().includes(q)
           )
-      );
-    }
+        ) {
+          return false;
+        }
+      }
 
-    return result;
+      return true;
+    });
   }, [provisions, activeCode, filters, searchQuery]);
 
   const value = useMemo(() => ({
