@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const formData = await req.formData();
     const action = req.nextUrl.searchParams.get("action") || "upload";
@@ -27,6 +32,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const id = req.nextUrl.searchParams.get("id");
     const action = req.nextUrl.searchParams.get("action");
@@ -59,6 +67,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const suggestionId = req.nextUrl.searchParams.get("suggestionId");
     const action = req.nextUrl.searchParams.get("action"); // approve | reject | cancel
@@ -92,6 +103,9 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const id = req.nextUrl.searchParams.get("id");
     if (!id) {
