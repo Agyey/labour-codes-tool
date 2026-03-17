@@ -49,6 +49,7 @@ export function AppNavigation() {
               <button
                 key={v.id}
                 onClick={() => setActiveView(v.id as typeof activeView)}
+                aria-label={`Switch to ${v.label} view`}
                 className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                   activeView === v.id
                     ? "bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-md shadow-slate-900/10 dark:shadow-none"
