@@ -60,7 +60,7 @@ export function CreateCaseModal({ isOpen, onClose, matters, onSuccess }: CreateC
             <h2 className="text-xl font-black text-slate-900 dark:text-white">Track New Case</h2>
             <p className="text-xs text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Litigation Nexus • Intake</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl transition-colors">
+          <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-xl transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
