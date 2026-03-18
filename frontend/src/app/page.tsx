@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { 
   Scale, 
   BookOpen, 
@@ -9,10 +11,33 @@ import {
   Calendar,
   Search,
   ChevronRight,
-  Gavel
+  Gavel,
+  Loader2
 } from 'lucide-react';
+import { api, Document } from '@/lib/api';
 
 export default function Home() {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [backendStatus, setBackendStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.documents.list();
+        setDocuments(response.data);
+        setBackendStatus('online');
+      } catch (error) {
+        console.error('Failed to fetch documents:', error);
+        setBackendStatus('offline');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0f1115] text-white font-sans selection:bg-blue-500/30">
       {/* Background Gradient Orbs */}
@@ -46,8 +71,13 @@ export default function Home() {
             <div className="p-4 bg-white/5 rounded-2xl border border-white/10 group hover:bg-white/10 transition-colors cursor-pointer">
               <p className="text-sm font-medium text-blue-400 mb-1">System Status</p>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-xs text-gray-400 font-mono">Backend: FastAPI 0.135.1</span>
+                <div className={`w-2 h-2 rounded-full animate-pulse ${
+                  backendStatus === 'online' ? 'bg-green-500' : 
+                  backendStatus === 'offline' ? 'bg-red-500' : 'bg-yellow-500'
+                }`} />
+                <span className="text-xs text-gray-400 font-mono">
+                  Backend: {backendStatus === 'online' ? 'Connected' : backendStatus === 'offline' ? 'Disconnected' : 'Checking...'}
+                </span>
               </div>
             </div>
           </div>
@@ -71,45 +101,65 @@ export default function Home() {
               <input 
                 type="text" 
                 placeholder="Search Acts, Sections, or Definitions..." 
-                className="bg-white/5 border border-white/10 rounded-full py-3 pl-12 pr-6 w-full md:w-[350px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all backdrop-blur-md"
+                className="bg-white/5 border border-white/10 rounded-full py-3 pl-12 pr-6 w-full md:w-[350px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all backdrop-blur-md text-sm"
               />
             </div>
           </header>
 
           {/* Quick Stats / Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <StatCard label="Active Documents" value="2,482" trend="+12" icon={<FileText className="text-blue-400" />} />
-            <StatCard label="Structural Units" value="1.2M" trend="+4.5%" icon={<GitBranch className="text-indigo-400" />} />
-            <StatCard label="Cross-References" value="84,291" trend="+842" icon={<ChevronRight className="text-purple-400" />} />
+            <StatCard label="Active Documents" value={documents.length.toString()} trend="+0" icon={<FileText className="text-blue-400" />} />
+            <StatCard label="Structural Units" value="0" trend="+0" icon={<GitBranch className="text-indigo-400" />} />
+            <StatCard label="Cross-References" value="0" trend="+0" icon={<ChevronRight className="text-purple-400" />} />
           </div>
 
           {/* Latest Activity / Content */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <section className="bg-white/5 rounded-3xl border border-white/10 p-8 backdrop-blur-md relative overflow-hidden group hover:border-white/20 transition-all">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+            <section className="bg-white/5 rounded-3xl border border-white/10 p-8 backdrop-blur-md relative overflow-hidden group hover:border-white/20 transition-all min-h-[400px]">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform">
                 <BookOpen size={120} />
               </div>
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-blue-500 rounded-full" />
-                Recently Processed Acts
+                Knowledge Library
               </h2>
+              
               <div className="space-y-4 relative z-10">
-                <ActItem title="Companies Act, 2013" tag="Active" date="Updated 2h ago" />
-                <ActItem title="Income Tax Act, 1961" tag="Active" date="Updated 5h ago" />
-                <ActItem title="Labour Code (Social Security)" tag="Draft" date="Processing..." />
-                <ActItem title="Digital Personal Data Protection Act" tag="Published" date="New release" />
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-3">
+                    <Loader2 className="animate-spin text-blue-500" size={32} />
+                    <p className="text-sm font-medium">Fetching documents...</p>
+                  </div>
+                ) : documents.length > 0 ? (
+                  documents.map(doc => (
+                    <ActItem 
+                      key={doc.id} 
+                      title={doc.title} 
+                      tag={doc.status} 
+                      date={`Updated ${new Date(doc.created_at).toLocaleDateString()}`} 
+                    />
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-gray-500 border border-dashed border-white/10 rounded-2xl bg-black/20">
+                    <BookOpen size={48} className="mb-4 opacity-20" />
+                    <p className="text-sm font-medium">No documents found in the library</p>
+                    <p className="text-xs text-gray-600 mt-1">Start by adding a new legal instrument via the API</p>
+                  </div>
+                )}
               </div>
             </section>
 
             <section className="bg-white/5 rounded-3xl border border-white/10 p-8 backdrop-blur-md hover:border-white/20 transition-all">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-green-500 rounded-full" />
-                Upcoming Compliances
+                Compliance Highlights
               </h2>
               <div className="space-y-4">
-                <ComplianceItem title="Annual Return Filing (MGT-7)" deadline="Due in 12 days" act="Companies Act" severity="high" />
-                <ComplianceItem title="Quarterly Tax Deposit" deadline="Due in 3 days" act="Income Tax" severity="urgent" />
-                <ComplianceItem title="Board Meeting Notification" deadline="Due in 5 days" act="Internal Policy" severity="medium" />
+                <div className="flex flex-col items-center justify-center py-20 text-gray-500 border border-dashed border-white/10 rounded-2xl bg-black/20">
+                  <ShieldCheck size={48} className="mb-4 opacity-20" />
+                  <p className="text-sm font-medium">No active obligations</p>
+                  <p className="text-xs text-gray-600 mt-1">Obligations will appear here as documents are processed</p>
+                </div>
               </div>
             </section>
           </div>
