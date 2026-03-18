@@ -5,6 +5,7 @@ import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 export function TimelineView() {
   const { activeCode } = useUI();
@@ -15,19 +16,24 @@ export function TimelineView() {
     c: "#6366f1"
   };
 
-  const events = provisions
-    .filter((x) => x.code === activeCode && (x.timelineDates || []).length > 0)
-    .flatMap((p) =>
-      (p.timelineDates || []).map((d) => ({
-        date: d.date,
-        label: d.label,
-        sec: p.sec,
-        sub: p.sub,
-        title: p.title,
-        id: p.id,
-      }))
-    )
-    .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  // ⚡ Bolt: Memoize expensive array operations (filter, map, sort)
+  // Ensures calculation only re-runs when provisions or activeCode change,
+  // preventing unnecessary processing on every re-render.
+  const events = useMemo(() => {
+    return provisions
+      .filter((x) => x.code === activeCode && (x.timelineDates || []).length > 0)
+      .flatMap((p) =>
+        (p.timelineDates || []).map((d) => ({
+          date: d.date,
+          label: d.label,
+          sec: p.sec,
+          sub: p.sub,
+          title: p.title,
+          id: p.id,
+        }))
+      )
+      .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  }, [provisions, activeCode]);
 
   return (
     <div className="space-y-4">
