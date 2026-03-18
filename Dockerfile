@@ -16,11 +16,11 @@ RUN pip install --no-cache-dir -r backend/requirements.txt
 COPY backend ./backend
 
 # --- Stage 3: Final Runner ---
-FROM node:20-alpine AS runner
+FROM nikolaik/python-nodejs:python3.10-nodejs20-alpine AS runner
 WORKDIR /app
 
-# Install Python and dependencies in the runner
-RUN apk add --no-cache python3 py3-pip supervisor
+# Install supervisor and PostgreSQL binary dependencies
+RUN apk add --no-cache supervisor libpq
 
 # Copy Frontend Standalone - This folder includes its own node_modules
 # In monorepo, it mirrors the path: /app/frontend/.next/standalone/frontend/server.js
@@ -28,9 +28,9 @@ COPY --from=frontend-builder /app/frontend/.next/standalone ./
 COPY --from=frontend-builder /app/frontend/.next/static ./frontend/.next/static
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
 
-# Copy Backend
+# Copy Backend and Install Dependencies
 COPY --from=backend-builder /app/backend ./backend
-RUN pip install --no-cache-dir --break-system-packages fastapi uvicorn sqlalchemy psycopg2-binary pydantic alembic
+RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy psycopg2-binary pydantic alembic
 
 # Supervisor Configuration to run both
 COPY supervisord.conf /etc/supervisord.conf
