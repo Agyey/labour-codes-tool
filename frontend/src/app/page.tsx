@@ -217,20 +217,3 @@ function ActItem({ title, tag, date }: { title: string, tag: string, date: strin
   );
 }
 
-function ComplianceItem({ title, deadline, act, severity }: { title: string, deadline: string, act: string, severity: 'urgent' | 'high' | 'medium' }) {
-  const sevColor = 
-    severity === 'urgent' ? 'bg-red-500 shadow-red-500/50' : 
-    severity === 'high' ? 'bg-orange-500 shadow-orange-500/50' : 
-    'bg-blue-500 shadow-blue-500/50';
-
-  return (
-    <div className="flex items-center gap-4 p-4 bg-black/40 rounded-2xl border border-white/5 hover:bg-black/60 transition-colors cursor-pointer group">
-      <div className={`w-3 h-3 rounded-full ${sevColor} shadow-md`} />
-      <div className="flex-1">
-        <h4 className="font-bold text-gray-200 group-hover:text-white transition-colors">{title}</h4>
-        <p className="text-xs text-gray-400 mt-0.5">{act} • <span className="text-gray-500">{deadline}</span></p>
-      </div>
-      <ChevronRight size={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
-    </div>
-  );
-}
