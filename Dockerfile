@@ -19,8 +19,8 @@ COPY backend ./backend
 FROM nikolaik/python-nodejs:python3.10-nodejs20-alpine AS runner
 WORKDIR /app
 
-# Install supervisor and PostgreSQL binary dependencies
-RUN apk add --no-cache supervisor libpq
+# Install PostgreSQL binary dependencies and other tools
+RUN apk add --no-cache libpq
 
 # Copy Frontend Standalone - This folder includes its own node_modules
 # In monorepo, it mirrors the path: /app/frontend/.next/standalone/frontend/server.js
@@ -32,17 +32,15 @@ COPY --from=frontend-builder /app/frontend/public ./frontend/public
 COPY --from=backend-builder /app/backend ./backend
 RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy psycopg2-binary pydantic alembic
 
-# Supervisor Configuration to run both
-COPY supervisord.conf /etc/supervisord.conf
+# Startup Script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
-ENV BACKEND_PORT=8000
 ENV HOSTNAME="0.0.0.0"
 
 EXPOSE 3000
 
-# Start both services via Supervisor
-# We run from /app, and next standalone is copied here.
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Start both services via the script
+CMD ["/app/start.sh"]
