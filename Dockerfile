@@ -22,7 +22,7 @@ WORKDIR /app
 # Install Python and dependencies in the runner
 RUN apk add --no-cache python3 py3-pip supervisor
 
-# Copy Frontend Standalone
+# Copy Frontend Standalone and Static Files
 COPY --from=frontend-builder /app/frontend/.next/standalone ./frontend
 COPY --from=frontend-builder /app/frontend/.next/static ./frontend/.next/static
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
