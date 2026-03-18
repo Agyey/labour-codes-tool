@@ -27,9 +27,9 @@ COPY --from=frontend-builder /app/frontend/.next/standalone ./frontend
 COPY --from=frontend-builder /app/frontend/.next/static ./frontend/.next/static
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
 
-# Copy Backend
+# Copy Backend and Install Dependencies
 COPY --from=backend-builder /app/backend ./backend
-RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy psycopg2-binary pydantic alembic
+RUN pip install --no-cache-dir --break-system-packages fastapi uvicorn sqlalchemy psycopg2-binary pydantic alembic
 
 # Supervisor Configuration to run both
 COPY supervisord.conf /etc/supervisord.conf
