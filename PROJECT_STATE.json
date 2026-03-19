@@ -1,0 +1,22 @@
+{
+  "project": "LexNexus",
+  "root": {
+    "path": "/Users/agyeyarya/Development/Labor Law Code Review",
+    "summary": "Legal knowledge system for labor law review.",
+    "children": [
+      {
+        "name": "backend",
+        "path": "backend",
+        "summary": "FastAPI backend with Pydantic V2 and structured logging.",
+        "status": "healthy"
+      },
+      {
+        "name": "frontend",
+        "path": "frontend",
+        "summary": "Next.js frontend with memoized dashboard components.",
+        "status": "healthy"
+      }
+    ]
+  },
+  "last_sync": "2026-03-19T07:46:00Z"
+}

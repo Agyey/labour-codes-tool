@@ -32,18 +32,18 @@ def read_document_tree(document_id: UUID, db: Session = Depends(database.get_db)
     # Fetch all units for the document
     units = db.query(models.StructuralUnit).filter(models.StructuralUnit.document_id == document_id).order_by(models.StructuralUnit.sort_order).all()
     
-    # Build a dictionary for easy access
+    # Build a dictionary for easy access using dict comprehension
     unit_dict = {str(u.id): schemas.StructuralUnitTree.from_orm(u) for u in units}
     tree = []
     
-    # Organize into tree
-    for unit_id_str, unit_obj in unit_dict.items():
+    # Organize into tree using a single pass
+    for unit_obj in unit_dict.values():
         if unit_obj.parent_id:
             parent_id_str = str(unit_obj.parent_id)
             if parent_id_str in unit_dict:
                 unit_dict[parent_id_str].children.append(unit_obj)
             else:
-                # Parent might be in another document or context, but usually it's in the same
+                # Handle cases where parent might be outside current filter/document
                 tree.append(unit_obj)
         else:
             tree.append(unit_obj)

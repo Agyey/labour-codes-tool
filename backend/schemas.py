@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, SecretStr
 from uuid import UUID
 from datetime import date, datetime
 from typing import List, Optional, Any, Dict
@@ -85,6 +85,8 @@ class ReferenceType(str, Enum):
 # --- Base Schemas ---
 
 class DocumentBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     title: str
     short_title: Optional[str] = None
     popular_name: Optional[str] = None
@@ -109,7 +111,7 @@ class DocumentBase(BaseModel):
     preamble_text: Optional[str] = None
     enacting_formula: Optional[str] = None
     long_title: Optional[str] = None
-    editor_notes: Optional[str] = None
+    editor_notes: Optional[SecretStr] = None
     data_source: Optional[str] = None
 
 class DocumentCreate(DocumentBase):
@@ -119,10 +121,10 @@ class Document(DocumentBase):
     id: UUID
     created_at: datetime
     updated_at: datetime
-    class Config:
-        from_attributes = True
 
 class StructuralUnitBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     document_id: UUID
     parent_id: Optional[UUID] = None
     unit_type: Optional[UnitType] = None
@@ -146,10 +148,10 @@ class StructuralUnitCreate(StructuralUnitBase):
 
 class StructuralUnit(StructuralUnitBase):
     id: UUID
-    class Config:
-        from_attributes = True
 
 class DefinitionBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     structural_unit_id: Optional[UUID] = None
     document_id: Optional[UUID] = None
     term: str
@@ -166,10 +168,10 @@ class DefinitionCreate(DefinitionBase):
 
 class Definition(DefinitionBase):
     id: UUID
-    class Config:
-        from_attributes = True
 
 class CrossReferenceBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     source_unit_id: UUID
     target_unit_id: Optional[UUID] = None
     target_document_id: Optional[UUID] = None
@@ -184,10 +186,10 @@ class CrossReferenceCreate(CrossReferenceBase):
 
 class CrossReference(CrossReferenceBase):
     id: UUID
-    class Config:
-        from_attributes = True
 
 class AmendmentHistoryBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     structural_unit_id: Optional[UUID] = None
     amending_document_id: Optional[UUID] = None
     amending_reference: Optional[str] = None
@@ -205,10 +207,10 @@ class AmendmentHistoryCreate(AmendmentHistoryBase):
 
 class AmendmentHistory(AmendmentHistoryBase):
     id: UUID
-    class Config:
-        from_attributes = True
 
 class AuthorityBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     name: str
     short_name: Optional[str] = None
     authority_type: Optional[str] = None
@@ -224,10 +226,10 @@ class AuthorityCreate(AuthorityBase):
 
 class Authority(AuthorityBase):
     id: UUID
-    class Config:
-        from_attributes = True
 
 class ComplianceObligationBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     structural_unit_id: Optional[UUID] = None
     obligation_type: Optional[str] = None
     compliance_category: Optional[str] = None
@@ -244,13 +246,11 @@ class ComplianceObligationCreate(ComplianceObligationBase):
 
 class ComplianceObligation(ComplianceObligationBase):
     id: UUID
-    class Config:
-        from_attributes = True
 
 # --- Additional specialized schemas for Phase 2 ---
 
 class StructuralUnitTree(StructuralUnit):
     children: List['StructuralUnitTree'] = []
 
-# No need to call update_forward_refs in Pydantic V2 typically, but kept for compatibility
-# StructuralUnitTree.model_rebuild() # Pydantic V2 style
+# Pydantic V2 style model rebuild
+StructuralUnitTree.model_rebuild()

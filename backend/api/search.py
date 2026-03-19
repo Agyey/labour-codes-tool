@@ -15,6 +15,9 @@ def search_provisions(
     unit_type: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
+    # Basic sanitization to prevent accidental or malicious character issues in LIKE patterns
+    q = q.strip().replace("%", "").replace("_", "")
+    
     query = db.query(models.StructuralUnit).filter(
         or_(
             models.StructuralUnit.full_text.ilike(f"%{q}%"),
@@ -38,6 +41,9 @@ def search_documents(
     doc_type: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
+    # Basic sanitization
+    q = q.strip().replace("%", "").replace("_", "")
+    
     query = db.query(models.Document).filter(
         or_(
             models.Document.title.ilike(f"%{q}%"),

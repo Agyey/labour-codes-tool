@@ -1,11 +1,22 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from .database import get_db, engine
 from .models import Base
 from .api import documents, structure, metadata, search
 import uvicorn
+import os
 
 app = FastAPI(title="Legal Knowledge System API")
+
+# Infrastructure Resilience: CORS Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # @app.on_event("startup")
 # def startup():
