@@ -318,9 +318,6 @@ async def cancel_analysis(document_id: str) -> dict[str, str]:
     return {"message": "Analysis cancelled.", "status": "uploaded"}
 
 
-
-
-
 @app.post("/api/documents/{document_id}/analyze")
 async def trigger_analysis(
     document_id: str, background_tasks: BackgroundTasks
@@ -333,7 +330,9 @@ async def trigger_analysis(
         raise HTTPException(400, "Document has no extracted text.")
 
     if document_id not in ANALYSIS_EVENTS and doc.status != "analyzed":
-        await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
+        await db.document.update(
+            where={"id": document_id}, data={"status": "analyzing"}
+        )
         asyncio.create_task(_run_analysis_background(document_id, doc.raw_text))
 
     return {
@@ -351,14 +350,16 @@ async def trigger_analysis(
 ANALYSIS_EVENTS: dict[str, list[str]] = {}
 ANALYSIS_LISTENERS: dict[str, list[asyncio.Queue[str | None]]] = {}
 
+
 async def _publish_event(document_id: str, event_str: str) -> None:
     if document_id not in ANALYSIS_EVENTS:
         ANALYSIS_EVENTS[document_id] = []
     ANALYSIS_EVENTS[document_id].append(event_str)
-    
+
     if document_id in ANALYSIS_LISTENERS:
         for q in ANALYSIS_LISTENERS[document_id]:
             await q.put(event_str)
+
 
 async def _publish_done(document_id: str) -> None:
     if document_id in ANALYSIS_LISTENERS:
@@ -371,7 +372,7 @@ async def _stream_reader(document_id: str) -> typing.AsyncGenerator[str, None]:
     # Yield history first
     for evt in ANALYSIS_EVENTS.get(document_id, []):
         yield evt
-        
+
     doc = await db.document.find_unique(where={"id": document_id})
     if not doc or (doc.status != "analyzing" and document_id not in ANALYSIS_EVENTS):
         return
@@ -380,7 +381,7 @@ async def _stream_reader(document_id: str) -> typing.AsyncGenerator[str, None]:
     if document_id not in ANALYSIS_LISTENERS:
         ANALYSIS_LISTENERS[document_id] = []
     ANALYSIS_LISTENERS[document_id].append(q)
-    
+
     try:
         while True:
             evt = await q.get()
@@ -401,48 +402,57 @@ async def _run_analysis_background(document_id: str, raw_text: str) -> None:
         return f"{elasped_sec:.1f}s"
 
     try:
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "init",
-                "status": "done",
-                "message": "Initializing document analysis pipeline...",
-                "detail": f"Document ID: {str(document_id)[:8]}... | {len(raw_text):,} characters to process",
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "init",
+                    "status": "done",
+                    "message": "Initializing document analysis pipeline...",
+                    "detail": f"Document ID: {str(document_id)[:8]}... | {len(raw_text):,} characters to process",
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "extraction",
-                "status": "running",
-                "message": "Sending document to Gemini 2.5 Flash...",
-                "detail": "Beginning thought process and extraction...",
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "extraction",
+                    "status": "running",
+                    "message": "Sending document to Gemini 2.5 Flash...",
+                    "detail": "Beginning thought process and extraction...",
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
         extraction_result: list[typing.Any] = []
-        
+
         try:
             async for chunk in analyze_document_stream(document_id, raw_text):
                 if isinstance(chunk, str):
-                    await _publish_event(document_id, _sse_event(
-                        "progress",
-                        {
-                            "phase": "extraction",
-                            "status": "running",
-                            "message": "Gemini Analysis",
-                            "detail": f"🤔 {chunk}",
-                            "elapsed": _elapsed(),
-                        },
-                    ))
+                    await _publish_event(
+                        document_id,
+                        _sse_event(
+                            "progress",
+                            {
+                                "phase": "extraction",
+                                "status": "running",
+                                "message": "Gemini Analysis",
+                                "detail": f"🤔 {chunk}",
+                                "elapsed": _elapsed(),
+                            },
+                        ),
+                    )
                 else:
                     extraction_result.append(chunk)
         except Exception as exc:
             extraction_result.append(exc)
-            
+
         if not extraction_result or isinstance(extraction_result[0], Exception):
             raise (
                 extraction_result[0]
@@ -452,33 +462,39 @@ async def _run_analysis_background(document_id: str, raw_text: str) -> None:
 
         extracted = extraction_result[0]
 
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "extraction",
-                "status": "done",
-                "message": f"Extraction complete — {extracted.name}",
-                "detail": (
-                    f"{len(extracted.chapters)} chapters · "
-                    f"{sum(len(ch.sections) for ch in extracted.chapters)} sections · "
-                    f"{len(extracted.definitions)} definitions · "
-                    f"{len(extracted.penalties)} penalties · "
-                    f"{len(extracted.key_changes)} key changes"
-                ),
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "extraction",
+                    "status": "done",
+                    "message": f"Extraction complete — {extracted.name}",
+                    "detail": (
+                        f"{len(extracted.chapters)} chapters · "
+                        f"{sum(len(ch.sections) for ch in extracted.chapters)} sections · "
+                        f"{len(extracted.definitions)} definitions · "
+                        f"{len(extracted.penalties)} penalties · "
+                        f"{len(extracted.key_changes)} key changes"
+                    ),
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "structure",
-                "status": "running",
-                "message": "Constructing document structure tree...",
-                "detail": "Building vectorless RAG hierarchy for intelligent traversal",
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "structure",
+                    "status": "running",
+                    "message": "Constructing document structure tree...",
+                    "detail": "Building vectorless RAG hierarchy for intelligent traversal",
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
         tree_preview: list[dict[str, typing.Any]] = []
         for ch in extracted.chapters:
@@ -493,101 +509,122 @@ async def _run_analysis_background(document_id: str, raw_text: str) -> None:
                 }
             )
 
-        await _publish_event(document_id, _sse_event(
-            "tree",
-            {
-                "phase": "structure",
-                "status": "done",
-                "message": f"Document tree: {len(tree_preview)} chapters mapped",
-                "chapters": tree_preview,
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "tree",
+                {
+                    "phase": "structure",
+                    "status": "done",
+                    "message": f"Document tree: {len(tree_preview)} chapters mapped",
+                    "chapters": tree_preview,
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "graph",
-                "status": "running",
-                "message": "Building knowledge graph in Neo4j...",
-                "detail": f"Creating nodes for {len(extracted.chapters)} chapters",
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "graph",
+                    "status": "running",
+                    "message": "Building knowledge graph in Neo4j...",
+                    "detail": f"Creating nodes for {len(extracted.chapters)} chapters",
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
         result = await build_graph_and_suggestions(document_id, extracted)
 
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "graph",
-                "status": "done",
-                "message": "Knowledge graph built successfully",
-                "detail": (
-                    f"{result['graph_stats']['nodes']} nodes · "
-                    f"{result['graph_stats']['relationships']} relationships · "
-                    f"{result['suggestion_count']} suggestions generated"
-                ),
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "graph",
+                    "status": "done",
+                    "message": "Knowledge graph built successfully",
+                    "detail": (
+                        f"{result['graph_stats']['nodes']} nodes · "
+                        f"{result['graph_stats']['relationships']} relationships · "
+                        f"{result['suggestion_count']} suggestions generated"
+                    ),
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "finalize",
-                "status": "running",
-                "message": "Finalizing analysis and recording audit trail...",
-                "detail": "Updating document status and creating tamper-proof audit record",
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "finalize",
+                    "status": "running",
+                    "message": "Finalizing analysis and recording audit trail...",
+                    "detail": "Updating document status and creating tamper-proof audit record",
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
         await db.document.update(
             where={"id": document_id},
             data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
         )
 
-        await _publish_event(document_id, _sse_event(
-            "progress",
-            {
-                "phase": "finalize",
-                "status": "done",
-                "message": "Analysis complete!",
-                "detail": f"{result['suggestion_count']} suggestions ready for your review",
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "progress",
+                {
+                    "phase": "finalize",
+                    "status": "done",
+                    "message": "Analysis complete!",
+                    "detail": f"{result['suggestion_count']} suggestions ready for your review",
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
         # Final event
-        await _publish_event(document_id, _sse_event(
-            "complete",
-            {
-                "suggestion_count": result["suggestion_count"],
-                "graph_nodes": result["graph_stats"]["nodes"],
-                "graph_relationships": result["graph_stats"]["relationships"],
-                "analysis_id": result["analysis_id"],
-                "elapsed": _elapsed(),
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "complete",
+                {
+                    "suggestion_count": result["suggestion_count"],
+                    "graph_nodes": result["graph_stats"]["nodes"],
+                    "graph_relationships": result["graph_stats"]["relationships"],
+                    "analysis_id": result["analysis_id"],
+                    "elapsed": _elapsed(),
+                },
+            ),
+        )
 
     except Exception as e:
         logger.error(f"Background analysis failed for {document_id}: {e}")
         await db.document.update(where={"id": document_id}, data={"status": "error"})
-        await _publish_event(document_id, _sse_event(
-            "error",
-            {
-                "message": "Analysis failed. Please try again.",
-            },
-        ))
+        await _publish_event(
+            document_id,
+            _sse_event(
+                "error",
+                {
+                    "message": "Analysis failed. Please try again.",
+                },
+            ),
+        )
     finally:
         await _publish_done(document_id)
-        
+
         # Self-clean up after 5 minutes
         async def _cleanup():
             await asyncio.sleep(300)
             ANALYSIS_EVENTS.pop(document_id, None)
-            
+
         asyncio.create_task(_cleanup())
 
 
@@ -603,7 +640,9 @@ async def stream_analysis(request: Request, document_id: str) -> StreamingRespon
 
     # Only start background task if not already tracking
     if document_id not in ANALYSIS_EVENTS and doc.status != "analyzed":
-        await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
+        await db.document.update(
+            where={"id": document_id}, data={"status": "analyzing"}
+        )
         asyncio.create_task(_run_analysis_background(document_id, doc.raw_text))
 
     return StreamingResponse(

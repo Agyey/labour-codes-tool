@@ -57,14 +57,16 @@ def extract_text_from_pdf(file_path: str) -> tuple[str, int]:
     return text_content, page_count
 
 
-async def analyze_document_stream(document_id: str, raw_text: str) -> typing.AsyncGenerator[str | ExtractedLegislation, None]:
+async def analyze_document_stream(
+    document_id: str, raw_text: str
+) -> typing.AsyncGenerator[str | ExtractedLegislation, None]:
     """Send document text to Gemini and stream thoughts, then structured extraction."""
     logger.info(f"Analyzing document {document_id}: {len(raw_text)} characters")
 
     prompt = (
         "First, think step-by-step about this document to prepare for extraction. Write your detailed analysis inside <think> and </think> tags.\n"
         "Break down your thoughts logically. Identify chapters, compliance items, definitions, and penalties. Keep your thinking extremely concise to save tokens.\n\n"
-        "CRITICAL: To prevent exceeding output limits, set the `full_text` field of EVERY section and sub_section to an empty string \"\" in the JSON. We only need the `summary`.\n\n"
+        'CRITICAL: To prevent exceeding output limits, set the `full_text` field of EVERY section and sub_section to an empty string "" in the JSON. We only need the `summary`.\n\n'
         "After closing the </think> tag, output the precise JSON matching the required schema enclosed in ```json and ``` tags.\n\n"
         f"Document text:\n{raw_text}"
     )
@@ -80,21 +82,21 @@ async def analyze_document_stream(document_id: str, raw_text: str) -> typing.Asy
 
     full_text = ""
     thought_buffer = ""
-    
+
     import re
-    
+
     try:
         async for chunk in response_stream:
             text = chunk.text or ""
             full_text += text
-            
+
             # If we haven't reached </think> yet, we process the stream as thoughts
             if "</think>" not in full_text:
                 if "<think>" in full_text:
                     # Strip out <think> and accumulate
                     clean_text = text.replace("<think>", "").replace("\n", " ")
                     thought_buffer += clean_text
-                    
+
                     # Yield complete sentences to the UI
                     while ". " in thought_buffer:
                         split_idx = thought_buffer.index(". ") + 2
@@ -107,7 +109,7 @@ async def analyze_document_stream(document_id: str, raw_text: str) -> typing.Asy
                 if thought_buffer.strip():
                     yield thought_buffer.strip() + "..."
                     thought_buffer = ""
-                    
+
     except Exception as e:
         logger.error(f"Stream error: {e}")
         raise e
@@ -116,13 +118,13 @@ async def analyze_document_stream(document_id: str, raw_text: str) -> typing.Asy
     json_match = re.search(r"```json\s*(.*?)\s*```", full_text, re.DOTALL)
     if not json_match:
         json_match = re.search(r"(\{.*\})", full_text, re.DOTALL)
-        
+
     if not json_match:
         raise ValueError("Failed to extract JSON from Gemini response.")
-        
+
     json_str = json_match.group(1)
     extracted = ExtractedLegislation.model_validate_json(json_str)
-    
+
     logger.info(
         f"Extraction complete: {extracted.name} — "
         f"{len(extracted.chapters)} chapters, "
