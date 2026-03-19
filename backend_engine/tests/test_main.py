@@ -431,9 +431,9 @@ def test_stream_analysis(mock_reader: Any, mock_db: Any, client: TestClient) -> 
 
 
 @patch("src.main.db")
-@patch("src.main.analyze_document_stream")
+@patch("src.main._stream_reader")
 def test_stream_analysis_error(
-    mock_analyze: Any, mock_db: Any, client: TestClient
+    mock_reader: Any, mock_db: Any, client: TestClient
 ) -> None:
     class MockDoc:
         id = "s1"
@@ -442,7 +442,11 @@ def test_stream_analysis_error(
 
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
-    mock_analyze.side_effect = Exception("Analysis Logic Error")
+
+    async def mock_gen(*args: Any, **kwargs: Any):
+        yield "event: error\\ndata: Simulated streaming error\\n\\n"
+        
+    mock_reader.side_effect = mock_gen
 
     response = client.get("/api/documents/s1/analyze/stream")
     assert response.status_code == 200
