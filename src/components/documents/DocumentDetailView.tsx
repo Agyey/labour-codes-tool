@@ -80,6 +80,33 @@ function StreamingProgress({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [events]);
 
+  const displayEvents = useMemo(() => {
+    const grouped: StreamEvent[] = [];
+    let currentThinking: StreamEvent | null = null;
+
+    for (const evt of events) {
+      if (evt.message === "Gemini Analysis") {
+        const cleanDetail = evt.detail ? evt.detail.replace(/^🤔\s*/, "") : "";
+        if (!currentThinking) {
+          currentThinking = {
+            ...evt,
+            message: "AI Thinking...",
+            detail: cleanDetail,
+          };
+          grouped.push(currentThinking);
+        } else {
+          currentThinking.detail += (cleanDetail ? " " + cleanDetail : "");
+          currentThinking.elapsed = evt.elapsed;
+          currentThinking.status = evt.status;
+        }
+      } else {
+        currentThinking = null;
+        grouped.push(evt);
+      }
+    }
+    return grouped;
+  }, [events]);
+
   return (
     <div className="bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden font-mono">
       {/* Terminal header */}
@@ -114,14 +141,14 @@ function StreamingProgress({
 
       {/* Stream content */}
       <div ref={scrollRef} className="p-5 space-y-3 max-h-[600px] overflow-y-auto">
-        {events.length === 0 && !error && (
+        {displayEvents.length === 0 && !error && (
           <div className="flex items-center gap-3 text-zinc-500">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-xs">Connecting to analysis pipeline...</span>
           </div>
         )}
 
-        {events.map((evt, i) => (
+        {displayEvents.map((evt, i) => (
           <motion.div
             key={`${evt.phase}-${evt.status}-${i}`}
             initial={{ opacity: 0, x: -10 }}

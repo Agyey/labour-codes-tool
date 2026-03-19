@@ -63,10 +63,12 @@ async def analyze_document_stream(
     """Send document text to Gemini and stream thoughts, then structured extraction."""
     logger.info(f"Analyzing document {document_id}: {len(raw_text)} characters")
 
+    schema_json = json.dumps(ExtractedLegislation.model_json_schema(), indent=2)
     prompt = (
         "First, think step-by-step about this document to prepare for extraction. Write your detailed analysis inside <think> and </think> tags.\n"
         "Break down your thoughts logically. Identify chapters, compliance items, definitions, and penalties. Keep your thinking extremely concise to save tokens.\n\n"
         'CRITICAL: To prevent exceeding output limits, set the `full_text` field of EVERY section and sub_section to an empty string "" in the JSON. We only need the `summary`.\n\n'
+        f"REQUIRED JSON SCHEMA:\n```json\n{schema_json}\n```\n\n"
         "After closing the </think> tag, output the precise JSON matching the required schema enclosed in ```json and ``` tags.\n\n"
         f"Document text:\n{raw_text}"
     )
