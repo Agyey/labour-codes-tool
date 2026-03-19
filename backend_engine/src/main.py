@@ -384,10 +384,10 @@ async def _stream_reader(document_id: str) -> typing.AsyncGenerator[str, None]:
 
     try:
         while True:
-            evt = await q.get()
-            if evt is None:
+            stream_evt: str | None = await q.get()
+            if stream_evt is None:
                 break
-            yield evt
+            yield stream_evt
     finally:
         if document_id in ANALYSIS_LISTENERS and q in ANALYSIS_LISTENERS[document_id]:
             ANALYSIS_LISTENERS[document_id].remove(q)
@@ -621,7 +621,7 @@ async def _run_analysis_background(document_id: str, raw_text: str) -> None:
         await _publish_done(document_id)
 
         # Self-clean up after 5 minutes
-        async def _cleanup():
+        async def _cleanup() -> None:
             await asyncio.sleep(300)
             ANALYSIS_EVENTS.pop(document_id, None)
 
