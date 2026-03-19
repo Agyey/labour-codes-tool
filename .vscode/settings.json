@@ -1,0 +1,18 @@
+{
+  "python.analysis.extraPaths": [
+    "./backend_engine",
+    "./backend_engine/src"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend_engine/.venv/bin/python",
+  "python.testing.pytestEnabled": true,
+  "python.testing.cwd": "backend_engine",
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "editor.formatOnSave": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportGeneralTypeIssues": "none"
+  }
+}

@@ -1,46 +1,58 @@
-# Combine Frontend and Backend into a single Railway Service
-
-# --- Stage 1: Frontend Build ---
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app
-COPY frontend/package.json frontend/package-lock.json ./frontend/
-RUN cd frontend && npm ci
-COPY frontend ./frontend
-RUN cd frontend && npm run build
-
-# --- Stage 2: Backend Build ---
-FROM python:3.10-slim AS backend-builder
-WORKDIR /app
-COPY backend/requirements.txt ./backend/
-RUN pip install --no-cache-dir -r backend/requirements.txt
-COPY backend ./backend
-
-# --- Stage 3: Final Runner ---
-FROM nikolaik/python-nodejs:python3.10-nodejs20-alpine AS runner
+# Stage 1: Install dependencies
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Install PostgreSQL binary dependencies and other tools
-RUN apk add --no-cache libpq
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Copy Frontend Standalone - This folder includes its own node_modules
-# In monorepo, it mirrors the path: /app/frontend/.next/standalone/frontend/server.js
-COPY --from=frontend-builder /app/frontend/.next/standalone ./
-COPY --from=frontend-builder /app/frontend/.next/static ./frontend/.next/static
-COPY --from=frontend-builder /app/frontend/public ./frontend/public
+# Stage 2: Build the application
+FROM node:20-alpine AS builder
+RUN apk add --no-cache openssl
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-# Copy Backend and Install Dependencies
-COPY --from=backend-builder /app/backend ./backend
-RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy psycopg2-binary pydantic alembic
+# Generate Prisma Client
+RUN npx prisma generate --generator client
 
-# Startup Script
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+# Environment variables must be provided at build time for Next.js
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
-# Environment variables
+# Provide build-time placeholders so next build can collect page data.
+# Real values are injected at runtime by Railway.
+ENV GOOGLE_CLIENT_ID="build-placeholder"
+ENV GOOGLE_CLIENT_SECRET="build-placeholder"
+ENV NEXTAUTH_SECRET="build-placeholder-secret-minimum-32-chars"
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
+
+# Build Next.js app
+RUN npm run build
+
+# Stage 3: Runner
+FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
+WORKDIR /app
+
 ENV NODE_ENV=production
+ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Manually copy Prisma engines to standalone node_modules
+# Next.js standalone often misses these
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
+USER nextjs
 
 EXPOSE 3000
 
-# Start both services via the script
-CMD ["/app/start.sh"]
+CMD ["node", "server.js"]

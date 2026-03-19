@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js essential models
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("viewer") // custom role: admin, editor, reviewer, viewer
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Custom domains
+  provisionEdits ProvisionEdit[]
+  comments       Comment[]
+  
+  last_login    DateTime?
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Custom app tables
+model Organization {
+  id         String   @id @default(cuid())
+  name       String
+  plan       String
+  settings   Json?
+  created_at DateTime @default(now())
+  
+  provisions Provision[]
+}
+
+model Provision {
+  id             String   @id @default(cuid())
+  org_id         String?
+  code           String
+  chapter        String
+  chapter_name   String
+  section        String
+  sub_section    String
+  title          String
+  summary        String
+  full_text      String   @db.Text
+  impact         String
+  rule_authority String
+  change_tags    String[]
+  workflow_tags  String[]
+  penalty_old    String?
+  penalty_new    String?
+  notes          String?
+  assignee       String?
+  due_date       DateTime?
+  verified       Boolean  @default(false)
+  pinned         Boolean  @default(false)
+  version        Int      @default(1)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  
+  // Relations
+  organization     Organization? @relation(fields: [org_id], references: [id])
+  oldMappings      OldMapping[]
+  complianceItems  ComplianceItem[]
+  stateData        StateData[]
+  edits            ProvisionEdit[]
+  comments         Comment[]
+}
+
+model OldMapping {
+  id                  String   @id @default(cuid())
+  provision_id        String
+  act_name            String
+  section             String
+  summary             String
+  full_text           String   @db.Text
+  change_description  String
+  change_tags         String[]
+  
+  provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
+}
+
+model ComplianceItem {
+  id            String   @id @default(cuid())
+  provision_id  String
+  task          String
+  assignee      String?
+  status        String   @default("Not Started")
+  due_date      DateTime?
+  completed_at  DateTime?
+  
+  provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
+}
+
+model StateData {
+  id                String   @id @default(cuid())
+  provision_id      String
+  state             String
+  notes             String?
+  rule_text         String?  @db.Text
+  compliance_status String?
+  
+  provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
+}
+
+model ProvisionEdit {
+  id            String   @id @default(cuid())
+  provision_id  String
+  user_id       String
+  diff          Json
+  edit_type     String
+  created_at    DateTime @default(now())
+  
+  provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [user_id], references: [id])
+}
+
+model Comment {
+  id            String   @id @default(cuid())
+  provision_id  String
+  user_id       String
+  body          String   @db.Text
+  parent_id     String?
+  created_at    DateTime @default(now())
+  
+  provision Provision @relation(fields: [provision_id], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [user_id], references: [id])
+  parent    Comment?  @relation("CommentReplies", fields: [parent_id], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+}
