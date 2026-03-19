@@ -445,7 +445,7 @@ def test_stream_analysis_error(
 
     async def mock_gen(*args: Any, **kwargs: Any):
         yield "event: error\\ndata: Simulated streaming error\\n\\n"
-        
+
     mock_reader.side_effect = mock_gen
 
     response = client.get("/api/documents/s1/analyze/stream")
