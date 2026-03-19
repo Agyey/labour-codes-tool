@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock
 from typing import Any
-from src.database import connect_db, disconnect_db, db
+from src.database import connect_db, disconnect_db
 
 
 @pytest.mark.asyncio
