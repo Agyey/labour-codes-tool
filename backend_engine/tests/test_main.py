@@ -152,9 +152,6 @@ def test_upload_document_exception(mock_extract: Any, client: TestClient) -> Non
     assert response.status_code == 500
 
 
-
-
-
 @patch("src.main.db")
 def test_trigger_analysis(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
@@ -414,9 +411,7 @@ def test_cancel_analysis_wrong_status(mock_db: Any, client: TestClient) -> None:
 
 @patch("src.main.db")
 @patch("src.main._stream_reader")
-def test_stream_analysis(
-    mock_reader: Any, mock_db: Any, client: TestClient
-) -> None:
+def test_stream_analysis(mock_reader: Any, mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "s1"
         raw_text = "text"
@@ -424,10 +419,10 @@ def test_stream_analysis(
 
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
-    
+
     async def mock_gen(*args: Any, **kwargs: Any):
         yield "event: progress\\ndata: {}\\n\\n"
-        
+
     mock_reader.side_effect = mock_gen
 
     response = client.get("/api/documents/s1/analyze/stream")

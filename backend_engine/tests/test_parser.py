@@ -103,10 +103,13 @@ async def test_analyze_document_stream(
     mock_response.text = mock_extracted_legislation.model_dump_json()
 
     with patch("src.parser._client") as mock_client:
+
         async def mock_stream_gen():
             yield mock_response
-            
-        mock_client.aio.models.generate_content_stream = AsyncMock(return_value=mock_stream_gen())
+
+        mock_client.aio.models.generate_content_stream = AsyncMock(
+            return_value=mock_stream_gen()
+        )
 
         chunks = [chunk async for chunk in analyze_document_stream("doc1", "raw text")]
 
