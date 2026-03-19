@@ -1,7 +1,7 @@
 # Project State: LexNexus
 
 ## Root Summary
-LexNexus is a legal knowledge system designed for labor law code review. It features a FastAPI backend and a Next.js/React frontend. Recent work has focused on performance optimization (Pydantic V2, component memoization) and security hardening (PII protection, CORS, input sanitization).
+LexNexus is a legal knowledge system designed for labor law code review. It features a FastAPI backend and a Next.js/React frontend. Recent work has focused on performance optimization (Pydantic V2, component memoization), security hardening (PII protection, CORS, input sanitization), and dependency patching (Next.js 16.2.0 upgrade). The legacy `backend_engine` has been removed.
 
 ## State Tree
 
@@ -28,6 +28,3 @@ LexNexus is a legal knowledge system designed for labor law code review. It feat
 - Implemented `React.memo` and `useMemo` for performance.
 - Extracted `DashboardItems.tsx` components.
 
-#### [backend_engine](file:///Users/agyeyarya/Development/Labor%20Law%20Code%20Review/backend_engine)
-**Summary**: Legacy or specialized engine module (Untracked).
-**Status**: 🟡 Review Needed

@@ -13,7 +13,7 @@
       {
         "name": "frontend",
         "path": "frontend",
-        "summary": "Next.js frontend with memoized dashboard components.",
+        "summary": "Next.js frontend with memoized dashboard components and Next.js 16.2.0 upgrade.",
         "status": "healthy"
       }
     ]
