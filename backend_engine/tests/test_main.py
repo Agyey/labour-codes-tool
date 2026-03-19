@@ -1,6 +1,6 @@
 import pytest
 import io
-from typing import Any, List, Generator
+from typing import Any, Generator
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from src.main import app
