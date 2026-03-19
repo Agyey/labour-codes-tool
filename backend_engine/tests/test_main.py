@@ -86,7 +86,9 @@ def test_get_document_found(mock_db: Any, client: TestClient) -> None:
 @patch("src.main.db")
 @patch("src.main.extract_text_from_pdf")
 @patch("src.main.record_audit")
-def test_upload_document(mock_audit: Any, mock_extract: Any, mock_db: Any, client: TestClient) -> None:
+def test_upload_document(
+    mock_audit: Any, mock_extract: Any, mock_db: Any, client: TestClient
+) -> None:
     mock_extract.return_value = ("raw text", 5)
     mock_audit.return_value = AsyncMock()
 
@@ -257,7 +259,9 @@ def test_approve_suggestion_not_pending(mock_db: Any, client: TestClient) -> Non
 
 
 @patch("src.main.db")
-def test_approve_suggestion_legislation_no_framework(mock_db: Any, client: TestClient) -> None:
+def test_approve_suggestion_legislation_no_framework(
+    mock_db: Any, client: TestClient
+) -> None:
     class MockSuggestionLegis:
         status = "pending"
         type = "create_legislation"
@@ -273,7 +277,9 @@ def test_approve_suggestion_legislation_no_framework(mock_db: Any, client: TestC
 
 @patch("src.main.db")
 @patch("src.main.record_audit")
-def test_approve_suggestion_all_types(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
+def test_approve_suggestion_all_types(
+    mock_audit: Any, mock_db: Any, client: TestClient
+) -> None:
     types = [
         ("create_legislation", "?framework_id=f1"),
         ("create_compliance_item", "?provision_id=p1"),
@@ -415,7 +421,9 @@ def test_cancel_analysis_wrong_status(mock_db: Any, client: TestClient) -> None:
 @patch("src.main.db")
 @patch("src.main.analyze_document")
 @patch("src.main.build_graph_and_suggestions")
-def test_stream_analysis(mock_build: Any, mock_analyze: Any, mock_db: Any, client: TestClient) -> None:
+def test_stream_analysis(
+    mock_build: Any, mock_analyze: Any, mock_db: Any, client: TestClient
+) -> None:
     class MockDoc:
         id = "s1"
         raw_text = "text"
@@ -441,15 +449,17 @@ def test_stream_analysis(mock_build: Any, mock_analyze: Any, mock_db: Any, clien
     # TestClient will collect all SSE events
     content = response.text
     assert "event: progress" in content
-    assert "phase\": \"init" in content
-    assert "phase\": \"extraction" in content
+    assert 'phase": "init' in content
+    assert 'phase": "extraction' in content
     assert "Extraction complete" in content
     assert "event: complete" in content
 
 
 @patch("src.main.db")
 @patch("src.main.analyze_document")
-def test_stream_analysis_error(mock_analyze: Any, mock_db: Any, client: TestClient) -> None:
+def test_stream_analysis_error(
+    mock_analyze: Any, mock_db: Any, client: TestClient
+) -> None:
     class MockDoc:
         id = "s1"
         raw_text = "text"

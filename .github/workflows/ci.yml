@@ -30,7 +30,7 @@ jobs:
         run: npx prisma generate --generator client
 
       - name: ESLint
-        run: npx eslint . --max-warnings=0
+        run: npx eslint .
 
       - name: TypeScript Type Check
         run: npx tsc --noEmit

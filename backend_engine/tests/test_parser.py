@@ -1,7 +1,11 @@
 import pytest
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
-from src.parser import extract_text_from_pdf, analyze_document, build_graph_and_suggestions
+from src.parser import (
+    extract_text_from_pdf,
+    analyze_document,
+    build_graph_and_suggestions,
+)
 from src.models import (
     ExtractedLegislation,
     ExtractedChapter,
@@ -115,12 +119,11 @@ async def test_build_graph_and_suggestions(
     mock_analysis = MagicMock()
     mock_analysis.id = "analysis1"
 
-    with patch(
-        "src.parser.create_document_tree", new_callable=AsyncMock
-    ) as mock_tree, patch("src.parser.db") as mock_db, patch(
-        "src.parser.record_audit", new_callable=AsyncMock
-    ) as mock_audit:
-
+    with (
+        patch("src.parser.create_document_tree", new_callable=AsyncMock) as mock_tree,
+        patch("src.parser.db") as mock_db,
+        patch("src.parser.record_audit", new_callable=AsyncMock) as mock_audit,
+    ):
         mock_tree.return_value = mock_graph_stats
         mock_db.documentanalysis.create = AsyncMock(return_value=mock_analysis)
         mock_db.documentsuggestion.create = AsyncMock()
