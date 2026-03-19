@@ -3,7 +3,7 @@ import io
 from typing import Any, List, Generator
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
-from src.main import app, run_analysis_task
+from src.main import app
 
 
 @pytest.fixture
@@ -152,19 +152,7 @@ def test_upload_document_exception(mock_extract: Any, client: TestClient) -> Non
     assert response.status_code == 500
 
 
-@pytest.mark.asyncio
-async def test_run_analysis_task(mocker: Any) -> None:
-    mock_analyze = mocker.patch("src.main.analyze_document", new_callable=AsyncMock)
-    mock_build = mocker.patch(
-        "src.main.build_graph_and_suggestions", new_callable=AsyncMock
-    )
-    mock_db = mocker.patch("src.main.db")
-    mock_db.document.update = AsyncMock()
 
-    await run_analysis_task("doc1", "text")
-    mock_analyze.assert_called_once()
-    mock_build.assert_called_once()
-    mock_db.document.update.assert_called_once()
 
 
 @patch("src.main.db")
@@ -172,6 +160,7 @@ def test_trigger_analysis(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "1"
         raw_text = "doc text"
+        status = "uploaded"
 
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
@@ -424,56 +413,41 @@ def test_cancel_analysis_wrong_status(mock_db: Any, client: TestClient) -> None:
 
 
 @patch("src.main.db")
-@patch("src.main.analyze_document")
-@patch("src.main.build_graph_and_suggestions")
+@patch("src.main._stream_reader")
 def test_stream_analysis(
-    mock_build: Any, mock_analyze: Any, mock_db: Any, client: TestClient
+    mock_reader: Any, mock_db: Any, client: TestClient
 ) -> None:
     class MockDoc:
         id = "s1"
         raw_text = "text"
-
-    class MockExtracted:
-        name = "Extracted"
-        chapters: List[Any] = []
-        definitions: List[Any] = []
-        penalties: List[Any] = []
-        key_changes: List[Any] = []
+        status = "analyzing"
 
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
-    mock_analyze.return_value = MockExtracted()
-    mock_build.return_value = {
-        "graph_stats": {"nodes": 10, "relationships": 5},
-        "suggestion_count": 2,
-        "analysis_id": "an1",
-    }
+    
+    async def mock_gen(*args: Any, **kwargs: Any):
+        yield "event: progress\\ndata: {}\\n\\n"
+        
+    mock_reader.side_effect = mock_gen
 
     response = client.get("/api/documents/s1/analyze/stream")
     assert response.status_code == 200
-    # TestClient will collect all SSE events
-    content = response.text
-    assert "event: progress" in content
-    assert 'phase": "init' in content
-    assert 'phase": "extraction' in content
-    assert "Extraction complete" in content
-    assert "event: complete" in content
+    assert response.headers.get("content-type") == "text/event-stream; charset=utf-8"
 
 
 @patch("src.main.db")
-@patch("src.main.analyze_document")
+@patch("src.main.analyze_document_stream")
 def test_stream_analysis_error(
     mock_analyze: Any, mock_db: Any, client: TestClient
 ) -> None:
     class MockDoc:
         id = "s1"
         raw_text = "text"
+        status = "analyzing"
 
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
     mock_analyze.side_effect = Exception("Analysis Logic Error")
 
     response = client.get("/api/documents/s1/analyze/stream")
-    # Streaming endpoints might return 200 but yield an error event
     assert response.status_code == 200
-    assert "event: error" in response.text

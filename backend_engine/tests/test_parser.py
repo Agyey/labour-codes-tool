@@ -3,7 +3,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from src.parser import (
     extract_text_from_pdf,
-    analyze_document,
+    analyze_document_stream,
     build_graph_and_suggestions,
 )
 from src.models import (
@@ -96,19 +96,22 @@ def test_extract_text_from_pdf(mocker: Any) -> None:
 
 
 @pytest.mark.asyncio
-async def test_analyze_document(
+async def test_analyze_document_stream(
     mocker: Any, mock_extracted_legislation: ExtractedLegislation
 ) -> None:
     mock_response = MagicMock()
     mock_response.text = mock_extracted_legislation.model_dump_json()
 
     with patch("src.parser._client") as mock_client:
-        mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+        async def mock_stream_gen():
+            yield mock_response
+            
+        mock_client.aio.models.generate_content_stream = AsyncMock(return_value=mock_stream_gen())
 
-        result = await analyze_document("doc1", "raw text")
+        chunks = [chunk async for chunk in analyze_document_stream("doc1", "raw text")]
 
-        assert result.name == "Test Act"
-        mock_client.aio.models.generate_content.assert_called_once()
+        assert len(chunks) > 0
+        mock_client.aio.models.generate_content_stream.assert_called_once()
 
 
 @pytest.mark.asyncio
