@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Trash2, Search, BookOpen, Scale } from "lucide-react";
 import { 
@@ -56,10 +56,15 @@ export function ScenarioEditorModal({ isOpen, onClose, scenario, onUpdate }: Sce
     setLoading(false);
   }
 
-  const filteredObligations = obligations.filter(ob => 
-    ob.title.toLowerCase().includes(search.toLowerCase()) || 
-    ob.description.toLowerCase().includes(search.toLowerCase())
-  );
+  // ⚡ Bolt: Memoize filteredObligations to avoid searching through all obligations on every render
+  const filteredObligations = useMemo(() => {
+    if (!search) return obligations;
+    const lowerSearch = search.toLowerCase();
+    return obligations.filter(ob =>
+      (ob.title && ob.title.toLowerCase().includes(lowerSearch)) ||
+      (ob.description && ob.description.toLowerCase().includes(lowerSearch))
+    );
+  }, [obligations, search]);
 
   return (
     <AnimatePresence>
