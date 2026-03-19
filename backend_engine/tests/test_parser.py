@@ -103,8 +103,8 @@ async def test_analyze_document_stream(
     mock_response.text = mock_extracted_legislation.model_dump_json()
 
     with patch("src.parser._client") as mock_client:
-
         from collections.abc import AsyncGenerator
+
         async def mock_stream_gen() -> AsyncGenerator[Any, None]:
             yield mock_response
 

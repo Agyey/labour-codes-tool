@@ -421,6 +421,7 @@ def test_stream_analysis(mock_reader: Any, mock_db: Any, client: TestClient) -> 
     mock_db.document.update = AsyncMock()
 
     from collections.abc import AsyncGenerator
+
     async def mock_gen(*args: Any, **kwargs: Any) -> AsyncGenerator[str, None]:
         yield "event: progress\\ndata: {}\\n\\n"
 
@@ -445,6 +446,7 @@ def test_stream_analysis_error(
     mock_db.document.update = AsyncMock()
 
     from collections.abc import AsyncGenerator
+
     async def mock_gen(*args: Any, **kwargs: Any) -> AsyncGenerator[str, None]:
         yield "event: error\\ndata: Simulated streaming error\\n\\n"
 

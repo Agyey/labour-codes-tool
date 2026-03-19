@@ -127,10 +127,13 @@ async def analyze_document_stream(
     json_str = json_match.group(1)
     try:
         import json_repair
+
         decoded = json_repair.loads(json_str)
         extracted = ExtractedLegislation.model_validate(decoded)
     except Exception as parse_e:
-        logger.warning(f"json_repair failed, falling back to raw json parsing: {parse_e}")
+        logger.warning(
+            f"json_repair failed, falling back to raw json parsing: {parse_e}"
+        )
         extracted = ExtractedLegislation.model_validate_json(json_str)
 
     logger.info(
