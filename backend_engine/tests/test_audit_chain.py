@@ -10,9 +10,10 @@ def mock_db(mocker: Any) -> Any:
 
 
 @pytest.mark.asyncio
-async def test_record_audit_first_entry(mock_db: Any) -> None:
-    mock_db.auditchain.find_first.return_value = None
-    mock_db.auditchain.create.return_value = MagicMock(current_hash="hash1")
+async def test_record_audit_first_entry(mock_db: Any, mocker: Any) -> None:
+    mocker.patch("src.audit_chain.compute_hash", return_value="hash1")
+    mock_db.auditchain.find_first = AsyncMock(return_value=None)
+    mock_db.auditchain.create = AsyncMock(return_value=MagicMock(current_hash="hash1"))
 
     res = await record_audit("UPLOAD", "DOCUMENT", "doc1", {"file": "test.pdf"})
     assert res == "hash1"
@@ -22,9 +23,10 @@ async def test_record_audit_first_entry(mock_db: Any) -> None:
 
 
 @pytest.mark.asyncio
-async def test_record_audit_subsequent_entry(mock_db: Any) -> None:
-    mock_db.auditchain.find_first.return_value = MagicMock(current_hash="prev_hash")
-    mock_db.auditchain.create.return_value = MagicMock(current_hash="new_hash")
+async def test_record_audit_subsequent_entry(mock_db: Any, mocker: Any) -> None:
+    mocker.patch("src.audit_chain.compute_hash", return_value="new_hash")
+    mock_db.auditchain.find_first = AsyncMock(return_value=MagicMock(current_hash="prev_hash"))
+    mock_db.auditchain.create = AsyncMock(return_value=MagicMock(current_hash="new_hash"))
 
     res = await record_audit("ANALYZE", "DOCUMENT", "doc1", {})
     assert res == "new_hash"
@@ -40,10 +42,10 @@ async def test_verify_chain_integrity_valid(mock_db: Any) -> None:
             self.current_hash = curr
             self.id = eid
 
-    mock_db.auditchain.find_many.return_value = [
+    mock_db.auditchain.find_many = AsyncMock(return_value=[
         MockEntry("0" * 64, "hash1", "id1"),
         MockEntry("hash1", "hash2", "id2"),
-    ]
+    ])
 
     res = await verify_chain_integrity()
     assert res["valid"] is True
@@ -67,10 +69,10 @@ async def test_verify_chain_integrity_invalid(mock_db: Any) -> None:
             self.current_hash = curr
             self.id = eid
 
-    mock_db.auditchain.find_many.return_value = [
+    mock_db.auditchain.find_many = AsyncMock(return_value=[
         MockEntry("0" * 64, "hash1", "id1"),
         MockEntry("wrong_hash", "hash2", "id2"),
-    ]
+    ])
 
     res = await verify_chain_integrity()
     assert res["valid"] is False

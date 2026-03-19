@@ -8,7 +8,10 @@ from src.main import app, run_analysis_task
 
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
-    with TestClient(app) as c:
+    with patch("prisma.Client.connect", new_callable=AsyncMock), \
+         patch("prisma.Client.disconnect", new_callable=AsyncMock), \
+         patch("prisma.Client.is_connected", return_value=True), \
+         TestClient(app) as c:
         yield c
 
 

@@ -11,7 +11,7 @@ from src.graph_service import (
 @pytest.mark.asyncio
 async def test_get_close_driver(mocker: Any) -> None:
     mock_driver = MagicMock()
-    mock_driver.close = MagicMock()
+    mock_driver.close = AsyncMock()
     mocker.patch(
         "src.graph_service.AsyncGraphDatabase.driver", return_value=mock_driver
     )
@@ -25,7 +25,9 @@ async def test_get_close_driver(mocker: Any) -> None:
 async def test_create_document_tree(mocker: Any) -> None:
     mock_driver = AsyncMock()
     mock_session = AsyncMock()
-    mock_driver.session.return_value.__aenter__.return_value = mock_session
+    mock_session_ctx = AsyncMock()
+    mock_session_ctx.__aenter__.return_value = mock_session
+    mock_driver.session = MagicMock(return_value=mock_session_ctx)
     mocker.patch("src.graph_service.get_driver", return_value=mock_driver)
 
     mock_legislation = MagicMock()
@@ -104,7 +106,9 @@ async def test_get_graph_and_suggestions(mocker: Any) -> None:
             return gen()
 
     mock_driver.session = MagicMock()
-    mock_driver.session.return_value.__aenter__.return_value = mock_session
+    mock_session_ctx = AsyncMock()
+    mock_session_ctx.__aenter__.return_value = mock_session
+    mock_driver.session.return_value = mock_session_ctx
     mocker.patch("src.graph_service.get_driver", return_value=mock_driver)
 
     # Test Global Traversal
