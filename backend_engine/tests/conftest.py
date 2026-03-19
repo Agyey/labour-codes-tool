@@ -7,9 +7,7 @@ os.environ["GEMINI_API_KEY"] = "test_gemini"
 os.environ["DATABASE_URL"] = "postgresql://test:test@localhost:5432/test"
 os.environ["NEO4J_PASSWORD"] = "test_neo4j"
 
-import google.genai
-
-
+# Mock google.genai
 class MockAioModels:
     generate_content = AsyncMock()
 
@@ -23,7 +21,9 @@ class MockClient:
         self.aio = MockAio()
 
 
-google.genai.Client = MockClient
+mock_google_genai = MagicMock()
+mock_google_genai.Client = MockClient
+sys.modules["google.genai"] = mock_google_genai
 
 # Create an AsyncMock for Prisma
 mock_prisma_instance = AsyncMock()

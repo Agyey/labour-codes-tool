@@ -6,7 +6,7 @@ import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { Save, X } from "lucide-react";
 import { CommentSection } from "./CommentSection";
-import { addComment } from "@/app/actions/provisions";
+import { addComment } from "@/app/actions/comments";
 import { createBlankOldMapping } from "@/lib/utils";
 import type { Provision, OldMapping, ComplianceItem, Comment } from "@/types/provision";
 import { BasicInfoFields } from "./BasicInfoFields";

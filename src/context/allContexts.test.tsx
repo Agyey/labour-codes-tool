@@ -12,13 +12,16 @@ vi.mock("next-auth/react", () => ({
 
 vi.mock("@/app/actions/provisions", () => ({
   getProvisions: vi.fn().mockResolvedValue([]),
-  getFrameworks: vi.fn().mockResolvedValue([]),
-  getLegislations: vi.fn().mockResolvedValue([]),
   updateProvision: vi.fn().mockResolvedValue({ success: true }),
   deleteProvision: vi.fn().mockResolvedValue({ success: true }),
   deleteProvisions: vi.fn().mockResolvedValue({ success: true }),
   togglePin: vi.fn().mockResolvedValue({ success: true }),
   toggleVerify: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+vi.mock("@/app/actions/frameworks", () => ({
+  getFrameworks: vi.fn().mockResolvedValue([]),
+  getLegislations: vi.fn().mockResolvedValue([]),
   createFramework: vi.fn().mockResolvedValue({ success: true }),
   updateFramework: vi.fn().mockResolvedValue({ success: true }),
   deleteFramework: vi.fn().mockResolvedValue({ success: true }),

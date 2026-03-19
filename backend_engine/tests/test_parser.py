@@ -1,157 +1,98 @@
 import pytest
-from unittest.mock import AsyncMock
-from src.parser import (
-    extract_text_from_pdf,
-    analyze_document,
-    build_graph_and_suggestions,
-)
+from unittest.mock import AsyncMock, MagicMock, patch
+from src.parser import extract_text_from_pdf, analyze_document, build_graph_and_suggestions
+from src.models import ExtractedLegislation, SuggestionType
 
-
-def test_extract_text_from_pdf(mocker):
-    # Mock PyMuPDF (fitz)
-    class MockPage:
-        def get_text(self):
-            return "test page text"
-
-    class MockDoc:
-        def __init__(self):
-            self.pages = [MockPage(), MockPage()]
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            pass
-
-        def __len__(self):
-            return len(self.pages)
-
-        def __iter__(self):
-            return iter(self.pages)
-
-    mocker.patch("fitz.open", return_value=MockDoc())
-    text, count = extract_text_from_pdf("dummy.pdf")
-    assert count == 2
-    assert "test page text" in text
-
-
-@pytest.mark.asyncio
-async def test_analyze_document(mocker):
-    mocker.patch(
-        "src.parser._client.aio.models.generate_content", new_callable=AsyncMock
-    )
-
-    # We don't want to actually run the genai request
-    class MockResponse:
-        text = '{"name": "test", "short_name": "t", "year": 2024, "summary": "s", "chapters": []}'
-
-    mock_gen = mocker.patch(
-        "src.parser._client.aio.models.generate_content", new_callable=AsyncMock
-    )
-    mock_gen.return_value = MockResponse()
-
-    res = await analyze_document("123", "raw_text")
-    assert res.name == "test"
-    assert res.year == 2024
-
-
-@pytest.mark.asyncio
-async def test_build_graph_and_suggestions(mocker):
-    # Mock Neo4j creation
-    mock_create_tree = mocker.patch(
-        "src.parser.create_document_tree", new_callable=AsyncMock
-    )
-    mock_create_tree.return_value = {"nodes": 10, "relationships": 5}
-
-    # Mock postgres DB
-    mock_db = mocker.patch("src.parser.db")
-
-    class MockAnalysis:
-        id = "analysis_id"
-
-    mock_db.documentanalysis.create.return_value = MockAnalysis()
-    mock_db.documentsuggestion.create.return_value = AsyncMock()
-
-    # Mock audit chain
-    mock_record_audit = mocker.patch("src.parser.record_audit", new_callable=AsyncMock)
-
-    from src.models import ExtractedLegislation
-
-    from src.models import (
-        ExtractedChapter,
-        ExtractedSection,
-        ExtractedSubSection,
-        ExtractedComplianceTask,
-        ExtractedPenalty,
-        ExtractedChange,
-        ExtractedDefinition,
-    )
-
-    extracted = ExtractedLegislation(
-        name="test",
-        short_name="t",
+@pytest.fixture
+def mock_extracted_legislation():
+    return ExtractedLegislation(
+        name="Test Act",
+        short_name="TA",
         year=2024,
-        document_type="act",
-        summary="sum",
+        document_type="Act",
+        summary="Test Summary",
         chapters=[
-            ExtractedChapter(
-                chapter_number="I",
-                chapter_name="Pre",
-                summary="summary",
-                sections=[
-                    ExtractedSection(
-                        section_number="1",
-                        title="T1",
-                        summary="S1",
-                        full_text="F1",
-                        sub_sections=[
-                            ExtractedSubSection(
-                                sub_section_number="a",
-                                full_text="sub-f",
-                                summary="sub-s",
-                                compliance_tasks=[
-                                    ExtractedComplianceTask(
-                                        task="SubTask",
-                                        due_logic="logic",
-                                        severity="low",
-                                    )
-                                ],
-                            )
+            {
+                "chapter_number": "I",
+                "chapter_name": "Preliminary",
+                "summary": "Chapter summary",
+                "sections": [
+                    {
+                        "section_number": "1",
+                        "title": "Short title",
+                        "summary": "Section summary",
+                        "full_text": "Full text of section 1",
+                        "sub_sections": [
+                            {
+                                "sub_section_number": "1",
+                                "text": "Sub 1 text",
+                                "full_text": "Sub 1 full text",
+                                "summary": "Sub 1 summary",
+                                "compliance_tasks": [{"task": "Task 1", "due_logic": "Logic", "severity": "High"}]
+                            }
                         ],
-                        compliance_tasks=[
-                            ExtractedComplianceTask(
-                                task="Task1", due_logic="logic", severity="high"
-                            )
-                        ],
-                        penalties=[
-                            ExtractedPenalty(
-                                description="Fine", fine_amount="100", imprisonment="No"
-                            )
-                        ],
-                    )
-                ],
-            )
+                        "compliance_tasks": [],
+                        "penalties": [{"description": "Fine", "fine_amount": "1000", "imprisonment": "None"}]
+                    }
+                ]
+            }
         ],
-        definitions=[
-            ExtractedDefinition(
-                term="Employer", definition="The boss", section_ref="s2"
-            )
-        ],
-        key_changes=[
-            ExtractedChange(
-                difference_type="Amendment",
-                description="Changed something",
-                previous_reference="Old Act",
-                new_reference="New Act",
-            )
-        ],
-        penalties=[],
-        effective_date="now",
-        repealed_acts=["old act"],
+        definitions=[{"term": "Test", "definition": "Def", "section_ref": "2"}],
+        key_changes=[{"difference_type": "Addition", "description": "New", "previous_reference": "N/A", "new_reference": "1"}],
+        repealed_acts=["Old Act"],
     )
 
-    res = await build_graph_and_suggestions("doc_123", extracted)
-    assert res["analysis_id"] == "analysis_id"
-    assert res["suggestion_count"] > 0
-    mock_create_tree.assert_called_once()
-    mock_record_audit.assert_called_once()
+def test_extract_text_from_pdf():
+    mock_doc = MagicMock()
+    mock_page = MagicMock()
+    mock_page.get_text.return_value = "Page text"
+    
+    # Mocking context manager and iteration
+    mock_doc.__enter__.return_value = mock_doc
+    mock_doc.__exit__.return_value = None
+    mock_doc.__iter__.return_value = [mock_page]
+    mock_doc.__len__.return_value = 1
+    
+    with patch("fitz.open", return_value=mock_doc):
+        text, count = extract_text_from_pdf("dummy.pdf")
+        assert "Page text" in text
+        assert count == 1
+
+@pytest.mark.asyncio
+async def test_analyze_document(mock_extracted_legislation):
+    mock_response = MagicMock()
+    mock_response.text = mock_extracted_legislation.model_dump_json()
+    
+    with patch("src.parser._client") as mock_client:
+        mock_client.aio.models.generate_content = AsyncMock(return_value=mock_response)
+        
+        result = await analyze_document("doc1", "raw text")
+        
+        assert result.name == "Test Act"
+        mock_client.aio.models.generate_content.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_build_graph_and_suggestions(mock_extracted_legislation):
+    mock_graph_stats = {"nodes": 10, "relationships": 5}
+    mock_analysis = MagicMock()
+    mock_analysis.id = "analysis1"
+    
+    with patch("src.parser.create_document_tree", new_callable=AsyncMock) as mock_tree, \
+         patch("src.parser.db") as mock_db, \
+         patch("src.parser.record_audit", new_callable=AsyncMock) as mock_audit:
+        
+        mock_tree.return_value = mock_graph_stats
+        mock_db.documentanalysis.create = AsyncMock(return_value=mock_analysis)
+        mock_db.documentsuggestion.create = AsyncMock()
+        
+        result = await build_graph_and_suggestions("doc1", mock_extracted_legislation)
+        
+        assert result["analysis_id"] == "analysis1"
+        assert result["graph_stats"] == mock_graph_stats
+        # 1 (Legislation) + 1 (Change) + 1 (Provision) + 1 (Compliance) + 1 (Penalty) + 1 (Repeal) + 1 (Definition) = 7
+        assert result["suggestion_count"] == 7
+        
+        assert mock_tree.called
+        assert mock_db.documentanalysis.create.called
+        assert mock_db.documentsuggestion.create.call_count == 7
+        assert mock_audit.called

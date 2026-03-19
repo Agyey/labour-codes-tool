@@ -5,10 +5,10 @@ export PORT=${PORT:-3000}
 export HOSTNAME="0.0.0.0"
 export NODE_ENV="production"
 
-echo "Starting Backend on port 8000..."
+echo "Starting Backend Engine on port 8000..."
 # Run backend in the background
-cd /app && python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+cd /app/backend_engine && python3 -m uvicorn src.main:app --host 0.0.0.0 --port 8000 &
 
 echo "Starting Frontend on port $PORT..."
 # Run frontend in the foreground
-cd /app && node frontend/server.js
+cd /app && node server.js

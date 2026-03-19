@@ -18,6 +18,8 @@ import {
   deleteProvisions as deleteProvisionsAction,
   togglePin as togglePinAction,
   toggleVerify as toggleVerifyAction,
+} from "@/app/actions/provisions";
+import {
   getFrameworks,
   getLegislations,
   createFramework as createFrameworkAction,
@@ -25,7 +27,7 @@ import {
   deleteFramework as deleteFrameworkAction,
   createLegislation as createLegislationAction,
   deleteLegislation as deleteLegislationAction
-} from "@/app/actions/provisions";
+} from "@/app/actions/frameworks";
 import { getUsers } from "@/app/actions/users";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
 import { useSession } from "next-auth/react";
