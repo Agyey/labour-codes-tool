@@ -1,4 +1,4 @@
-def test_settings_load():
+def test_settings_load() -> None:
     # Environment variables are already set by conftest.py
     # So we just load and verify
     from src.settings import Settings

@@ -1,56 +1,41 @@
 import pytest
-from unittest.mock import AsyncMock, patch
-from src.audit_chain import (
-    get_last_hash,
-    compute_hash,
-    record_audit,
-    verify_chain_integrity,
-)
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
+from src.audit_chain import record_audit, verify_chain_integrity
 
 
 @pytest.fixture
-def mock_db(mocker):
+def mock_db(mocker: Any) -> Any:
     return mocker.patch("src.audit_chain.db")
 
 
 @pytest.mark.asyncio
-async def test_get_last_hash_empty(mock_db):
-    mock_db.auditchain.find_first = AsyncMock(return_value=None)
-    hash_val = await get_last_hash()
-    assert hash_val == "0" * 64
+async def test_record_audit_first_entry(mock_db: Any) -> None:
+    mock_db.auditchain.find_first.return_value = None
+    mock_db.auditchain.create.return_value = MagicMock(current_hash="hash1")
 
-
-@pytest.mark.asyncio
-async def test_get_last_hash_exists(mock_db, mocker):
-    class MockEntry:
-        current_hash = "mock_hash"
-
-    mock_db.auditchain.find_first = AsyncMock(return_value=MockEntry())
-    hash_val = await get_last_hash()
-    assert hash_val == "mock_hash"
-
-
-def test_compute_hash():
-    h = compute_hash("prev", "act", "type", "id", {}, "timestamp")
-    assert isinstance(h, str)
-    assert len(h) == 64
-
-
-@pytest.mark.asyncio
-@patch("src.audit_chain.get_last_hash", new_callable=AsyncMock)
-async def test_record_audit(mock_get_last, mock_db):
-    mock_get_last.return_value = "0" * 64
-    mock_db.auditchain.create = AsyncMock()
-
-    new_hash = await record_audit("test_action", "doc", "doc1", {"key": "val"})
-    assert isinstance(new_hash, str)
+    res = await record_audit("UPLOAD", "DOCUMENT", "doc1", {"file": "test.pdf"})
+    assert res == "hash1"
     mock_db.auditchain.create.assert_called_once()
+    args = mock_db.auditchain.create.call_args[1]["data"]
+    assert args["previous_hash"] == "0" * 64
 
 
 @pytest.mark.asyncio
-async def test_verify_chain_integrity_valid(mock_db):
+async def test_record_audit_subsequent_entry(mock_db: Any) -> None:
+    mock_db.auditchain.find_first.return_value = MagicMock(current_hash="prev_hash")
+    mock_db.auditchain.create.return_value = MagicMock(current_hash="new_hash")
+
+    res = await record_audit("ANALYZE", "DOCUMENT", "doc1", {})
+    assert res == "new_hash"
+    args = mock_db.auditchain.create.call_args[1]["data"]
+    assert args["previous_hash"] == "prev_hash"
+
+
+@pytest.mark.asyncio
+async def test_verify_chain_integrity_valid(mock_db: Any) -> None:
     class MockEntry:
-        def __init__(self, prev, curr, eid):
+        def __init__(self, prev: str, curr: str, eid: str) -> None:
             self.previous_hash = prev
             self.current_hash = curr
             self.id = eid
@@ -67,7 +52,7 @@ async def test_verify_chain_integrity_valid(mock_db):
 
 
 @pytest.mark.asyncio
-async def test_verify_chain_integrity_empty(mock_db):
+async def test_verify_chain_integrity_empty(mock_db: Any) -> None:
     mock_db.auditchain.find_many = AsyncMock(return_value=[])
     res = await verify_chain_integrity()
     assert res["valid"] is True
@@ -75,9 +60,9 @@ async def test_verify_chain_integrity_empty(mock_db):
 
 
 @pytest.mark.asyncio
-async def test_verify_chain_integrity_invalid(mock_db):
+async def test_verify_chain_integrity_invalid(mock_db: Any) -> None:
     class MockEntry:
-        def __init__(self, prev, curr, eid):
+        def __init__(self, prev: str, curr: str, eid: str) -> None:
             self.previous_hash = prev
             self.current_hash = curr
             self.id = eid

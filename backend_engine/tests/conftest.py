@@ -1,47 +1,32 @@
 import pytest
 import os
-import sys
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 os.environ["GEMINI_API_KEY"] = "test_gemini"
-os.environ["DATABASE_URL"] = "postgresql://test:test@localhost:5432/test"
-os.environ["NEO4J_PASSWORD"] = "test_neo4j"
-
-# Mock google.genai
-class MockAioModels:
-    generate_content = AsyncMock()
+os.environ["DATABASE_URL"] = "postgresql://user:pass@localhost:5432/db"
+os.environ["NEO4J_URI"] = "bolt://localhost:7687"
+os.environ["NEO4J_USER"] = "neo4j"
+os.environ["NEO4J_PASSWORD"] = "password"
 
 
-class MockAio:
-    models = MockAioModels()
-
-
-class MockClient:
-    def __init__(self, *args, **kwargs):
-        self.aio = MockAio()
-
-
-mock_google_genai = MagicMock()
-mock_google_genai.Client = MockClient
-sys.modules["google.genai"] = mock_google_genai
-
-# Create an AsyncMock for Prisma
-mock_prisma_instance = AsyncMock()
-mock_prisma_instance.is_connected = MagicMock(return_value=False)
-
-
-class MockPrismaCls:
-    def __call__(self, *args, **kwargs):
-        return mock_prisma_instance
-
-
-mock_prisma_module = MagicMock()
-mock_prisma_module.Prisma = MockPrismaCls()
-mock_prisma_module.Client = MockPrismaCls()
-sys.modules["prisma"] = mock_prisma_module
+@pytest.fixture
+def mock_db_connections(mocker: Any) -> None:
+    mocker.patch("src.database.db.connect", new_callable=AsyncMock)
+    mocker.patch("src.database.db.disconnect", new_callable=AsyncMock)
 
 
 @pytest.fixture(autouse=True)
-def mock_db_connections(mocker):
-    mocker.patch("src.graph_service.get_driver", new_callable=AsyncMock)
-    mocker.patch("src.graph_service.close_driver", new_callable=AsyncMock)
+def mock_settings(mocker: Any) -> Any:
+    mock = MagicMock()
+    mock.GEMINI_API_KEY = "test_gemini"
+    mock.DATABASE_URL = "postgresql://user:pass@localhost:5432/db"
+    mock.NEO4J_URI = "bolt://localhost:7687"
+    mock.NEO4J_USER = "neo4j"
+    mock.NEO4J_PASSWORD = "password"
+    return mocker.patch("src.settings.settings", mock)
+
+
+@pytest.fixture
+def mock_db_client(mocker: Any) -> Any:
+    return mocker.patch("src.database.db")

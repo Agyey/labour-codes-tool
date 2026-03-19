@@ -1,24 +1,25 @@
 import pytest
 import io
+from typing import Any, List, Generator
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from src.main import app, run_analysis_task
 
 
 @pytest.fixture
-def client():
+def client() -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
 
 
-def test_health_check(client):
+def test_health_check(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 
 @patch("src.main.db")
-def test_list_documents(mock_db, client):
+def test_list_documents(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "1"
         name = "test"
@@ -37,14 +38,14 @@ def test_list_documents(mock_db, client):
 
 
 @patch("src.main.db")
-def test_get_document_not_found(mock_db, client):
+def test_get_document_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=None)
     response = client.get("/api/documents/nonexistent")
     assert response.status_code == 404
 
 
 @patch("src.main.db")
-def test_get_document_found(mock_db, client):
+def test_get_document_found(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "1"
         name = "test"
@@ -59,7 +60,7 @@ def test_get_document_found(mock_db, client):
         id = "an_1"
         summary = "sum"
         document_type = "act"
-        structured_data = {}
+        structured_data: dict[str, Any] = {}
         graph_nodes = 1
         graph_relationships = 1
         created_at = None
@@ -68,7 +69,7 @@ def test_get_document_found(mock_db, client):
         id = "sug_1"
         type = "create_legislation"
         target_module = "db"
-        suggested_data = {}
+        suggested_data: dict[str, Any] = {}
         confidence = 0.9
         status = "pending"
         created_at = None
@@ -85,7 +86,7 @@ def test_get_document_found(mock_db, client):
 @patch("src.main.db")
 @patch("src.main.extract_text_from_pdf")
 @patch("src.main.record_audit")
-def test_upload_document(mock_audit, mock_extract, mock_db, client):
+def test_upload_document(mock_audit: Any, mock_extract: Any, mock_db: Any, client: TestClient) -> None:
     mock_extract.return_value = ("raw text", 5)
     mock_audit.return_value = AsyncMock()
 
@@ -107,7 +108,7 @@ def test_upload_document(mock_audit, mock_extract, mock_db, client):
     assert response.json()["id"] == "new_doc"
 
 
-def test_upload_document_no_filename(client):
+def test_upload_document_no_filename(client: TestClient) -> None:
     response = client.post(
         "/api/documents/upload",
         files={"file": ("", io.BytesIO(b""), "application/pdf")},
@@ -115,7 +116,7 @@ def test_upload_document_no_filename(client):
     assert response.status_code in (400, 422)
 
 
-def test_upload_document_bad_extension(client):
+def test_upload_document_bad_extension(client: TestClient) -> None:
     response = client.post(
         "/api/documents/upload",
         files={"file": ("test.exe", io.BytesIO(b""), "application/octet-stream")},
@@ -124,7 +125,7 @@ def test_upload_document_bad_extension(client):
 
 
 @patch("src.main.settings")
-def test_upload_document_too_large(mock_settings, client):
+def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> None:
     mock_settings.allowed_file_types = [".pdf"]
     mock_settings.max_upload_size_mb = 0.0001
     response = client.post(
@@ -135,7 +136,7 @@ def test_upload_document_too_large(mock_settings, client):
 
 
 @patch("src.main.extract_text_from_pdf")
-def test_upload_document_exception(mock_extract, client):
+def test_upload_document_exception(mock_extract: Any, client: TestClient) -> None:
     mock_extract.side_effect = Exception("test error")
     response = client.post(
         "/api/documents/upload",
@@ -145,7 +146,7 @@ def test_upload_document_exception(mock_extract, client):
 
 
 @pytest.mark.asyncio
-async def test_run_analysis_task(mocker):
+async def test_run_analysis_task(mocker: Any) -> None:
     mock_analyze = mocker.patch("src.main.analyze_document", new_callable=AsyncMock)
     mock_build = mocker.patch(
         "src.main.build_graph_and_suggestions", new_callable=AsyncMock
@@ -160,7 +161,7 @@ async def test_run_analysis_task(mocker):
 
 
 @patch("src.main.db")
-def test_trigger_analysis(mock_db, client):
+def test_trigger_analysis(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "1"
         raw_text = "doc text"
@@ -173,14 +174,14 @@ def test_trigger_analysis(mock_db, client):
 
 
 @patch("src.main.db")
-def test_trigger_analysis_not_found(mock_db, client):
+def test_trigger_analysis_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=None)
     response = client.post("/api/documents/x/analyze")
     assert response.status_code == 404
 
 
 @patch("src.main.db")
-def test_trigger_analysis_no_text(mock_db, client):
+def test_trigger_analysis_no_text(mock_db: Any, client: TestClient) -> None:
     class MockDocEmpty:
         id = "2"
         raw_text = None
@@ -191,7 +192,7 @@ def test_trigger_analysis_no_text(mock_db, client):
 
 
 @patch("src.main.traverse_for_query")
-def test_get_tree(mock_traverse, client):
+def test_get_tree(mock_traverse: Any, client: TestClient) -> None:
     mock_traverse.return_value = [{"summary": "s"}]
 
     # Branch 1
@@ -204,7 +205,7 @@ def test_get_tree(mock_traverse, client):
 
 
 @patch("src.main.traverse_for_query")
-def test_get_tree_exception(mock_traverse, client):
+def test_get_tree_exception(mock_traverse: Any, client: TestClient) -> None:
     mock_traverse.side_effect = Exception("tree error")
     response = client.get("/api/documents/1/tree")
     assert response.status_code == 500
@@ -212,7 +213,7 @@ def test_get_tree_exception(mock_traverse, client):
 
 @patch("src.main.db")
 @patch("src.main.record_audit")
-def test_approve_suggestion(mock_audit, mock_db, client):
+def test_approve_suggestion(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         id = "sug1"
         status = "pending"
@@ -237,14 +238,14 @@ def test_approve_suggestion(mock_audit, mock_db, client):
 
 
 @patch("src.main.db")
-def test_approve_suggestion_not_found(mock_db, client):
+def test_approve_suggestion_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=None)
     response = client.patch("/api/suggestions/invalid/approve")
     assert response.status_code == 404
 
 
 @patch("src.main.db")
-def test_approve_suggestion_not_pending(mock_db, client):
+def test_approve_suggestion_not_pending(mock_db: Any, client: TestClient) -> None:
     class MockSuggestionDone:
         status = "approved"
 
@@ -256,7 +257,7 @@ def test_approve_suggestion_not_pending(mock_db, client):
 
 
 @patch("src.main.db")
-def test_approve_suggestion_legislation_no_framework(mock_db, client):
+def test_approve_suggestion_legislation_no_framework(mock_db: Any, client: TestClient) -> None:
     class MockSuggestionLegis:
         status = "pending"
         type = "create_legislation"
@@ -272,7 +273,7 @@ def test_approve_suggestion_legislation_no_framework(mock_db, client):
 
 @patch("src.main.db")
 @patch("src.main.record_audit")
-def test_approve_suggestion_all_types(mock_audit, mock_db, client):
+def test_approve_suggestion_all_types(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
     types = [
         ("create_legislation", "?framework_id=f1"),
         ("create_compliance_item", "?provision_id=p1"),
@@ -308,12 +309,12 @@ def test_approve_suggestion_all_types(mock_audit, mock_db, client):
 
 
 @patch("src.main.db")
-def test_approve_suggestion_exception(mock_db, client):
+def test_approve_suggestion_exception(mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         status = "pending"
         type = "create_legislation"
         target_module = "tm"
-        suggested_data = {}
+        suggested_data: dict[str, Any] = {}
 
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=MockSuggestion())
     mock_db.legislation.create = AsyncMock(side_effect=Exception("create error"))
@@ -323,7 +324,7 @@ def test_approve_suggestion_exception(mock_db, client):
 
 @patch("src.main.db")
 @patch("src.main.record_audit")
-def test_reject_suggestion(mock_audit, mock_db, client):
+def test_reject_suggestion(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         id = "sug1"
         status = "pending"
@@ -339,14 +340,14 @@ def test_reject_suggestion(mock_audit, mock_db, client):
 
 
 @patch("src.main.db")
-def test_reject_suggestion_not_found(mock_db, client):
+def test_reject_suggestion_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=None)
     response = client.patch("/api/suggestions/none/reject")
     assert response.status_code == 404
 
 
 @patch("src.main.verify_chain_integrity")
-def test_verify_audit(mock_verify, client):
+def test_verify_audit(mock_verify: Any, client: TestClient) -> None:
     mock_verify.return_value = {"valid": True}
     response = client.get("/api/audit/verify")
     assert response.status_code == 200
@@ -354,7 +355,7 @@ def test_verify_audit(mock_verify, client):
 
 @patch("src.main.db")
 @patch("src.main.record_audit")
-def test_delete_document(mock_audit, mock_db, client):
+def test_delete_document(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "doc_del"
         name = "ToDelete"
@@ -373,14 +374,14 @@ def test_delete_document(mock_audit, mock_db, client):
 
 
 @patch("src.main.db")
-def test_delete_document_not_found(mock_db, client):
+def test_delete_document_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=None)
     response = client.delete("/api/documents/missing")
     assert response.status_code == 404
 
 
 @patch("src.main.db")
-def test_cancel_analysis(mock_db, client):
+def test_cancel_analysis(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "doc_cancel"
         status = "analyzing"
@@ -395,14 +396,14 @@ def test_cancel_analysis(mock_db, client):
 
 
 @patch("src.main.db")
-def test_cancel_analysis_not_found(mock_db, client):
+def test_cancel_analysis_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=None)
     response = client.patch("/api/documents/x/cancel")
     assert response.status_code == 404
 
 
 @patch("src.main.db")
-def test_cancel_analysis_wrong_status(mock_db, client):
+def test_cancel_analysis_wrong_status(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         status = "uploaded"
 
@@ -414,17 +415,17 @@ def test_cancel_analysis_wrong_status(mock_db, client):
 @patch("src.main.db")
 @patch("src.main.analyze_document")
 @patch("src.main.build_graph_and_suggestions")
-def test_stream_analysis(mock_build, mock_analyze, mock_db, client):
+def test_stream_analysis(mock_build: Any, mock_analyze: Any, mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "s1"
         raw_text = "text"
 
     class MockExtracted:
         name = "Extracted"
-        chapters = []
-        definitions = []
-        penalties = []
-        key_changes = []
+        chapters: List[Any] = []
+        definitions: List[Any] = []
+        penalties: List[Any] = []
+        key_changes: List[Any] = []
 
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
@@ -448,7 +449,7 @@ def test_stream_analysis(mock_build, mock_analyze, mock_db, client):
 
 @patch("src.main.db")
 @patch("src.main.analyze_document")
-def test_stream_analysis_error(mock_analyze, mock_db, client):
+def test_stream_analysis_error(mock_analyze: Any, mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "s1"
         raw_text = "text"
