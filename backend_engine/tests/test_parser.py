@@ -104,7 +104,8 @@ async def test_analyze_document_stream(
 
     with patch("src.parser._client") as mock_client:
 
-        async def mock_stream_gen():
+        from collections.abc import AsyncGenerator
+        async def mock_stream_gen() -> AsyncGenerator[Any, None]:
             yield mock_response
 
         mock_client.aio.models.generate_content_stream = AsyncMock(

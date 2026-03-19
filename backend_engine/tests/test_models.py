@@ -74,8 +74,8 @@ def test_extracted_legislation_edge_cases() -> None:
         ExtractedLegislation(
             name="Test Act",
             short_name="TA",
-            year="invalid",
-            summary="Summary",  # type: ignore
+            year="invalid",  # type: ignore
+            summary="Summary",
         )
 
 

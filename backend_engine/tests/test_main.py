@@ -420,7 +420,8 @@ def test_stream_analysis(mock_reader: Any, mock_db: Any, client: TestClient) -> 
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
 
-    async def mock_gen(*args: Any, **kwargs: Any):
+    from collections.abc import AsyncGenerator
+    async def mock_gen(*args: Any, **kwargs: Any) -> AsyncGenerator[str, None]:
         yield "event: progress\\ndata: {}\\n\\n"
 
     mock_reader.side_effect = mock_gen
@@ -443,7 +444,8 @@ def test_stream_analysis_error(
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.document.update = AsyncMock()
 
-    async def mock_gen(*args: Any, **kwargs: Any):
+    from collections.abc import AsyncGenerator
+    async def mock_gen(*args: Any, **kwargs: Any) -> AsyncGenerator[str, None]:
         yield "event: error\\ndata: Simulated streaming error\\n\\n"
 
     mock_reader.side_effect = mock_gen

@@ -125,7 +125,13 @@ async def analyze_document_stream(
         raise ValueError("Failed to extract JSON from Gemini response.")
 
     json_str = json_match.group(1)
-    extracted = ExtractedLegislation.model_validate_json(json_str)
+    try:
+        import json_repair
+        decoded = json_repair.loads(json_str)
+        extracted = ExtractedLegislation.model_validate(decoded)
+    except Exception as parse_e:
+        logger.warning(f"json_repair failed, falling back to raw json parsing: {parse_e}")
+        extracted = ExtractedLegislation.model_validate_json(json_str)
 
     logger.info(
         f"Extraction complete: {extracted.name} — "
