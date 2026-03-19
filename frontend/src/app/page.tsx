@@ -15,7 +15,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { api, Document as DocumentType } from '../lib/api';
-import { NavItem, StatCard, ActItem } from '@/components/DashboardItems';
+import { NavItem, StatCard, ActItem } from '../components/DashboardItems';
 
 export default function Home() {
   const [documents, setDocuments] = useState<DocumentType[]>([]);
