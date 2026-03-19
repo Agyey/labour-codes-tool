@@ -57,21 +57,72 @@ def extract_text_from_pdf(file_path: str) -> tuple[str, int]:
     return text_content, page_count
 
 
-async def analyze_document(document_id: str, raw_text: str) -> ExtractedLegislation:
-    """Send document text to Gemini for structured extraction."""
+async def analyze_document_stream(document_id: str, raw_text: str) -> typing.AsyncGenerator[str | ExtractedLegislation, None]:
+    """Send document text to Gemini and stream thoughts, then structured extraction."""
     logger.info(f"Analyzing document {document_id}: {len(raw_text)} characters")
 
-    response = await _client.aio.models.generate_content(
+    prompt = (
+        "First, think step-by-step about this document to prepare for extraction. Write your detailed analysis inside <think> and </think> tags.\n"
+        "Break down your thoughts logically. Identify chapters, compliance items, definitions, and penalties. Keep your thinking extremely concise to save tokens.\n\n"
+        "CRITICAL: To prevent exceeding output limits, set the `full_text` field of EVERY section and sub_section to an empty string \"\" in the JSON. We only need the `summary`.\n\n"
+        "After closing the </think> tag, output the precise JSON matching the required schema enclosed in ```json and ``` tags.\n\n"
+        f"Document text:\n{raw_text}"
+    )
+
+    response_stream = await _client.aio.models.generate_content_stream(
         model="gemini-2.5-flash",
-        contents=raw_text,
+        contents=prompt,
         config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=ExtractedLegislation,
             system_instruction=SYSTEM_INSTRUCTION,
+            temperature=0.2,
         ),
     )
 
-    extracted = ExtractedLegislation.model_validate_json(response.text or "")
+    full_text = ""
+    thought_buffer = ""
+    
+    import re
+    
+    try:
+        async for chunk in response_stream:
+            text = chunk.text or ""
+            full_text += text
+            
+            # If we haven't reached </think> yet, we process the stream as thoughts
+            if "</think>" not in full_text:
+                if "<think>" in full_text:
+                    # Strip out <think> and accumulate
+                    clean_text = text.replace("<think>", "").replace("\n", " ")
+                    thought_buffer += clean_text
+                    
+                    # Yield complete sentences to the UI
+                    while ". " in thought_buffer:
+                        split_idx = thought_buffer.index(". ") + 2
+                        sentence = thought_buffer[:split_idx].strip()
+                        thought_buffer = thought_buffer[split_idx:]
+                        if sentence:
+                            yield sentence
+            else:
+                # We have reached </think>, we might have a final thought to flush
+                if thought_buffer.strip():
+                    yield thought_buffer.strip() + "..."
+                    thought_buffer = ""
+                    
+    except Exception as e:
+        logger.error(f"Stream error: {e}")
+        raise e
+
+    # Extract JSON out of the full result
+    json_match = re.search(r"```json\s*(.*?)\s*```", full_text, re.DOTALL)
+    if not json_match:
+        json_match = re.search(r"(\{.*\})", full_text, re.DOTALL)
+        
+    if not json_match:
+        raise ValueError("Failed to extract JSON from Gemini response.")
+        
+    json_str = json_match.group(1)
+    extracted = ExtractedLegislation.model_validate_json(json_str)
+    
     logger.info(
         f"Extraction complete: {extracted.name} — "
         f"{len(extracted.chapters)} chapters, "
@@ -79,7 +130,7 @@ async def analyze_document(document_id: str, raw_text: str) -> ExtractedLegislat
         f"{len(extracted.key_changes)} key changes, "
         f"{len(extracted.penalties)} penalties"
     )
-    return extracted
+    yield extracted
 
 
 async def build_graph_and_suggestions(

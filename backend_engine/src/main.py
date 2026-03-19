@@ -44,9 +44,11 @@ from src.database import db, connect_db, disconnect_db
 from src.graph_service import close_driver, traverse_for_query
 from src.parser import (
     extract_text_from_pdf,
-    analyze_document,
+    analyze_document_stream,
     build_graph_and_suggestions,
 )
+import asyncio
+import time
 from src.audit_chain import record_audit, verify_chain_integrity
 from src.settings import settings
 
@@ -317,29 +319,7 @@ async def cancel_analysis(document_id: str) -> dict[str, str]:
     return {"message": "Analysis cancelled.", "status": "uploaded"}
 
 
-# ──────────────────────────────────────────────
-# AI Analysis — Background (legacy)
-# ──────────────────────────────────────────────
 
-
-async def run_analysis_task(document_id: str, raw_text: str) -> None:
-    """Background task to run the Gemini analysis and graph building."""
-    try:
-        # 1. AI extraction
-        extracted = await analyze_document(document_id, raw_text)
-
-        # 2. Build graph + generate suggestions
-        await build_graph_and_suggestions(document_id, extracted)
-
-        # 3. Mark as analyzed
-        await db.document.update(
-            where={"id": document_id},
-            data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
-        )
-
-    except Exception as e:
-        await db.document.update(where={"id": document_id}, data={"status": "error"})
-        logger.error(f"Analysis background task failed for {document_id}: {e}")
 
 
 @app.post("/api/documents/{document_id}/analyze")
@@ -353,14 +333,12 @@ async def trigger_analysis(
     if not doc.raw_text:
         raise HTTPException(400, "Document has no extracted text.")
 
-    # Update status to analyzing
-    await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
-
-    # Schedule the background task
-    background_tasks.add_task(run_analysis_task, document_id, doc.raw_text)
+    if document_id not in ANALYSIS_EVENTS and doc.status != "analyzed":
+        await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
+        asyncio.create_task(_run_analysis_background(document_id, doc.raw_text))
 
     return {
-        "message": "Analysis started in background. Please poll for status.",
+        "message": "Analysis started in background. Please poll for status or connect to stream.",
         "document_id": document_id,
         "status": "analyzing",
     }
@@ -370,109 +348,102 @@ async def trigger_analysis(
 # AI Analysis — SSE Streaming
 # ──────────────────────────────────────────────
 
+# Global state for resilient streaming across page reloads
+ANALYSIS_EVENTS: dict[str, list[str]] = {}
+ANALYSIS_LISTENERS: dict[str, list[asyncio.Queue[str | None]]] = {}
 
-async def _analysis_stream(
-    document_id: str, raw_text: str
-) -> AsyncGenerator[str, None]:
-    """Generator that runs the full analysis pipeline and yields SSE progress events.
+async def _publish_event(document_id: str, event_str: str) -> None:
+    if document_id not in ANALYSIS_EVENTS:
+        ANALYSIS_EVENTS[document_id] = []
+    ANALYSIS_EVENTS[document_id].append(event_str)
+    
+    if document_id in ANALYSIS_LISTENERS:
+        for q in ANALYSIS_LISTENERS[document_id]:
+            await q.put(event_str)
 
-    Key improvements:
-    - Heartbeat "thinking" events every ~3s during Gemini call (no dead air)
-    - Per-chapter tree streaming during graph build
-    - Live suggestion count updates
-    - Elapsed time on every event
-    """
-    import asyncio
-    import time
+async def _publish_done(document_id: str) -> None:
+    if document_id in ANALYSIS_LISTENERS:
+        for q in ANALYSIS_LISTENERS[document_id]:
+            await q.put(None)
+        ANALYSIS_LISTENERS.pop(document_id, None)
 
-    start_time = time.monotonic()
+
+async def _stream_reader(document_id: str) -> typing.AsyncGenerator[str, None]:
+    # Yield history first
+    for evt in ANALYSIS_EVENTS.get(document_id, []):
+        yield evt
+        
+    doc = await db.document.find_unique(where={"id": document_id})
+    if not doc or (doc.status != "analyzing" and document_id not in ANALYSIS_EVENTS):
+        return
+
+    q: asyncio.Queue[str | None] = asyncio.Queue()
+    if document_id not in ANALYSIS_LISTENERS:
+        ANALYSIS_LISTENERS[document_id] = []
+    ANALYSIS_LISTENERS[document_id].append(q)
+    
+    try:
+        while True:
+            evt = await q.get()
+            if evt is None:
+                break
+            yield evt
+    finally:
+        if document_id in ANALYSIS_LISTENERS and q in ANALYSIS_LISTENERS[document_id]:
+            ANALYSIS_LISTENERS[document_id].remove(q)
+
+
+async def _run_analysis_background(document_id: str, raw_text: str) -> None:
+    """Runs the document analysis in a background task, detached from the HTTP lifecycle."""
+    start_time = time.time()
 
     def _elapsed() -> str:
-        return f"{time.monotonic() - start_time:.1f}s"
+        elasped_sec = time.time() - start_time
+        return f"{elasped_sec:.1f}s"
 
     try:
-        # Phase 1: Init
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "init",
-                "status": "running",
+                "status": "done",
                 "message": "Initializing document analysis pipeline...",
-                "detail": f"Document ID: {document_id[:8]}... | {len(raw_text):,} characters to process",
+                "detail": f"Document ID: {str(document_id)[:8]}... | {len(raw_text):,} characters to process",
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
-        # Phase 2: Gemini extraction with heartbeat
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "extraction",
                 "status": "running",
                 "message": "Sending document to Gemini 2.5 Flash...",
-                "detail": "Extracting full legal hierarchy: chapters, sections, definitions, penalties, compliance obligations",
+                "detail": "Beginning thought process and extraction...",
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
-        # Run extraction with concurrent heartbeat so the user sees activity
-        heartbeat_messages = [
-            "Parsing document structure and identifying chapters...",
-            "Extracting section headings and legal definitions...",
-            "Analyzing compliance obligations and penalties...",
-            "Mapping sub-sections and cross-references...",
-            "Identifying key changes from previous legislation...",
-            "Building hierarchical representation...",
-            "Validating extracted entities and relationships...",
-            "Finalizing structured extraction output...",
-        ]
-
-        # Use an asyncio.Queue to yield heartbeats + final result
-        result_queue: asyncio.Queue[str | None] = asyncio.Queue()
         extraction_result: list[typing.Any] = []
-
-        async def _run_extraction() -> None:
-            try:
-                extracted = await analyze_document(document_id, raw_text)
-                extraction_result.append(extracted)
-            except Exception as exc:
-                extraction_result.append(exc)
-            finally:
-                await result_queue.put(None)  # Signal done
-
-        async def _heartbeat() -> None:
-            idx = 0
-            while True:
-                await asyncio.sleep(3)
-                msg = heartbeat_messages[idx % len(heartbeat_messages)]
-                await result_queue.put(
-                    _sse_event(
+        
+        try:
+            async for chunk in analyze_document_stream(document_id, raw_text):
+                if isinstance(chunk, str):
+                    await _publish_event(document_id, _sse_event(
                         "progress",
                         {
                             "phase": "extraction",
                             "status": "running",
-                            "message": f"⏳ {msg}",
-                            "detail": f"Gemini is processing... ({_elapsed()} elapsed)",
+                            "message": "Gemini Analysis",
+                            "detail": f"🤔 {chunk}",
                             "elapsed": _elapsed(),
                         },
-                    )
-                )
-                idx += 1
-
-        extraction_task = asyncio.create_task(_run_extraction())
-        heartbeat_task = asyncio.create_task(_heartbeat())
-
-        # Drain heartbeat events until extraction finishes
-        while True:
-            event = await result_queue.get()
-            if event is None:
-                break
-            yield event
-
-        heartbeat_task.cancel()
-        await extraction_task  # ensure done
-
-        # Check for errors
+                    ))
+                else:
+                    extraction_result.append(chunk)
+        except Exception as exc:
+            extraction_result.append(exc)
+            
         if not extraction_result or isinstance(extraction_result[0], Exception):
             raise (
                 extraction_result[0]
@@ -482,7 +453,7 @@ async def _analysis_stream(
 
         extracted = extraction_result[0]
 
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "extraction",
@@ -497,10 +468,9 @@ async def _analysis_stream(
                 ),
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
-        # Phase 3: Structure preview — emit tree
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "structure",
@@ -509,7 +479,7 @@ async def _analysis_stream(
                 "detail": "Building vectorless RAG hierarchy for intelligent traversal",
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
         tree_preview: list[dict[str, typing.Any]] = []
         for ch in extracted.chapters:
@@ -524,7 +494,7 @@ async def _analysis_stream(
                 }
             )
 
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "tree",
             {
                 "phase": "structure",
@@ -533,10 +503,9 @@ async def _analysis_stream(
                 "chapters": tree_preview,
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
-        # Phase 4: Graph building (with per-chapter events)
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "graph",
@@ -545,11 +514,11 @@ async def _analysis_stream(
                 "detail": f"Creating nodes for {len(extracted.chapters)} chapters",
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
         result = await build_graph_and_suggestions(document_id, extracted)
 
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "graph",
@@ -562,10 +531,9 @@ async def _analysis_stream(
                 ),
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
-        # Phase 5: Finalize
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "finalize",
@@ -574,14 +542,14 @@ async def _analysis_stream(
                 "detail": "Updating document status and creating tamper-proof audit record",
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
         await db.document.update(
             where={"id": document_id},
             data={"status": "analyzed", "analyzed_at": datetime.now(timezone.utc)},
         )
 
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "progress",
             {
                 "phase": "finalize",
@@ -590,10 +558,10 @@ async def _analysis_stream(
                 "detail": f"{result['suggestion_count']} suggestions ready for your review",
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
         # Final event
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "complete",
             {
                 "suggestion_count": result["suggestion_count"],
@@ -602,17 +570,26 @@ async def _analysis_stream(
                 "analysis_id": result["analysis_id"],
                 "elapsed": _elapsed(),
             },
-        )
+        ))
 
     except Exception as e:
-        logger.error(f"Streaming analysis failed for {document_id}: {e}")
+        logger.error(f"Background analysis failed for {document_id}: {e}")
         await db.document.update(where={"id": document_id}, data={"status": "error"})
-        yield _sse_event(
+        await _publish_event(document_id, _sse_event(
             "error",
             {
                 "message": "Analysis failed. Please try again.",
             },
-        )
+        ))
+    finally:
+        await _publish_done(document_id)
+        
+        # Self-clean up after 5 minutes
+        async def _cleanup():
+            await asyncio.sleep(300)
+            ANALYSIS_EVENTS.pop(document_id, None)
+            
+        asyncio.create_task(_cleanup())
 
 
 @app.get("/api/documents/{document_id}/analyze/stream")
@@ -625,11 +602,13 @@ async def stream_analysis(request: Request, document_id: str) -> StreamingRespon
     if not doc.raw_text:
         raise HTTPException(400, "Document has no extracted text.")
 
-    # Update status to analyzing
-    await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
+    # Only start background task if not already tracking
+    if document_id not in ANALYSIS_EVENTS and doc.status != "analyzed":
+        await db.document.update(where={"id": document_id}, data={"status": "analyzing"})
+        asyncio.create_task(_run_analysis_background(document_id, doc.raw_text))
 
     return StreamingResponse(
-        _analysis_stream(document_id, doc.raw_text),
+        _stream_reader(document_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
