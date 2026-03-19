@@ -10,7 +10,7 @@ import { createBlankProvision } from "@/lib/utils";
 import { Plus, BookOpen, Database, Upload, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { LibraryTable } from "@/components/library/LibraryTable";
-import { injectSampleData } from "@/app/actions/provisions";
+import { injectSampleData } from "@/app/actions/provisions/write";
 import { PdfUploadWizard } from "@/components/parsers/PdfUploadWizard";
 import toast from "react-hot-toast";
 import { useState } from "react";

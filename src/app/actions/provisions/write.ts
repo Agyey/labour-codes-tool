@@ -122,7 +122,7 @@ export async function updateProvision(id: string, rawUpdates: Provision) {
         summary: m.summary,
         full_text: m.fullText,
         change_description: m.change,
-        change_tags: m.change_tags || [],
+        change_tags: m.changeTags || [],
       }));
 
       const compItemsCreate = (validatedData.compItems || []).map((c) => ({
