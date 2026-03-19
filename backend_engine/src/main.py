@@ -19,7 +19,6 @@ import prisma
 import shutil
 import tempfile
 import typing
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
