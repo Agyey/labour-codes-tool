@@ -1,19 +1,18 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { CODES } from "@/config/codes";
-import { IMPACT_COLORS } from "@/config/tags";
-import { Badge } from "@/components/shared/Badge";
-import { GitCompare, ArrowLeftRight, Plus, X } from "lucide-react";
+import { GitCompare, ArrowLeftRight, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Breadcrumbs } from "../shared/Breadcrumbs";
 import toast from "react-hot-toast";
+import { RegisterActModal } from "./CompareView/RegisterActModal";
+import { ComparisonSide } from "./CompareView/ComparisonSide";
 
 export function CompareView() {
   const { provisions, frameworks, legislations, saveProvision, createLegislation } = useData();
-  const { comparePayload, setComparePayload } = useUI();
+  const { comparePayload } = useUI();
   
   const [codeA, setCodeA] = useState<string>("");
   const [codeB, setCodeB] = useState<string>("");
@@ -33,8 +32,7 @@ export function CompareView() {
       setCodeA(comparePayload.sideA.code);
       setProvA(comparePayload.sideA.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [comparePayload]);
+  }, [comparePayload, codeA, provA]);
 
   const handleRegisterAct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +56,6 @@ export function CompareView() {
     }
   };
 
-  /** Create a formal OldMapping connector between A and B */
   const handleCreateConnector = async () => {
     if (!a || !b) return;
     
@@ -80,11 +77,9 @@ export function CompareView() {
     toast.success(`Connected ${a.sec}${subA} to ${b.code} ${b.sec}${subB}`);
   };
 
-  // Dynamically derive available codes from provisions + static config + manual registrations
   const availableCodes = useMemo(() => {
-    // Collect unique codes from provisions + global legislations
     const codesInData = new Set([...provisions.map(p => p.code), ...legislations.map(l => l.shortName)]);
-    const all = Array.from(codesInData).map(c => {
+    return Array.from(codesInData).map(c => {
       const dbLeg = legislations.find(l => l.shortName === c);
       const staticMeta = CODES[c as keyof typeof CODES];
       
@@ -95,7 +90,6 @@ export function CompareView() {
         color: dbLeg?.color || staticMeta?.c || "#64748b"
       };
     }).sort((a, b) => a.name.localeCompare(b.name));
-    return all;
   }, [provisions, legislations]);
 
   const provsA = useMemo(() => provisions.filter(p => p.code === codeA), [provisions, codeA]);
@@ -143,72 +137,25 @@ export function CompareView() {
           )}
           <button 
             onClick={() => setShowAddAct(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-400 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all shadow-sm"
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-800 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-zinc-400 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" /> Add New Act
           </button>
         </div>
       </div>
 
-      {/* Add Act Modal */}
       {showAddAct && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-[32px] shadow-2xl border border-slate-200 dark:border-zinc-800 p-8 relative overflow-hidden">
-            <button 
-              onClick={() => setShowAddAct(false)}
-              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Register Legal Container</h3>
-            <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6">Define a new Act or Code to enable comparative mapping.</p>
-
-            <form onSubmit={handleRegisterAct} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Act Name</label>
-                <input 
-                  autoFocus
-                  required
-                  value={newActName}
-                  onChange={e => setNewActName(e.target.value)}
-                  placeholder="e.g. Payment of Wages Act, 1936"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Short Code</label>
-                <input 
-                  required
-                  value={newActShort}
-                  onChange={e => setNewActShort(e.target.value)}
-                  placeholder="e.g. PWA36"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Framework (Bucket)</label>
-                <select 
-                  required
-                  value={targetFrameworkId}
-                  onChange={e => setTargetFrameworkId(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-indigo-500/20"
-                >
-                  <option value="">Select Bucket</option>
-                  {frameworks.map(f => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
-                </select>
-              </div>
-              <button 
-                type="submit"
-                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-zinc-900 font-black rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20 mt-4"
-              >
-                Register Act
-              </button>
-            </form>
-          </div>
-        </div>
+        <RegisterActModal 
+          onClose={() => setShowAddAct(false)}
+          onSubmit={handleRegisterAct}
+          newActName={newActName}
+          setNewActName={setNewActName}
+          newActShort={newActShort}
+          setNewActShort={setNewActShort}
+          targetFrameworkId={targetFrameworkId}
+          setTargetFrameworkId={setTargetFrameworkId}
+          frameworks={frameworks}
+        />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
@@ -216,133 +163,33 @@ export function CompareView() {
            <ArrowLeftRight className="w-4 h-4 text-slate-400" />
         </div>
 
-        {/* SIDE A */}
-        <div className="space-y-4 p-6 bg-white dark:bg-zinc-900/50 rounded-[32px] border border-slate-200 dark:border-zinc-800/80 shadow-sm">
-          <div className="space-y-3">
-             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">MAIN LEGISLATION (New Code)</label>
-             <select
-                value={codeA}
-                onChange={(e) => { setCodeA(e.target.value); setProvA(""); setSubA(""); }}
-                className="w-full px-4 py-3 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs bg-slate-50 dark:bg-zinc-900 font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-             >
-                <option value="">Select Act</option>
-                {availableCodes.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-             </select>
+        <ComparisonSide 
+          label="MAIN LEGISLATION (New Code)"
+          code={codeA}
+          setCode={setCodeA}
+          availableCodes={availableCodes}
+          provId={provA}
+          setProvId={setProvA}
+          provisions={provsA}
+          subId={subA}
+          setSubId={setSubA}
+          selectedProvision={a}
+          getMeta={getMeta}
+        />
 
-             <div className="grid grid-cols-[3fr_1fr] gap-2 mt-4">
-                <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Provision</label>
-                   <select
-                      value={provA}
-                      onChange={(e) => setProvA(e.target.value)}
-                      disabled={!codeA}
-                      className="w-full px-4 py-3 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs bg-slate-50 dark:bg-zinc-900 font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50"
-                   >
-                      <option value="">Select Section/Rule</option>
-                      {provsA.map(p => (
-                        <option key={p.id} value={p.id}>[{p.provisionType === 'rule' ? 'R.' : 'S.'}{p.sec}] {p.title}</option>
-                      ))}
-                   </select>
-                </div>
-                <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Sub-Sec</label>
-                   <select
-                      value={subA}
-                      onChange={(e) => setSubA(e.target.value)}
-                      disabled={!a}
-                      className="w-full px-4 py-3 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs bg-slate-50 dark:bg-zinc-900 font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50"
-                   >
-                      <option value="">None</option>
-                      {(a?.subSections || []).map((ss: any, idx: number) => (
-                        <option key={idx} value={ss.marker}>{ss.marker}</option>
-                      ))}
-                   </select>
-                </div>
-             </div>
-          </div>
-
-          {a ? (
-            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-zinc-800 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight mb-2" style={{ color: getMeta(codeA).c }}>
-                {a.provisionType === 'rule' ? 'Rule' : 'Section'} {a.sec}{subA} — {a.title}
-              </h3>
-              <div className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed font-medium bg-slate-50 dark:bg-zinc-800/30 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800/50">
-                {subA ? (a.subSections.find((ss: any) => ss.marker === subA)?.text || a.summary) : a.summary}
-              </div>
-            </div>
-          ) : (
-            <div className="py-20 text-center opacity-30 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[24px] mt-4">
-               <GitCompare className="w-8 h-8 mx-auto mb-2" />
-               <p className="text-xs font-bold uppercase tracking-wider">Select New Law</p>
-            </div>
-          )}
-        </div>
-
-        {/* SIDE B */}
-        <div className="space-y-4 p-6 bg-white dark:bg-zinc-900/50 rounded-[32px] border border-slate-200 dark:border-zinc-800/80 shadow-sm relative">
-          <div className="space-y-3">
-             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">REPEALED LEGISLATION (Old Law)</label>
-             <select
-                value={codeB}
-                onChange={(e) => { setCodeB(e.target.value); setProvB(""); setSubB(""); }}
-                className="w-full px-4 py-3 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs bg-slate-50 dark:bg-zinc-900 font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-             >
-                <option value="">Select Act</option>
-                {availableCodes.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-             </select>
-
-             <div className="grid grid-cols-[3fr_1fr] gap-2 mt-4">
-                <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Provision</label>
-                   <select
-                      value={provB}
-                      onChange={(e) => setProvB(e.target.value)}
-                      disabled={!codeB}
-                      className="w-full px-4 py-3 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs bg-slate-50 dark:bg-zinc-900 font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50"
-                   >
-                      <option value="">Select Section/Rule</option>
-                      {provsB.map(p => (
-                        <option key={p.id} value={p.id}>[S.{p.sec}] {p.title}</option>
-                      ))}
-                   </select>
-                </div>
-                <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">Sub-Sec</label>
-                   <select
-                      value={subB}
-                      onChange={(e) => setSubB(e.target.value)}
-                      disabled={!b}
-                      className="w-full px-4 py-3 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs bg-slate-50 dark:bg-zinc-900 font-bold text-slate-700 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50"
-                   >
-                      <option value="">None</option>
-                      {(b?.subSections || []).map((ss: any, idx: number) => (
-                        <option key={idx} value={ss.marker}>{ss.marker}</option>
-                      ))}
-                   </select>
-                </div>
-             </div>
-          </div>
-
-          {b || comparePayload?.sideB ? (
-             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-zinc-800 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white leading-tight mb-2" style={{ color: getMeta(codeB || "REPEALED").c }}>
-                  {b?.provisionType === 'rule' ? 'Rule' : 'Section'} {b?.sec || comparePayload?.sideB?.code}{subB} — {b?.title || comparePayload?.sideB?.title}
-                </h3>
-                <div className="text-sm text-slate-600 dark:text-zinc-400 leading-relaxed font-medium bg-slate-50 dark:bg-zinc-800/30 p-4 rounded-2xl border border-slate-100 dark:border-zinc-800/50">
-                   {subB ? (b?.subSections.find((ss: any) => ss.marker === subB)?.text || b?.summary || comparePayload?.sideB?.summary) : (b?.summary || comparePayload?.sideB?.summary)}
-                </div>
-             </div>
-          ) : (
-            <div className="py-20 text-center opacity-30 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-[24px] mt-4">
-               <GitCompare className="w-8 h-8 mx-auto mb-2" />
-               <p className="text-xs font-bold uppercase tracking-wider">Select Old Law</p>
-            </div>
-          )}
-        </div>
+        <ComparisonSide 
+          label="REPEALED LEGISLATION (Old Law)"
+          code={codeB}
+          setCode={setCodeB}
+          availableCodes={availableCodes}
+          provId={provB}
+          setProvId={setProvB}
+          provisions={provsB}
+          subId={subB}
+          setSubId={setSubB}
+          selectedProvision={b}
+          getMeta={getMeta}
+        />
       </div>
     </div>
   );

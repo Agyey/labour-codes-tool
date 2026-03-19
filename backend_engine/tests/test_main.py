@@ -350,3 +350,114 @@ def test_verify_audit(mock_verify, client):
     mock_verify.return_value = {"valid": True}
     response = client.get("/api/audit/verify")
     assert response.status_code == 200
+
+
+@patch("src.main.db")
+@patch("src.main.record_audit")
+def test_delete_document(mock_audit, mock_db, client):
+    class MockDoc:
+        id = "doc_del"
+        name = "ToDelete"
+        file_name = "del.pdf"
+
+    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
+    mock_db.documentsuggestion.delete_many = AsyncMock()
+    mock_db.documentanalysis.delete_many = AsyncMock()
+    mock_db.document.delete = AsyncMock()
+    mock_audit.return_value = AsyncMock()
+
+    response = client.delete("/api/documents/doc_del")
+    assert response.status_code == 200
+    assert response.json()["id"] == "doc_del"
+    mock_db.document.delete.assert_called_once()
+
+
+@patch("src.main.db")
+def test_delete_document_not_found(mock_db, client):
+    mock_db.document.find_unique = AsyncMock(return_value=None)
+    response = client.delete("/api/documents/missing")
+    assert response.status_code == 404
+
+
+@patch("src.main.db")
+def test_cancel_analysis(mock_db, client):
+    class MockDoc:
+        id = "doc_cancel"
+        status = "analyzing"
+
+    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
+    mock_db.document.update = AsyncMock()
+
+    response = client.patch("/api/documents/doc_cancel/cancel")
+    assert response.status_code == 200
+    assert response.json()["status"] == "uploaded"
+    mock_db.document.update.assert_called_once()
+
+
+@patch("src.main.db")
+def test_cancel_analysis_not_found(mock_db, client):
+    mock_db.document.find_unique = AsyncMock(return_value=None)
+    response = client.patch("/api/documents/x/cancel")
+    assert response.status_code == 404
+
+
+@patch("src.main.db")
+def test_cancel_analysis_wrong_status(mock_db, client):
+    class MockDoc:
+        status = "uploaded"
+
+    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
+    response = client.patch("/api/documents/y/cancel")
+    assert response.status_code == 400
+
+
+@patch("src.main.db")
+@patch("src.main.analyze_document")
+@patch("src.main.build_graph_and_suggestions")
+def test_stream_analysis(mock_build, mock_analyze, mock_db, client):
+    class MockDoc:
+        id = "s1"
+        raw_text = "text"
+
+    class MockExtracted:
+        name = "Extracted"
+        chapters = []
+        definitions = []
+        penalties = []
+        key_changes = []
+
+    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
+    mock_db.document.update = AsyncMock()
+    mock_analyze.return_value = MockExtracted()
+    mock_build.return_value = {
+        "graph_stats": {"nodes": 10, "relationships": 5},
+        "suggestion_count": 2,
+        "analysis_id": "an1",
+    }
+
+    response = client.get("/api/documents/s1/analyze/stream")
+    assert response.status_code == 200
+    # TestClient will collect all SSE events
+    content = response.text
+    assert "event: progress" in content
+    assert "phase\": \"init" in content
+    assert "phase\": \"extraction" in content
+    assert "Extraction complete" in content
+    assert "event: complete" in content
+
+
+@patch("src.main.db")
+@patch("src.main.analyze_document")
+def test_stream_analysis_error(mock_analyze, mock_db, client):
+    class MockDoc:
+        id = "s1"
+        raw_text = "text"
+
+    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
+    mock_db.document.update = AsyncMock()
+    mock_analyze.side_effect = Exception("Analysis Logic Error")
+
+    response = client.get("/api/documents/s1/analyze/stream")
+    # Streaming endpoints might return 200 but yield an error event
+    assert response.status_code == 200
+    assert "event: error" in response.text

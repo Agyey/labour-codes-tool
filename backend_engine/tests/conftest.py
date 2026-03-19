@@ -37,6 +37,7 @@ class MockPrismaCls:
 
 mock_prisma_module = MagicMock()
 mock_prisma_module.Prisma = MockPrismaCls()
+mock_prisma_module.Client = MockPrismaCls()
 sys.modules["prisma"] = mock_prisma_module
 
 
