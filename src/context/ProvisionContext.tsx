@@ -10,14 +10,14 @@ import {
   type ReactNode,
 } from "react";
 import type { Provision } from "@/types/provision";
+import { getProvisions } from "@/app/actions/provisions/read";
+import { updateProvision } from "@/app/actions/provisions/write";
 import { 
-  getProvisions,
-  updateProvision,
   deleteProvision as deleteProvisionAction,
   deleteProvisions as deleteProvisionsAction,
   togglePin as togglePinAction,
   toggleVerify as toggleVerifyAction,
-} from "@/app/actions/provisions";
+} from "@/app/actions/provisions/toggle";
 import { loadStorage, saveStorage, calculateStats } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { useUI } from "@/context/UIContext";

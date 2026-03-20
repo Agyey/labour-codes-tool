@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { updateProvision, getProvisions } from "./provisions";
+import { getProvisions } from "./provisions/read";
+import { updateProvision } from "./provisions/write";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";

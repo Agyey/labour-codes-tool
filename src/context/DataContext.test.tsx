@@ -4,7 +4,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DataProvider, useData } from "./DataContext";
 import { useSession } from "next-auth/react";
 import { useUI } from "@/context/UIContext";
-import * as actions from "@/app/actions/provisions";
+import * as readActions from "@/app/actions/provisions/read";
+import * as writeActions from "@/app/actions/provisions/write";
+import * as toggleActions from "@/app/actions/provisions/toggle";
 import * as frameworkActions from "@/app/actions/frameworks";
 import * as userActions from "@/app/actions/users";
 
@@ -18,9 +20,16 @@ vi.mock("@/context/UIContext", () => ({
   useUI: vi.fn(),
 }));
 
-vi.mock("@/app/actions/provisions", () => ({
+vi.mock("@/app/actions/provisions/read", () => ({
   getProvisions: vi.fn(),
+}));
+
+vi.mock("@/app/actions/provisions/write", () => ({
   updateProvision: vi.fn(),
+  injectSampleData: vi.fn(),
+}));
+
+vi.mock("@/app/actions/provisions/toggle", () => ({
   deleteProvision: vi.fn(),
   deleteProvisions: vi.fn(),
   togglePin: vi.fn(),
@@ -66,7 +75,7 @@ describe("DataContext", () => {
     vi.clearAllMocks();
     (useSession as any).mockReturnValue({ data: { user: { id: "user1" } } });
     (useUI as any).mockReturnValue({ activeCode: "CoW", mode: "admin", passwordVerified: true });
-    (actions.getProvisions as any).mockResolvedValue([]);
+    (readActions.getProvisions as any).mockResolvedValue([]);
     (frameworkActions.getFrameworks as any).mockResolvedValue([]);
     (frameworkActions.getLegislations as any).mockResolvedValue([]);
     (userActions.getUsers as any).mockResolvedValue([]);
@@ -74,7 +83,7 @@ describe("DataContext", () => {
 
   it("should load data on mount", async () => {
     const mockProvs = [{ id: "p1", code: "CoW" }];
-    (actions.getProvisions as any).mockResolvedValue(mockProvs);
+    (readActions.getProvisions as any).mockResolvedValue(mockProvs);
 
     render(
       <DataProvider>
@@ -88,12 +97,12 @@ describe("DataContext", () => {
       expect(screen.getByTestId("count")).toHaveTextContent("1");
     });
 
-    expect(actions.getProvisions).toHaveBeenCalled();
+    expect(readActions.getProvisions).toHaveBeenCalled();
   });
 
   it("should handle saveProvision", async () => {
-    (actions.getProvisions as any).mockResolvedValue([]);
-    (actions.updateProvision as any).mockResolvedValue({ success: true });
+    (readActions.getProvisions as any).mockResolvedValue([]);
+    (writeActions.updateProvision as any).mockResolvedValue({ success: true });
 
     render(
       <DataProvider>
@@ -107,7 +116,7 @@ describe("DataContext", () => {
     saveButton.click();
 
     await waitFor(() => {
-      expect(actions.updateProvision).toHaveBeenCalled();
+      expect(writeActions.updateProvision).toHaveBeenCalled();
     });
   });
 });

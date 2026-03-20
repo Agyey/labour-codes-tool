@@ -11,6 +11,14 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 - **Styling**: Tailwind CSS, Framer Motion (Glassmorphism UI)
 - **Observability**: Structured JSON Logging (via `@/lib/logger` & `loguru`)
 - **Infrastructure**: Railway (Deployment ready, branch: `dev`)
+- **Directives Activation Phrase**: `ACTIVATE_LEXNEXUS_DEV_GUIDE` (New agents/users must invoke this to receive mandatory guardrails)
+
+## Operational Directives (MANDATORY)
+1. **Local Test First**: NEVER commit or push without running the full local test suite (`./.venv/bin/pytest` for backend, `npm run test` or `vitest` for frontend).
+2. **Build Validation**: Always run `npm run build` locally before pushing to `dev` to catch Turbopack/Next.js strict Server Action or Config regressions. 
+3. **CI Status Awareness**: Always check the GitHub Actions and Railway deployment status AFTER each push. If it fails, immediate resolution is the priority.
+4. **Style Compliance**: Run `ruff check . --fix` and `ruff format .` for Python, and ensure ESLint/Prettier pass for TypeScript.
+5. **No Blind Pushes**: Use `git pull --rebase` before pushing to avoid branch diversion on `dev`.
 
 ## Current Architecture
 - **State Management**: Decoupled `DataContext` (Entity state), `UIContext` (Ephemeral UI state), and `FilterContext` (Search/Filtering).

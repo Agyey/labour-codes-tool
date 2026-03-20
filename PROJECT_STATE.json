@@ -2,7 +2,7 @@
   "project": "LexNexus",
   "root": {
     "path": "/Users/agyeyarya/Development/Labor Law Code Review",
-    "summary": "Legal knowledge system for labor law review with 100% strict type safety and optimized vectorless RAG traversal.",
+    "summary": "Legal knowledge system for labor law review with 100% strict type safety and mandatory operational directives (Local tests, Build validation, CI monitoring).",
     "children": [
       {
         "name": "backend",
@@ -13,10 +13,10 @@
       {
         "name": "frontend",
         "path": "frontend",
-        "summary": "Next.js frontend with memoized components, 98.8% test coverage, decomposed atomic architecture, and resilient API routing.",
+        "summary": "Next.js frontend with memoized components, explicit server actions re-exports for Turbopack compatibility, and resilient routing.",
         "status": "stable"
       }
     ]
   },
-  "last_sync": "2026-03-20T15:20:00Z"
+  "last_sync": "2026-03-20T19:07:00Z"
 }

@@ -10,9 +10,13 @@ vi.mock("next-auth/react", () => ({
   useSession: vi.fn().mockReturnValue({ data: { user: { id: "test", role: "admin" } } }),
 }));
 
-vi.mock("@/app/actions/provisions", () => ({
+vi.mock("@/app/actions/provisions/read", () => ({
   getProvisions: vi.fn().mockResolvedValue([]),
+}));
+vi.mock("@/app/actions/provisions/write", () => ({
   updateProvision: vi.fn().mockResolvedValue({ success: true }),
+}));
+vi.mock("@/app/actions/provisions/toggle", () => ({
   deleteProvision: vi.fn().mockResolvedValue({ success: true }),
   deleteProvisions: vi.fn().mockResolvedValue({ success: true }),
   togglePin: vi.fn().mockResolvedValue({ success: true }),
