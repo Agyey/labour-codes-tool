@@ -6,9 +6,10 @@ and extract ObligationRecords and PenaltyRecords.
 from __future__ import annotations
 
 import json
+from typing import Any, cast
 from loguru import logger
 from google.genai import types
-from prisma import Client
+from prisma import Client # type: ignore[attr-defined]
 
 from src.models import (
     ComplianceBatchResponse,
@@ -32,7 +33,7 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
     logger.info(f"[Pass 3] Compliance extraction for doc {legal_doc_id}")
     
     # Fetch units that haven't been processed yet
-    from typing import Any, cast
+    # Fetch units that haven't been processed yet
     units = cast(list[Any], await db.structuralunit.find_many(
         where={
             "legal_doc_id": legal_doc_id,
@@ -48,7 +49,7 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
     obligation_count = 0
     
     for i in range(0, len(units), ASYNC_BATCH_SIZE):
-        batch = units[i:i + ASYNC_BATCH_SIZE]
+        batch: list[Any] = units[i:i + ASYNC_BATCH_SIZE]
         
         batch_prompt = "Analyze these provisions:\n\n"
         for u in batch:
@@ -72,11 +73,11 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
             try:
                 # If the SDK supports automatic parsing to the schema:
                 batch_data = ComplianceBatchResponse.model_validate_json(response.text)
-                results = batch_data.results
+                results: list[Any] = batch_data.results
             except Exception:
                 # Fallback to manual parse if schema validation on response text fails
-                data = json.loads(response.text)
-                results = data.get("results", [])
+                data: dict[str, Any] = json.loads(response.text)
+                results = cast(list[Any], data.get("results", []))
             
             # Process results
             for result in results:

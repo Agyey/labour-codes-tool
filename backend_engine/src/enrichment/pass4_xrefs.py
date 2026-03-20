@@ -6,8 +6,9 @@ inter-document references.
 from __future__ import annotations
 
 import re
+from typing import Any, cast
 from loguru import logger
-from prisma import Client
+from prisma import Client # type: ignore[attr-defined]
 
 
 # Common reference patterns
@@ -33,7 +34,6 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
     """Extracts references and records CrossReference objects."""
     logger.info(f"[Pass 4] Extracting cross-references for doc {legal_doc_id}")
     
-    from typing import Any, cast
     units = await db.structuralunit.find_many(
         where=cast(Any, {
             "legal_doc_id": legal_doc_id,

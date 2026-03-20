@@ -5,8 +5,9 @@ Detect authorities mentioned in text and build the appeal chains (RightsAndRemed
 from __future__ import annotations
 
 import re
+from typing import Any, cast
 from loguru import logger
-from prisma import Client
+from prisma import Client # type: ignore[attr-defined]
 
 
 # Simple rule-based extraction for known authorities
@@ -34,13 +35,12 @@ async def run_pass6(db: Client, legal_doc_id: str) -> None:
     """Extracts authorities and remedies by scanning text for Keywords."""
     logger.info(f"[Pass 6] Authority extraction for doc {legal_doc_id}")
     
-    from typing import Any, cast
-    units = await db.structuralunit.find_many(
-        where=cast(Any, {
+    units = cast(list[Any], await db.structuralunit.find_many(
+        where={
             "legal_doc_id": legal_doc_id,
             "full_text": {"not": None}
-        })
-    )
+        }
+    ))
     
     if not units:
         return

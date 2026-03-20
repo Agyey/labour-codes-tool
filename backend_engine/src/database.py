@@ -1,4 +1,4 @@
-from prisma import Client
+from prisma import Client # type: ignore[attr-defined]
 
 db = Client()
 

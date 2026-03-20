@@ -9,7 +9,7 @@ import uuid
 from typing import Any
 
 from loguru import logger
-from prisma import Client
+from prisma import Client # type: ignore[attr-defined]
 
 from src.models import ExtractedLegislation, DocumentClassification
 
@@ -49,7 +49,7 @@ async def run_pass1(
     )
     
     # 2. Build the StructuralUnit tree hierarchically
-    sort_counter = [0]
+    sort_counter: list[int] = [0]
     
     async def process_sections(
         sections: list[Any], parent_id: str | None = None

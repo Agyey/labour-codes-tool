@@ -4,10 +4,9 @@ Runs the 6 passes sequentially on a fully extracted document tree.
 Publishes Server-Sent Events (SSE) progress via a callback.
 """
 import time
-from typing import Awaitable, Callable
-
+from typing import Awaitable, Callable, Any
 from loguru import logger
-from prisma import Client
+from prisma import Client # type: ignore[attr-defined]
 
 from src.models import ExtractedLegislation, DocumentClassification
 from src.enrichment.pass1_structure import run_pass1
@@ -57,7 +56,7 @@ async def run_enrichment(
     await publish_progress(job_id, 1, PASSES[0][1], "done")
     
     # Run passes 2 through 6
-    pass_functions = [
+    pass_functions: list[Callable[[Client, str], Awaitable[None]]] = [
         run_pass2,
         run_pass3,
         run_pass4,

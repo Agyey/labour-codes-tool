@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-
 from loguru import logger
+
+from src.models import DocumentClassification
 
 
 # ── State code mapping ────────────────────────────────────────────
@@ -60,8 +61,6 @@ DUAL_APPROPRIATE_GOVT_ACTS = [
     "Provident Funds",
 ]
 
-
-from src.models import DocumentClassification
 
 
 def classify(raw_text: str) -> DocumentClassification:

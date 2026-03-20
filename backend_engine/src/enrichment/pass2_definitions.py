@@ -5,7 +5,7 @@ Extracts defined terms, their scopes, and inserts LegalDefinition records.
 """
 import re
 from loguru import logger
-from prisma import Client
+from prisma import Client # type: ignore[attr-defined]
 
 
 async def run_pass2(db: Client, legal_doc_id: str) -> None:

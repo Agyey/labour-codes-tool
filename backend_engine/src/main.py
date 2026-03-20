@@ -15,7 +15,7 @@ Endpoints:
 
 import json
 import os
-import prisma
+import prisma # type: ignore[attr-defined]
 import shutil
 import tempfile
 import typing
