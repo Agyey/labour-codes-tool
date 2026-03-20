@@ -5,6 +5,7 @@ export interface Document {
   file_name: string;
   file_size: number;
   page_count: number;
+  raw_text: string | null;
   status: "uploaded" | "analyzing" | "analyzed" | "error";
   uploaded_at: string | null;
   analyzed_at: string | null;

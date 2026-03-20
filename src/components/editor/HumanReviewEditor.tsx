@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Save, FileText, CheckCircle2, ChevronDown, 
@@ -25,7 +23,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
   const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
 
   const toggleChapter = (idx: number) => {
-    setExpandedChapters(prev => ({ ...prev, [idx]: !prev[idx] }));
+    setExpandedChapters((prev: Record<string, boolean>) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
   const fetchDocument = useCallback(async () => {
@@ -188,7 +186,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                       <input 
                         type="text"
                         value={formData.metadata?.name || ""}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("name", e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => updateMetadata("name", e.target.value)}
                         className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all"
                       />
                     </div>
@@ -199,7 +197,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                       <input 
                         type="text"
                         value={formData.metadata?.short_name || ""}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("short_name", e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => updateMetadata("short_name", e.target.value)}
                         className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all"
                       />
                     </div>
@@ -211,7 +209,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                         <input 
                           type="number"
                           value={formData.metadata?.year || ""}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("year", e.target.value)}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => updateMetadata("year", e.target.value)}
                           className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500 transition-all"
                         />
                       </div>
@@ -220,7 +218,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                         <input
                           type="text"
                           value={formData.metadata?.document_type || ""}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("document_type", e.target.value)}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => updateMetadata("document_type", e.target.value)}
                           className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all appearance-none"
                         />
                       </div>
@@ -232,7 +230,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                   <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-200 mb-4 mt-8">Summary</h3>
                   <textarea 
                     value={formData.summary || ""}
-                    onChange={(e) => handleMetadataChange("summary", e.target.value)}
+                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => updateMetadata("summary", e.target.value)}
                     className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 h-32 resize-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all"
                   />
                 </div>
@@ -274,7 +272,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                                 <input 
                                   className="w-16 bg-transparent border-b border-slate-200 dark:border-zinc-800 text-sm font-bold text-indigo-600 dark:text-indigo-400 focus:outline-none focus:border-indigo-500 px-1"
                                   value={section.section_number}
-                                  onChange={(e) => {
+                                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     const newData = { ...formData };
                                     newData.chapters[chapIdx].sections[secIdx].section_number = e.target.value;
                                     setFormData(newData);
@@ -283,7 +281,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                                 <input 
                                   className="flex-1 bg-transparent border-b border-slate-200 dark:border-zinc-800 text-sm font-bold text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-indigo-500 px-1"
                                   value={section.title}
-                                  onChange={(e) => {
+                                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     const newData = { ...formData };
                                     newData.chapters[chapIdx].sections[secIdx].title = e.target.value;
                                     setFormData(newData);
@@ -295,7 +293,7 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                                 className="w-full bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400 h-24 resize-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all mt-2"
                                 value={section.summary}
                                 placeholder="Section Summary..."
-                                onChange={(e) => {
+                                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
                                   const newData = { ...formData };
                                   newData.chapters[chapIdx].sections[secIdx].summary = e.target.value;
                                   setFormData(newData);

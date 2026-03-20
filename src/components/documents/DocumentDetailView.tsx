@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -150,7 +150,7 @@ function StreamingProgress({
           </div>
         )}
 
-        {displayEvents.map((evt, i) => (
+        {displayEvents.map((evt: any, i: number) => (
           <motion.div
             key={`${evt.phase}-${evt.status}-${i}`}
             initial={{ opacity: 0, x: -10 }}
@@ -366,10 +366,10 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
               const parsed = JSON.parse(currentData);
 
               if (currentEvent === "progress") {
-                setStreamEvents((prev) => [...prev, parsed as StreamEvent]);
+                setStreamEvents((prev: any[]) => [...prev, parsed as StreamEvent]);
               } else if (currentEvent === "tree") {
                 setTreeData(parsed as StreamEvent);
-                setStreamEvents((prev) => [...prev, {
+                setStreamEvents((prev: any[]) => [...prev, {
                   phase: "structure",
                   status: "done",
                   message: parsed.message,
@@ -479,11 +479,11 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
   );
 
   const pendingSuggestions = useMemo(
-    () => detail?.suggestions.filter((s) => s.status === "pending") || [],
+    () => detail?.suggestions.filter((s: any) => s.status === "pending") || [],
     [detail?.suggestions]
   );
   const approvedSuggestions = useMemo(
-    () => detail?.suggestions.filter((s) => s.status === "approved") || [],
+    () => detail?.suggestions.filter((s: any) => s.status === "approved") || [],
     [detail?.suggestions]
   );
 
@@ -737,7 +737,7 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
                         </div>
                       </div>
                     )}
-                    {suggestions.map((s) => (
+                    {suggestions.map((s: any) => (
                       <SuggestionCard
                         key={s.id}
                         suggestion={s}
