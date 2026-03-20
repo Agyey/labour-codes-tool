@@ -9,7 +9,6 @@ import json
 from typing import Any, cast
 from loguru import logger
 from google.genai import types
-from prisma import Client # type: ignore[attr-defined]
 
 from ..models import ComplianceBatchResponse
 from ..parser import _client as model_client

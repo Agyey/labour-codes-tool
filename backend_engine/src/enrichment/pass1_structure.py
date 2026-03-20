@@ -9,7 +9,6 @@ import uuid
 from typing import Any
 
 from loguru import logger
-from prisma import Client
 
 from ..models import ExtractedLegislation, DocumentClassification
 
@@ -58,7 +57,7 @@ async def run_pass1(
             unit_id = str(uuid.uuid4())
             sort_counter[0] += 1
             
-            await db.structuralunit.create( # type: ignore[attr-defined]
+            await db.structuralunit.create(
                 data={
                     "id": unit_id,
                     "legal_doc_id": doc_id,
@@ -97,7 +96,7 @@ async def run_pass1(
         chapter_id = str(uuid.uuid4())
         sort_counter[0] += 1
         
-        await db.structuralunit.create( # type: ignore[attr-defined]
+        await db.structuralunit.create(
             data={
                 "id": chapter_id,
                 "legal_doc_id": doc_id,

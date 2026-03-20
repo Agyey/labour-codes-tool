@@ -7,7 +7,6 @@ from __future__ import annotations
 import re
 from typing import Any, cast
 from loguru import logger
-from prisma import Client
 
 
 # Simple rule-based extraction for known authorities
