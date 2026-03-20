@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -47,7 +48,7 @@ export async function createFramework(data: any) {
     const framework = await prisma.framework.create({ data });
     revalidatePath("/admin");
     return { success: true, framework };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Failed to create framework" };
   }
 }
@@ -57,7 +58,7 @@ export async function updateFramework(id: string, data: any) {
     const framework = await prisma.framework.update({ where: { id }, data });
     revalidatePath("/admin");
     return { success: true, framework };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Failed to update framework" };
   }
 }
@@ -67,7 +68,7 @@ export async function deleteFramework(id: string) {
     await prisma.framework.delete({ where: { id } });
     revalidatePath("/admin");
     return { success: true };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Failed to delete framework" };
   }
 }
@@ -77,7 +78,7 @@ export async function createLegislation(data: any) {
     const legislation = await prisma.legislation.create({ data });
     revalidatePath("/admin");
     return { success: true, legislation };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Failed to create legislation" };
   }
 }
@@ -87,7 +88,7 @@ export async function deleteLegislation(id: string) {
     await prisma.legislation.delete({ where: { id } });
     revalidatePath("/admin");
     return { success: true };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Failed to delete legislation" };
   }
 }

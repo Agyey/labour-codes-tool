@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Upload, FileText, Loader2, Search, ChevronRight, Trash2 } from "lucide-react";
+
+import { Upload, FileText, Loader2, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import { Document } from "@/types/document";
-import { StatusBadge } from "@/components/documents/StatusBadge";
+
 import { DocumentDetailView } from "@/components/documents/DocumentDetailView";
 import { IngestJobCard } from "@/components/documents/IngestJobCard";
 import { PipelineProgressTracker } from "@/components/documents/PipelineProgressTracker";

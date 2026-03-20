@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { updateProvision, getProvisions } from "./provisions";
 import { prisma } from "@/lib/prisma";

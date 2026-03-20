@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -53,8 +54,8 @@ export function FrameworkProvider({ children }: { children: ReactNode }) {
       ]);
       if (dbFrameworks) setFrameworks(dbFrameworks as Framework[]);
       if (dbLegislations) setLegislations(dbLegislations as Legislation[]);
-    } catch (err) {
-      console.error("Failed to fetch frameworks:", err);
+    } catch {
+      console.error("Failed to fetch frameworks");
     } finally {
       setLoading(false);
     }

@@ -31,7 +31,6 @@ interface IngestJobCardProps {
 export function IngestJobCard({ job, onClick, onDelete }: IngestJobCardProps) {
   const isProcessing = job.status === "processing";
   const isFailed = job.status === "failed";
-  const isCompleted = job.status === "analyzed";
   
   return (
     <motion.div

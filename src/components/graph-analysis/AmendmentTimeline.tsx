@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GitCommit, History, ArrowDown } from "lucide-react";
+import { History, ArrowDown } from "lucide-react";
 
 interface Amendment {
   id: string;

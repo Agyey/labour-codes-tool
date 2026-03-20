@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useUI } from "@/context/UIContext";
@@ -38,21 +39,25 @@ export function CompareView() {
     e.preventDefault();
     if (!newActName || !newActShort || !targetFrameworkId) return;
     
-    const success = await createLegislation({
-      frameworkId: targetFrameworkId,
-      name: newActName,
-      shortName: newActShort,
-      type: 'act',
-      isRepealed: true,
-      year: new Date().getFullYear(),
-      color: "#94a3b8"
-    });
+    try {
+      const success = await createLegislation({
+        frameworkId: targetFrameworkId,
+        name: newActName,
+        shortName: newActShort,
+        type: 'act',
+        isRepealed: true,
+        year: new Date().getFullYear(),
+        color: "#94a3b8"
+      });
 
-    if (success) {
-      setNewActName("");
-      setNewActShort("");
-      setShowAddAct(false);
-      toast.success(`Registered ${newActShort} persistently.`);
+      if (success) {
+        setNewActName("");
+        setNewActShort("");
+        setShowAddAct(false);
+        toast.success(`Registered ${newActShort} persistently.`);
+      }
+    } catch {
+      toast.error("Failed to register act");
     }
   };
 

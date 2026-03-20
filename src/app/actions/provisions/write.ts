@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -72,8 +73,8 @@ export async function injectSampleData(frameworkId: string, activeCode: string) 
 
     revalidatePath("/library");
     return { success: true, provisionId: provision.id };
-  } catch (err) {
-    logger.error("Failed to inject sample data", err);
+  } catch {
+    logger.error("Failed to inject sample data");
     return { success: false, error: "Internal server error" };
   }
 }

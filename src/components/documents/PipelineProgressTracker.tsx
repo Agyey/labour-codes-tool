@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   CheckCircle2, 
-  CircleDashed, 
   Loader2, 
   XCircle,
   FileText,
@@ -112,7 +111,7 @@ export function PipelineProgressTracker({ jobId, onComplete }: PipelineProgressT
         <div className="flex justify-between relative">
           <div className="absolute top-5 transition-all duration-500 left-8 right-8 h-0.5 bg-slate-200 dark:bg-zinc-800 -z-10" />
           
-          {STAGES.map((stage, idx) => {
+          {STAGES.map((stage) => {
             const status = getStageStatus(stage.id);
             const Icon = stage.icon;
             

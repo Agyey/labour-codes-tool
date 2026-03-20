@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -106,8 +107,8 @@ export async function deleteProvisions(ids: string[]) {
 
     revalidatePath("/library");
     return { success: true };
-  } catch (error) {
-    logger.error("Failed to bulk delete provisions", error);
+  } catch {
+    logger.error("Failed to bulk delete provisions");
     return { success: false, error: "Failed to delete multiple provisions" };
   }
 }

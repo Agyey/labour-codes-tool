@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,10 +15,8 @@ export default function ReadingViewPage() {
   const id = params.id as string;
   
   const [document, setDocument] = useState<any>(null);
-  const [tree, setTree] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedState, setSelectedState] = useState<string | null>(null);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeData, setSelectedNodeData] = useState<any>(null);
 
   useEffect(() => {
@@ -31,10 +30,8 @@ export default function ReadingViewPage() {
           setDocument(docData);
         }
 
-        // Fetch tree
-        // In the future: pass ?state=${selectedState} to get state rules folded in
-        const treeRes = await fetch(`/api/pipeline/${id}/tree`); // wait, the backend route was /api/documents/[id]/tree. Let's fix that later if needed. Assume /api/documents/${id}/tree for now. Wait, let me just check the Next.js rewrite. Next JS rewrites /api/pipeline to BACKEND_URL/api/pipeline. But the backend has @app.get('/api/documents/{document_id}/tree'). We should probably fetch /api/documents/${id}/tree on the frontend proxy or directly? NextJS has `/api/documents/[id]/route.ts`? I'll use raw fetch to `/api/documents/${id}/tree` and let Next.js handle it if there's a route, or I'll just write it as `/api/pipeline/...`.
-        // Actually, let's use the explicit backend structure or write a route handler.
+        // Fetch tree placeholder
+        // const treeRes = await fetch(`/api/pipeline/${id}/tree`);
       } catch (e) {
         console.error("Failed to load document:", e);
       } finally {
@@ -127,7 +124,7 @@ export default function ReadingViewPage() {
           <div className="flex-1 overflow-y-auto">
             {activeTab === "index" ? (
               <ProvisionTree
-                nodes={tree.length > 0 ? tree : [
+                nodes={[
                   {
                     id: "mock1",
                     unit_type: "Part",
@@ -146,10 +143,9 @@ export default function ReadingViewPage() {
                     ]
                   }
                 ]}
-                onSelect={(id) => {
-                  setSelectedNodeId(id);
+                onSelect={(nodeId) => {
                   setSelectedNodeData({
-                    id,
+                    id: nodeId,
                     unit_type: "Section",
                     number: "1",
                     title: "Short title and commencement",

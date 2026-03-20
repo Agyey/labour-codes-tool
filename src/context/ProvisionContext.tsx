@@ -46,7 +46,7 @@ const ProvisionStateContext = createContext<ProvisionState | null>(null);
 const ProvisionActionsContext = createContext<ProvisionActions | null>(null);
 
 export function ProvisionProvider({ children }: { children: ReactNode }) {
-  const { data: session } = useSession();
+  useSession();
   const { activeCode } = useUI();
 
   const [provisions, setProvisions] = useState<Provision[]>([]);
