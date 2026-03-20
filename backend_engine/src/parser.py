@@ -184,10 +184,10 @@ async def build_graph_and_suggestions(
     # 2. Store the analysis in Postgres
     analysis = await db.documentanalysis.create(
         data={
-            "document_id": document_id,
+            "document": {"connect": {"id": document_id}},
             "summary": extracted.summary,
             "document_type": extracted.document_type,
-            "structured_data": json.loads(extracted.model_dump_json()),
+            "structured_data": prisma.Json(json.loads(extracted.model_dump_json())),
             "graph_nodes": graph_stats["nodes"],
             "graph_relationships": graph_stats["relationships"],
         }
@@ -199,7 +199,7 @@ async def build_graph_and_suggestions(
     # Suggestion: Create legislation entry
     await db.documentsuggestion.create(
         data={
-            "document_id": document_id,
+            "document": {"connect": {"id": document_id}},
             "analysis_id": analysis.id,
             "type": SuggestionType.CREATE_LEGISLATION,
             "target_module": "knowledge_base",
@@ -221,8 +221,8 @@ async def build_graph_and_suggestions(
     for change in extracted.key_changes:
         await db.documentsuggestion.create(
             data={
-                "document_id": document_id,
-                "analysis_id": analysis.id,
+                "document": {"connect": {"id": document_id}},
+                "analysis": {"connect": {"id": analysis.id}},
                 "type": SuggestionType.UPDATE_PROVISION,
                 "target_module": "knowledge_base",
                 "suggested_data": prisma.Json(
@@ -252,8 +252,8 @@ async def build_graph_and_suggestions(
             ]
             await db.documentsuggestion.create(
                 data={
-                    "document_id": document_id,
-                    "analysis_id": analysis.id,
+                    "document": {"connect": {"id": document_id}},
+                    "analysis": {"connect": {"id": analysis.id}},
                     "type": SuggestionType.CREATE_PROVISION,
                     "target_module": "knowledge_base",
                     "suggested_data": prisma.Json(
@@ -281,8 +281,8 @@ async def build_graph_and_suggestions(
             for task in all_tasks:
                 await db.documentsuggestion.create(
                     data={
-                        "document_id": document_id,
-                        "analysis_id": analysis.id,
+                        "document": {"connect": {"id": document_id}},
+                        "analysis": {"connect": {"id": analysis.id}},
                         "type": SuggestionType.CREATE_COMPLIANCE_ITEM,
                         "target_module": "compliance_tracker",
                         "suggested_data": prisma.Json(
@@ -303,8 +303,8 @@ async def build_graph_and_suggestions(
             for penalty in section.penalties:
                 await db.documentsuggestion.create(
                     data={
-                        "document_id": document_id,
-                        "analysis_id": analysis.id,
+                        "document": {"connect": {"id": document_id}},
+                        "analysis": {"connect": {"id": analysis.id}},
                         "type": SuggestionType.CREATE_PENALTY,
                         "target_module": "knowledge_base",
                         "suggested_data": prisma.Json(
@@ -325,8 +325,8 @@ async def build_graph_and_suggestions(
     for act_name in extracted.repealed_acts:
         await db.documentsuggestion.create(
             data={
-                "document_id": document_id,
-                "analysis_id": analysis.id,
+                "document": {"connect": {"id": document_id}},
+                "analysis": {"connect": {"id": analysis.id}},
                 "type": SuggestionType.FLAG_REPEAL,
                 "target_module": "knowledge_base",
                 "suggested_data": prisma.Json({"repealed_act_name": act_name}),
@@ -340,8 +340,8 @@ async def build_graph_and_suggestions(
     for defn in extracted.definitions:
         await db.documentsuggestion.create(
             data={
-                "document_id": document_id,
-                "analysis_id": analysis.id,
+                "document": {"connect": {"id": document_id}},
+                "analysis": {"connect": {"id": analysis.id}},
                 "type": SuggestionType.CREATE_DEFINITION,
                 "target_module": "knowledge_base",
                 "suggested_data": prisma.Json(
@@ -373,7 +373,7 @@ async def build_graph_and_suggestions(
     logger.info(f"Generated {suggestion_count} suggestions for document {document_id}")
 
     return {
-        "analysis_id": analysis.id,
+        "analysis": {"connect": {"id": analysis.id}},
         "graph_stats": graph_stats,
         "suggestion_count": suggestion_count,
     }
