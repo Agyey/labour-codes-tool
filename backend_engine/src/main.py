@@ -291,27 +291,39 @@ async def delete_document(document_id: str) -> dict[str, str]:
     analysis_ids = [a.id for a in analyses]
 
     if analysis_ids:
-        provisions = await db.provision.find_many(where={"source_id": {"in": analysis_ids}})
+        provisions = await db.provision.find_many(
+            where={"source_id": {"in": analysis_ids}}
+        )
         provision_ids = [p.id for p in provisions]
 
         if provision_ids:
             # Nullify DiligenceRequisition links
             await db.diligencerequisition.update_many(
-                where={"provision_id": {"in": provision_ids}}, data={"provision_id": None}
+                where={"provision_id": {"in": provision_ids}},
+                data={"provision_id": None},
             )
-            
+
             # Find compliance items to nullify associated Tasks
-            c_items = await db.complianceitem.find_many(where={"provision_id": {"in": provision_ids}})
+            c_items = await db.complianceitem.find_many(
+                where={"provision_id": {"in": provision_ids}}
+            )
             c_ids = [c.id for c in c_items]
             if c_ids:
                 await db.task.update_many(
-                    where={"compliance_item_id": {"in": c_ids}}, data={"compliance_item_id": None}
+                    where={"compliance_item_id": {"in": c_ids}},
+                    data={"compliance_item_id": None},
                 )
-            
-            await db.complianceitem.delete_many(where={"provision_id": {"in": provision_ids}})
+
+            await db.complianceitem.delete_many(
+                where={"provision_id": {"in": provision_ids}}
+            )
             await db.penalty.delete_many(where={"provision_id": {"in": provision_ids}})
-            await db.provisionrelation.delete_many(where={"source_id": {"in": provision_ids}})
-            await db.provisionrelation.delete_many(where={"target_id": {"in": provision_ids}})
+            await db.provisionrelation.delete_many(
+                where={"source_id": {"in": provision_ids}}
+            )
+            await db.provisionrelation.delete_many(
+                where={"target_id": {"in": provision_ids}}
+            )
 
             # Finally delete provisions
             await db.provision.delete_many(where={"source_id": {"in": analysis_ids}})
