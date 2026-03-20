@@ -83,13 +83,13 @@ async def run_pass6(db: Client, legal_doc_id: str) -> None:
                     await db.authoritylink.create(
                         data={
                             "authority_id": db_auth.id,
-                            "related_unit_id": unit.id,  # Changed from unit_id
+                            "related_unit_id": unit.id,
                             "role": role
                         }
                     )
                     auth_links += 1
                 except Exception:
-                    # Ignore unique constraint violations (might match multiple times in one unit)
+                    # Ignore unique constraint violations
                     pass
                     
         # 2. Look for explicit appeal/remedy language
@@ -104,7 +104,7 @@ async def run_pass6(db: Client, legal_doc_id: str) -> None:
                     "unit_id": unit.id,
                     "right_holder": "aggrieved_person",  # Default if not extracted
                     "summary": f"Appeal against decision to {forum_name}",
-                    "forum_level": "1",  # Changed from int to str
+                    "forum_level": "1",
                     "forum_name": forum_name,
                     "limitation_period": limitation
                 }

@@ -33,13 +33,12 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
     
     # Fetch units that haven't been processed yet
     from typing import Any, cast
-    units = await db.structuralunit.find_many(
-        where=cast(Any, {
+    units = cast(list[Any], await db.structuralunit.find_many(
+        where={
             "legal_doc_id": legal_doc_id,
-            "full_text": {"not": None}
-        }),
-        order={"sort_order": "asc"}
-    )
+            "unit_type": "section"
+        }
+    ))
     
     if not units:
         return
@@ -69,28 +68,45 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
             if not response.text:
                 continue
                 
-            data = json.loads(response.text)
+            # Use the model's structure if possible, or parse safely
+            try:
+                # If the SDK supports automatic parsing to the schema:
+                batch_data = ComplianceBatchResponse.model_validate_json(response.text)
+                results = batch_data.results
+            except Exception:
+                # Fallback to manual parse if schema validation on response text fails
+                data = json.loads(response.text)
+                results = data.get("results", [])
             
             # Process results
-            for result in data.get("results", []):
-                unit_id = result["unit_id"]
+            for result in results:
+                # Handle both dict and Pydantic model
+                if hasattr(result, "model_dump"):
+                    res_dict = result.model_dump()
+                else:
+                    res_dict = cast(dict[str, Any], result)
+                    
+                unit_id = res_dict.get("unit_id")
+                if not unit_id:
+                    continue
                 
                 # 1. Update Unit Nature
+                nature_tags = res_dict.get("nature_tags", [])
                 await db.structuralunit.update(
-                    where={"id": unit_id},
+                    where={"id": str(unit_id)},
                     data={
-                        "provision_nature": json.dumps(result.get("nature_tags", []))
+                        "provision_nature": json.dumps(nature_tags)
                     }
                 )
                 
                 processed_count += 1
                 
                 # 2. Insert Obligations
-                for ob in result.get("obligations", []):
+                for ob in res_dict.get("obligations", []):
                     created_ob = await db.obligationrecord.create(
                         data={
-                            "unit_id": unit_id,
-                            "obligation_type": ob.get("obligation_type", "other"),
+                            "unit_id": str(unit_id),
+                            "obligation_type": ob.get("obligation_type", "compliance"),
                             "compliance_category": ob.get("compliance_category", "ongoing"),
                             "title": ob.get("title", "Untitled Obligation"),
                             "description": ob.get("description"),
@@ -109,9 +125,9 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
                     for pen in ob.get("penalties", []):
                         await db.penaltyrecord.create(
                             data={
-                                "unit_id": unit_id,
+                                "unit_id": str(unit_id),
                                 "obligation_id": created_ob.id,
-                                "fine_amount": pen.get("fine_amount"),
+                                "fine_amount": str(pen.get("fine_amount", "")) if pen.get("fine_amount") else None,
                                 "imprisonment": pen.get("imprisonment"),
                                 "liable_person": pen.get("liable_person", ob.get("responsible_person")),
                                 "description": pen.get("description")

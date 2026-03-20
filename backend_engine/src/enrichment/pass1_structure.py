@@ -49,15 +49,14 @@ async def run_pass1(
     )
     
     # 2. Build the StructuralUnit tree hierarchically
-    sort_counter = 0
+    sort_counter = [0]
     
     async def process_sections(
         sections: list[Any], parent_id: str | None = None
     ) -> None:
-        nonlocal sort_counter
         for sec in sections:
             unit_id = str(uuid.uuid4())
-            sort_counter += 1
+            sort_counter[0] += 1
             
             await db.structuralunit.create(
                 data={
@@ -65,29 +64,30 @@ async def run_pass1(
                     "legal_doc_id": doc_id,
                     "parent_unit_id": parent_id,
                     "unit_type": "section",
-                    "unit_number": sec.section_number,
+                    "unit_number": str(sec.section_number),
                     "title": sec.title,
                     "full_text": sec.full_text,
                     "summary": sec.summary,
-                    "sort_order": sort_counter,
+                    "sort_order": sort_counter[0],
                     "status": "active",
                     "confidence_score": 1.0,
                 }
             )
             
             # Sub-sections
-            if hasattr(sec, "sub_sections") and sec.sub_sections:
-                for sub in sec.sub_sections:
-                    sort_counter += 1
+            sub_sections = getattr(sec, "sub_sections", [])
+            if sub_sections:
+                for sub in sub_sections:
+                    sort_counter[0] += 1
                     await db.structuralunit.create(
                         data={
                             "legal_doc_id": doc_id,
                             "parent_unit_id": unit_id,
                             "unit_type": "sub_section",
-                            "unit_number": sub.sub_section_number,
+                            "unit_number": str(sub.sub_section_number),
                             "full_text": sub.full_text,
                             "summary": sub.summary,
-                            "sort_order": sort_counter,
+                            "sort_order": sort_counter[0],
                             "status": "active",
                         }
                     )
@@ -95,7 +95,7 @@ async def run_pass1(
     # Walk the chapters -> sections
     for chapter in extracted.chapters:
         chapter_id = str(uuid.uuid4())
-        sort_counter += 1
+        sort_counter[0] += 1
         
         await db.structuralunit.create(
             data={
@@ -103,11 +103,11 @@ async def run_pass1(
                 "legal_doc_id": doc_id,
                 "parent_unit_id": None,
                 "unit_type": "chapter",
-                "unit_number": chapter.chapter_number,
+                "unit_number": str(chapter.chapter_number),
                 "title": chapter.chapter_name,
                 "full_text": None,
                 "summary": chapter.summary,
-                "sort_order": sort_counter,
+                "sort_order": sort_counter[0],
                 "status": "active",
                 "confidence_score": 1.0,
             }
@@ -115,5 +115,5 @@ async def run_pass1(
         
         await process_sections(chapter.sections, chapter_id)
         
-    logger.info(f"[Pass 1] Created LegalDocument {doc_id} with {sort_counter} structural units.")
+    logger.info(f"[Pass 1] Created LegalDocument {doc_id} with {sort_counter[0]} structural units.")
     return doc_id

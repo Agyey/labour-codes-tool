@@ -35,13 +35,13 @@ async def run_pass5(db: Client, legal_doc_id: str) -> None:
     # Usually only section 1 or specific applicability sections matter, but
     # scanning all for safety if they have substantive text
     from typing import Any, cast
-    units = await db.structuralunit.find_many(
-        where=cast(Any, {
+    units = cast(list[Any], await db.structuralunit.find_many(
+        where={
             "legal_doc_id": legal_doc_id,
-            "full_text": {"not": None}
-        }),
+            "unit_type": "section"
+        },
         order={"sort_order": "asc"}
-    )
+    ))
     
     if not units:
         return
@@ -70,28 +70,44 @@ async def run_pass5(db: Client, legal_doc_id: str) -> None:
             if not response.text:
                 continue
 
-            data = json.loads(response.text)
+            # Use the model's structure if possible, or parse safely
+            try:
+                # If the SDK supports automatic parsing to the schema:
+                batch_data = ApplicabilityBatchResponse.model_validate_json(response.text)
+                results = batch_data.results
+            except Exception:
+                # Fallback to manual parse if schema validation on response text fails
+                data = json.loads(response.text)
+                results = data.get("results", [])
             
             # Process results
-            for result in data.get("results", []):
-                unit_id = result["unit_id"]
+            for result in results:
+                # Handle both dict and Pydantic model
+                if hasattr(result, "model_dump"):
+                    res_dict = result.model_dump()
+                else:
+                    res_dict = cast(dict[str, Any], result)
+                    
+                unit_id = res_dict.get("unit_id")
+                if not unit_id:
+                    continue
                 
                 # Check if there are actually conditions
-                entities = result.get("entity_types", [])
-                thresholds = result.get("thresholds", {})
-                exemptions = result.get("exemptions", [])
+                entities = res_dict.get("entity_types", [])
+                thresholds = res_dict.get("thresholds", {})
+                exemptions = res_dict.get("exemptions", [])
                 
                 if not entities and not thresholds and not exemptions:
                     continue
                     
                 await db.applicabilitycondition.create(
                     data={
-                        "unit_id": unit_id,
+                        "unit_id": str(unit_id),
                         "condition_type": "entity_type" if entities else "threshold",
                         "entity_types": json.dumps(entities),
                         "thresholds": json.dumps(thresholds),
                         "exemptions": json.dumps(exemptions),
-                        "description": result.get("description")
+                        "description": res_dict.get("description")
                     }
                 )
                 

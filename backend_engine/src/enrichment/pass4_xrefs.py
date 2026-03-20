@@ -68,8 +68,8 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
                 "unit_type": ref_typeword
             })
             
-            target_doc_id = getattr(target, 'legal_doc_id', None)
-            target_unit_id = getattr(target, 'id', None)
+            target_doc_id = target.legal_doc_id if target else None
+            target_unit_id = target.id if target else None
             
             await db.crossreference.create(data={
                 "source_doc_id": legal_doc_id,
@@ -78,10 +78,10 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
                 "reference_subtype": subtype,
                 "ref_type": "section",  # Added field
                 "raw_text": raw_text,
-                "is_resolved": bool(target),
+                "is_resolved": target is not None,
                 "target_doc_id": target_doc_id,
                 "target_unit_id": target_unit_id,
-                "target_section_ref": f"{ref_typeword} {ref_val}" if not target else None
+                "target_section_ref": f"{ref_typeword} {ref_val}" if target is None else None
             })
             ref_count += 1
             if target:
@@ -98,10 +98,10 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
             # Attempt to find the target document in our DB
             target_doc = await db.legaldocument.find_first(where={
                 "title": {"contains": target_act_name.split(",")[0], "mode": "insensitive"},
-                "doc_type": "principal_act"
+                "status": "active"
             })
             
-            target_doc_id_val = getattr(target_doc, 'id', None)
+            target_doc_id_val = target_doc.id if target_doc else None
 
             await db.crossreference.create(data={
                 "source_doc_id": legal_doc_id,
@@ -110,9 +110,9 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
                 "reference_subtype": subtype,
                 "ref_type": "act",  # Added field
                 "raw_text": raw_text,
-                "is_resolved": bool(target_doc),
+                "is_resolved": target_doc is not None,
                 "target_doc_id": target_doc_id_val,
-                "target_act_name": target_act_name if not target_doc else None
+                "target_act_name": target_act_name if target_doc is None else None
             })
             ref_count += 1
             if target_doc:
