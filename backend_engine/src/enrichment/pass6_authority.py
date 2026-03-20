@@ -34,11 +34,12 @@ async def run_pass6(db: Client, legal_doc_id: str) -> None:
     """Extracts authorities and remedies by scanning text for Keywords."""
     logger.info(f"[Pass 6] Authority extraction for doc {legal_doc_id}")
     
+    from typing import Any, cast
     units = await db.structuralunit.find_many(
-        where={
+        where=cast(Any, {
             "legal_doc_id": legal_doc_id,
             "full_text": {"not": None}
-        }
+        })
     )
     
     if not units:
@@ -82,7 +83,7 @@ async def run_pass6(db: Client, legal_doc_id: str) -> None:
                     await db.authoritylink.create(
                         data={
                             "authority_id": db_auth.id,
-                            "unit_id": unit.id,
+                            "related_unit_id": unit.id,  # Changed from unit_id
                             "role": role
                         }
                     )
@@ -101,7 +102,9 @@ async def run_pass6(db: Client, legal_doc_id: str) -> None:
             await db.rightsandremedy.create(
                 data={
                     "unit_id": unit.id,
-                    "forum_level": 1,
+                    "right_holder": "aggrieved_person",  # Default if not extracted
+                    "summary": f"Appeal against decision to {forum_name}",
+                    "forum_level": "1",  # Changed from int to str
                     "forum_name": forum_name,
                     "limitation_period": limitation
                 }

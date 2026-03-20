@@ -26,17 +26,17 @@ async def run_pass1(
     Returns:
         The ID of the newly created LegalDocument.
     """
-    logger.info(f"[Pass 1] Creating structure for '{extracted.metadata.act_name}'")
+    logger.info(f"[Pass 1] Creating structure for '{extracted.name}'")
     
     # 1. Create the LegalDocument hub
     doc_id = str(uuid.uuid4())
-    current_year = extracted.metadata.year if extracted.metadata.year else 2025
+    current_year = extracted.year if extracted.year else 2025
     
     await db.legaldocument.create(
         data={
             "id": doc_id,
-            "title": extracted.metadata.act_name,
-            "short_title": None,
+            "title": extracted.name,
+            "short_title": extracted.short_name,
             "year": current_year,
             "doc_type": classification.doc_type,
             "jurisdiction": classification.jurisdiction,
@@ -51,37 +51,48 @@ async def run_pass1(
     # 2. Build the StructuralUnit tree hierarchically
     sort_counter = 0
     
-    async def process_provisions(
-        provisions: list[Any], parent_id: str | None = None
+    async def process_sections(
+        sections: list[Any], parent_id: str | None = None
     ) -> None:
         nonlocal sort_counter
-        for prov in provisions:
+        for sec in sections:
             unit_id = str(uuid.uuid4())
             sort_counter += 1
-            
-            # Combine text and summary
-            full_text = prov.text
             
             await db.structuralunit.create(
                 data={
                     "id": unit_id,
                     "legal_doc_id": doc_id,
                     "parent_unit_id": parent_id,
-                    "unit_type": "section",  # Extractor treats everything as a nested provision
-                    "unit_number": prov.id,
-                    "title": prov.title,
-                    "full_text": full_text,
-                    "summary": prov.summary,
+                    "unit_type": "section",
+                    "unit_number": sec.section_number,
+                    "title": sec.title,
+                    "full_text": sec.full_text,
+                    "summary": sec.summary,
                     "sort_order": sort_counter,
                     "status": "active",
                     "confidence_score": 1.0,
                 }
             )
             
-            if hasattr(prov, "sub_provisions") and prov.sub_provisions:
-                await process_provisions(prov.sub_provisions, unit_id)
+            # Sub-sections
+            if hasattr(sec, "sub_sections") and sec.sub_sections:
+                for sub in sec.sub_sections:
+                    sort_counter += 1
+                    await db.structuralunit.create(
+                        data={
+                            "legal_doc_id": doc_id,
+                            "parent_unit_id": unit_id,
+                            "unit_type": "sub_section",
+                            "unit_number": sub.sub_section_number,
+                            "full_text": sub.full_text,
+                            "summary": sub.summary,
+                            "sort_order": sort_counter,
+                            "status": "active",
+                        }
+                    )
 
-    # Walk the chapters -> provisions -> sub-provisions
+    # Walk the chapters -> sections
     for chapter in extracted.chapters:
         chapter_id = str(uuid.uuid4())
         sort_counter += 1
@@ -92,16 +103,17 @@ async def run_pass1(
                 "legal_doc_id": doc_id,
                 "parent_unit_id": None,
                 "unit_type": "chapter",
-                "unit_number": chapter.id,
-                "title": chapter.title,
+                "unit_number": chapter.chapter_number,
+                "title": chapter.chapter_name,
                 "full_text": None,
+                "summary": chapter.summary,
                 "sort_order": sort_counter,
                 "status": "active",
                 "confidence_score": 1.0,
             }
         )
         
-        await process_provisions(chapter.provisions, chapter_id)
+        await process_sections(chapter.sections, chapter_id)
         
     logger.info(f"[Pass 1] Created LegalDocument {doc_id} with {sort_counter} structural units.")
     return doc_id

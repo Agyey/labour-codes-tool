@@ -138,6 +138,9 @@ class ExtractedLegislation(BaseModel):
     repealed_acts: list[str] = Field(
         default_factory=list, description="Names of acts repealed by this legislation"
     )
+    metadata: dict[str, typing.Any] = Field(
+        default_factory=dict, description="Metadata for extraction (jurisdiction, etc)"
+    )
 
 
 # ──────────────────────────────────────────────

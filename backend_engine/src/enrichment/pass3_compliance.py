@@ -7,16 +7,13 @@ from __future__ import annotations
 
 import json
 from loguru import logger
-from google import genai
 from google.genai import types
 from prisma import Client
 
 from src.models import (
     ComplianceBatchResponse,
-    ProvisionClassification,
-    ObligationExtract,
-    PenaltyExtract,
 )
+from src.parser import _client as model_client
 
 
 ASYNC_BATCH_SIZE = 20
@@ -35,22 +32,18 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
     logger.info(f"[Pass 3] Compliance extraction for doc {legal_doc_id}")
     
     # Fetch units that haven't been processed yet
+    from typing import Any, cast
     units = await db.structuralunit.find_many(
-        where={
+        where=cast(Any, {
             "legal_doc_id": legal_doc_id,
             "full_text": {"not": None}
-        },
+        }),
         order={"sort_order": "asc"}
     )
     
     if not units:
         return
         
-    client = genai.Client(api_key=db._active_config.datasource.url) # Placeholder, actually should use settings
-    # Wait, the db client doesn't have the api key. I should pass settings or use a global client.
-    # In this project, parser.py has a global _client.
-    from src.parser import _client as model_client
-    
     # Process in batches of 20
     processed_count = 0
     obligation_count = 0
@@ -64,7 +57,7 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
             
         try:
             response = await model_client.aio.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.0-flash",
                 contents=batch_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
@@ -73,17 +66,15 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
                 )
             )
             
+            if not response.text:
+                continue
+                
             data = json.loads(response.text)
             
             # Process results
             for result in data.get("results", []):
                 unit_id = result["unit_id"]
                 
-                # Verify unit_id
-                target_unit = next((x for x in batch if x.id == unit_id), None)
-                if not target_unit:
-                    continue
-                    
                 # 1. Update Unit Nature
                 await db.structuralunit.update(
                     where={"id": unit_id},
@@ -96,7 +87,6 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
                 
                 # 2. Insert Obligations
                 for ob in result.get("obligations", []):
-                    # Create obligation
                     created_ob = await db.obligationrecord.create(
                         data={
                             "unit_id": unit_id,
@@ -115,10 +105,11 @@ async def run_pass3(db: Client, legal_doc_id: str) -> None:
                     
                     obligation_count += 1
                     
-                    # 3. Insert Penalties for this Obligation
+                    # 3. Insert Penalties
                     for pen in ob.get("penalties", []):
                         await db.penaltyrecord.create(
                             data={
+                                "unit_id": unit_id,
                                 "obligation_id": created_ob.id,
                                 "fine_amount": pen.get("fine_amount"),
                                 "imprisonment": pen.get("imprisonment"),

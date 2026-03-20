@@ -29,7 +29,7 @@ async def run_pass2(db: Client, legal_doc_id: str) -> None:
     )
     
     if not def_sections:
-        logger.info(f"[Pass 2] No distinct definitions section found.")
+        logger.info("[Pass 2] No distinct definitions section found.")
         return
         
     def_count = 0

@@ -11,9 +11,9 @@ import asyncio
 import json
 import time
 import typing
+from datetime import datetime
 
 from loguru import logger
-from prisma import Client
 
 from src.database import db
 from src.classifier import classify
@@ -86,7 +86,7 @@ async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) 
         
         classification = classify(raw_text)
         
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "classification", "status": "done", "result": classification.__dict__}))
+        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "classification", "status": "done", "result": classification.dict() if hasattr(classification, 'dict') else classification.__dict__}))
 
         # ──────────────────────────────────────────────
         # Stage 3: Extraction (Gemini)
@@ -108,7 +108,10 @@ async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) 
             
         extracted = extraction_result[0]
         
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "extraction", "status": "done", "title": extracted.metadata.act_name if hasattr(extracted, 'metadata') else getattr(extracted, 'name', 'Unknown Document')}))
+        # Use .name instead of .metadata.act_name for the new models
+        doc_title = getattr(extracted, 'name', 'Unknown Document')
+        
+        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "extraction", "status": "done", "title": doc_title}))
         
         # ──────────────────────────────────────────────
         # Stage 4: Enrichment (6 Passes)
@@ -131,7 +134,7 @@ async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) 
             where={"id": job_id},
             data={
                 "status": "completed",
-                "completed_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                "completed_at": datetime.now(),
                 "result_doc_id": legal_doc_id
             }
         )
@@ -145,7 +148,7 @@ async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) 
             data={
                 "status": "failed",
                 "error_log": str(e),
-                "completed_at": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                "completed_at": datetime.now(),
             }
         )
         await publish_pipeline_event(job_id, _sse_event("pipeline_error", {"job_id": job_id, "error": str(e)}))
@@ -186,4 +189,3 @@ async def stream_pipeline_events(job_id: str) -> typing.AsyncGenerator[str, None
     finally:
         if job_id in PIPELINE_LISTENERS and q in PIPELINE_LISTENERS[job_id]:
             PIPELINE_LISTENERS[job_id].remove(q)
-

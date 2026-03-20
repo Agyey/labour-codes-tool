@@ -61,18 +61,7 @@ DUAL_APPROPRIATE_GOVT_ACTS = [
 ]
 
 
-@dataclass
-class DocumentClassification:
-    doc_type: str  # principal_act | rules | regulations | amendment | notification | circular | schedule | case_law
-    jurisdiction: str  # "Central" | state code e.g. "MH"
-    appropriate_govt: str  # central | state | both
-    parent_act_hint: str | None  # detected act name from enabling clause
-    parent_act_year: int | None  # detected year
-    enabling_section_hint: str | None  # e.g. "section 469"
-    is_connector_act: bool  # Stamp Act, Registration Act, Court Fees Act
-    is_amendment: bool  # True if this amends another act
-    confidence: float = field(default=1.0)
-    notes: list[str] = field(default_factory=list)
+from src.models import DocumentClassification
 
 
 def classify(raw_text: str) -> DocumentClassification:

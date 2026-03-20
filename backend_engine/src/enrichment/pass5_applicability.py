@@ -7,14 +7,13 @@ from __future__ import annotations
 
 import json
 from loguru import logger
-from google import genai
 from google.genai import types
 from prisma import Client
 
 from src.models import (
     ApplicabilityBatchResponse,
-    ApplicabilityExtract,
 )
+from src.parser import _client as model_client
 
 ASYNC_BATCH_SIZE = 20
 
@@ -35,19 +34,18 @@ async def run_pass5(db: Client, legal_doc_id: str) -> None:
     
     # Usually only section 1 or specific applicability sections matter, but
     # scanning all for safety if they have substantive text
+    from typing import Any, cast
     units = await db.structuralunit.find_many(
-        where={
+        where=cast(Any, {
             "legal_doc_id": legal_doc_id,
             "full_text": {"not": None}
-        },
+        }),
         order={"sort_order": "asc"}
     )
     
     if not units:
         return
         
-    from src.parser import _client as model_client
-    
     processed_count = 0
     condition_count = 0
     
@@ -60,7 +58,7 @@ async def run_pass5(db: Client, legal_doc_id: str) -> None:
             
         try:
             response = await model_client.aio.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.0-flash",
                 contents=batch_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
@@ -69,6 +67,9 @@ async def run_pass5(db: Client, legal_doc_id: str) -> None:
                 )
             )
             
+            if not response.text:
+                continue
+
             data = json.loads(response.text)
             
             # Process results
@@ -81,10 +82,6 @@ async def run_pass5(db: Client, legal_doc_id: str) -> None:
                 exemptions = result.get("exemptions", [])
                 
                 if not entities and not thresholds and not exemptions:
-                    continue
-                    
-                target_unit = next((x for x in batch if x.id == unit_id), None)
-                if not target_unit:
                     continue
                     
                 await db.applicabilitycondition.create(

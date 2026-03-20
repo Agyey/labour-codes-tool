@@ -33,11 +33,12 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
     """Extracts references and records CrossReference objects."""
     logger.info(f"[Pass 4] Extracting cross-references for doc {legal_doc_id}")
     
+    from typing import Any, cast
     units = await db.structuralunit.find_many(
-        where={
+        where=cast(Any, {
             "legal_doc_id": legal_doc_id,
             "full_text": {"not": None}
-        }
+        })
     )
     
     if not units:
@@ -61,25 +62,30 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
             
             # Simple heuristic target resolution: search for a unit in the same doc with that number
             # Real resolution is more complex (finding the correct parent context)
-            target = await db.structuralunit.findFirst(where={
+            target = await db.structuralunit.find_first(where={
                 "legal_doc_id": legal_doc_id,
                 "unit_number": ref_val,
                 "unit_type": ref_typeword
             })
+            
+            target_doc_id = getattr(target, 'legal_doc_id', None)
+            target_unit_id = getattr(target, 'id', None)
             
             await db.crossreference.create(data={
                 "source_doc_id": legal_doc_id,
                 "source_unit_id": unit.id,
                 "reference_type": "intra_doc",
                 "reference_subtype": subtype,
+                "ref_type": "section",  # Added field
                 "raw_text": raw_text,
                 "is_resolved": bool(target),
-                "target_doc_id": target.legal_doc_id if target else None,
-                "target_unit_id": target.id if target else None,
+                "target_doc_id": target_doc_id,
+                "target_unit_id": target_unit_id,
                 "target_section_ref": f"{ref_typeword} {ref_val}" if not target else None
             })
             ref_count += 1
-            if target: resolved_count += 1
+            if target:
+                resolved_count += 1
             
         # 2. Inter-document refs ("the Companies Act, 2013")
         for match in INTER_DOC_PATTERN.finditer(text):
@@ -90,23 +96,27 @@ async def run_pass4(db: Client, legal_doc_id: str) -> None:
                 continue
                 
             # Attempt to find the target document in our DB
-            target_doc = await db.legaldocument.findFirst(where={
+            target_doc = await db.legaldocument.find_first(where={
                 "title": {"contains": target_act_name.split(",")[0], "mode": "insensitive"},
                 "doc_type": "principal_act"
             })
             
+            target_doc_id_val = getattr(target_doc, 'id', None)
+
             await db.crossreference.create(data={
                 "source_doc_id": legal_doc_id,
                 "source_unit_id": unit.id,
                 "reference_type": "inter_doc",
                 "reference_subtype": subtype,
+                "ref_type": "act",  # Added field
                 "raw_text": raw_text,
                 "is_resolved": bool(target_doc),
-                "target_doc_id": target_doc.id if target_doc else None,
+                "target_doc_id": target_doc_id_val,
                 "target_act_name": target_act_name if not target_doc else None
             })
             ref_count += 1
-            if target_doc: resolved_count += 1
+            if target_doc:
+                resolved_count += 1
             
     logger.info(f"[Pass 4] Found {ref_count} references. Resolved {resolved_count}.")
 
