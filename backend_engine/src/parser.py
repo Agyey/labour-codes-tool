@@ -200,7 +200,7 @@ async def build_graph_and_suggestions(
     await db.documentsuggestion.create(
         data={
             "document": {"connect": {"id": document_id}},
-            "analysis_id": analysis.id,
+            "analysis": {"connect": {"id": analysis.id}},
             "type": SuggestionType.CREATE_LEGISLATION,
             "target_module": "knowledge_base",
             "suggested_data": prisma.Json(
@@ -373,7 +373,7 @@ async def build_graph_and_suggestions(
     logger.info(f"Generated {suggestion_count} suggestions for document {document_id}")
 
     return {
-        "analysis": {"connect": {"id": analysis.id}},
+        "analysis_id": analysis.id,
         "graph_stats": graph_stats,
         "suggestion_count": suggestion_count,
     }
