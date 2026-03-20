@@ -10,10 +10,9 @@ Usage:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
 from loguru import logger
 
-from src.models import DocumentClassification
+from .models import DocumentClassification
 
 
 # ── State code mapping ────────────────────────────────────────────
@@ -269,4 +268,4 @@ def _compute_confidence(doc_type: str, jurisdiction: str, parent_act_hint: str |
         score -= 0.1  # slight penalty — might be amendment
     if jurisdiction == "Central" and doc_type in {"rules", "regulations"} and parent_act_hint is None:
         score -= 0.15
-    return round(max(0.5, score), 2)
+    return round(float(max(0.5, score)), 2)

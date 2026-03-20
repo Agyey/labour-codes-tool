@@ -4,17 +4,17 @@ Runs the 6 passes sequentially on a fully extracted document tree.
 Publishes Server-Sent Events (SSE) progress via a callback.
 """
 import time
-from typing import Awaitable, Callable, Any
+from typing import Awaitable, Callable
 from loguru import logger
-from prisma import Client # type: ignore[attr-defined]
+from prisma import Client
 
-from src.models import ExtractedLegislation, DocumentClassification
-from src.enrichment.pass1_structure import run_pass1
-from src.enrichment.pass2_definitions import run_pass2
-from src.enrichment.pass3_compliance import run_pass3
-from src.enrichment.pass4_xrefs import run_pass4
-from src.enrichment.pass5_applicability import run_pass5
-from src.enrichment.pass6_authority import run_pass6
+from ..models import ExtractedLegislation, DocumentClassification
+from .pass1_structure import run_pass1
+from .pass2_definitions import run_pass2
+from .pass3_compliance import run_pass3
+from .pass4_xrefs import run_pass4
+from .pass5_applicability import run_pass5
+from .pass6_authority import run_pass6
 
 
 PASSES = [

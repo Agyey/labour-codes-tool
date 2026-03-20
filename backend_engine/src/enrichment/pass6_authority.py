@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from typing import Any, cast
 from loguru import logger
-from prisma import Client # type: ignore[attr-defined]
+from prisma import Client
 
 
 # Simple rule-based extraction for known authorities
@@ -31,7 +31,7 @@ KNOWN_AUTHORITIES = {
     "Appellate Tribunal": "appellate",
 }
 
-async def run_pass6(db: Client, legal_doc_id: str) -> None:
+async def run_pass6(db: Any, legal_doc_id: str) -> None:
     """Extracts authorities and remedies by scanning text for Keywords."""
     logger.info(f"[Pass 6] Authority extraction for doc {legal_doc_id}")
     

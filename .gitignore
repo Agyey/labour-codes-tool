@@ -21,6 +21,7 @@
 venv_alembic/
 __pycache__/
 *.pyc
+.temp_venv/
 
 # production
 /build

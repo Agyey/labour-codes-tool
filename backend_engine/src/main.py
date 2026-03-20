@@ -15,7 +15,7 @@ Endpoints:
 
 import json
 import os
-import prisma # type: ignore[attr-defined]
+import prisma
 import shutil
 import tempfile
 import typing
@@ -129,7 +129,7 @@ async def ingest_document(
         )
 
     # Check file size
-    contents = await file.read()
+    contents: bytes = await file.read()
     size_mb = len(contents) / (1024 * 1024)
     if size_mb > settings.max_upload_size_mb:
         raise HTTPException(

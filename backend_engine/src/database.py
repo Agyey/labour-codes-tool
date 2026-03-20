@@ -1,6 +1,7 @@
-from prisma import Client # type: ignore[attr-defined]
+from typing import Any
+from prisma import Client
 
-db = Client()
+db: Any = Client()
 
 
 async def connect_db() -> None:

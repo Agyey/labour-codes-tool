@@ -5,10 +5,11 @@ Extracts defined terms, their scopes, and inserts LegalDefinition records.
 """
 import re
 from loguru import logger
-from prisma import Client # type: ignore[attr-defined]
+from typing import Any
+from prisma import Client
 
 
-async def run_pass2(db: Client, legal_doc_id: str) -> None:
+async def run_pass2(db: Any, legal_doc_id: str) -> None:
     """Extracts defined terms and populates LegalDefinition.
     
     Operates directly on the database state created by Pass 1.

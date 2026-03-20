@@ -11,10 +11,8 @@ from loguru import logger
 from google.genai import types
 from prisma import Client # type: ignore[attr-defined]
 
-from src.models import (
-    ComplianceBatchResponse,
-)
-from src.parser import _client as model_client
+from ..models import ComplianceBatchResponse
+from ..parser import _client as model_client
 
 
 ASYNC_BATCH_SIZE = 20
@@ -28,7 +26,7 @@ Given a batch of legal provisions (Structural Units), analyze each to:
 Output JSON tracking the exact unit_id provided.
 """
 
-async def run_pass3(db: Client, legal_doc_id: str) -> None:
+async def run_pass3(db: Any, legal_doc_id: str) -> None:
     """Classifies provisions and extracts obligations using Gemini."""
     logger.info(f"[Pass 3] Compliance extraction for doc {legal_doc_id}")
     

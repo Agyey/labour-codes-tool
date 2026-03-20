@@ -29,7 +29,7 @@ Output JSON tracking the exact unit_id provided.
 If a provision is general with no specific applicability language, return empty lists.
 """
 
-async def run_pass5(db: Client, legal_doc_id: str) -> None:
+async def run_pass5(db: Any, legal_doc_id: str) -> None:
     """Classifies applicability conditions using Gemini."""
     logger.info(f"[Pass 5] Applicability extraction for doc {legal_doc_id}")
     

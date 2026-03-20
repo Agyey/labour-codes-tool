@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from typing import Any, cast
 from loguru import logger
-from prisma import Client # type: ignore[attr-defined]
+from prisma import Client
 
 
 # Common reference patterns
@@ -30,7 +30,7 @@ SUBTYPES = {
     re.compile(r'\bwithout prejudice to\b', re.IGNORECASE): "general",
 }
 
-async def run_pass4(db: Client, legal_doc_id: str) -> None:
+async def run_pass4(db: Any, legal_doc_id: str) -> None:
     """Extracts references and records CrossReference objects."""
     logger.info(f"[Pass 4] Extracting cross-references for doc {legal_doc_id}")
     
