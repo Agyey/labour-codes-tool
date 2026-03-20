@@ -49,8 +49,11 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
   const handleUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const file = files[0];
-    if (!file.name.endsWith(".pdf")) {
-      toast.error("Only PDF files are supported.");
+    const allowed = [".pdf", ".docx", ".doc", ".xlsx", ".xls", ".txt", ".csv"];
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    
+    if (!allowed.includes(ext)) {
+      toast.error(`Unsupported file type. Allowed: ${allowed.join(", ")}`);
       return;
     }
 
@@ -115,7 +118,7 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
         }`}
         onClick={() => document.getElementById("file-input")?.click()}
       >
-        <input id="file-input" type="file" accept=".pdf" className="hidden" onChange={(e) => handleUpload(e.target.files)} />
+        <input id="file-input" type="file" accept=".pdf,.docx,.doc,.xlsx,.xls,.txt,.csv" className="hidden" onChange={(e) => handleUpload(e.target.files)} />
         {uploading ? (
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
@@ -127,10 +130,10 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
               <Upload className="w-8 h-8 text-indigo-500" />
             </div>
             <p className="text-sm font-bold text-slate-700 dark:text-zinc-300">
-              Drop your PDF here or <span className="text-indigo-600 dark:text-indigo-400">click to browse</span>
+              Drop your Document here or <span className="text-indigo-600 dark:text-indigo-400">click to browse</span>
             </p>
             <p className="text-xs text-slate-400 dark:text-zinc-600">
-              PDF files up to 50MB — Acts, Rules, Amendments, Notifications
+              Files up to 50MB — Acts, Rules, Amendments, Notifications, Contracts
             </p>
           </div>
         )}

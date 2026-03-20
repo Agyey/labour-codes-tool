@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useUI } from "@/context/UIContext";
 import { 
   BookOpen, 
+  Library,
   Layers,
   Network,
   Home,
@@ -19,6 +20,8 @@ import {
   FileUp,
   LucideIcon
 } from "lucide-react";
+
+// (skipped unchanged code manually due to chunk sizes but I'll use target replacement precisely)
 
 export function AppSidebar() {
   const pathname = usePathname() || "";
@@ -106,6 +109,7 @@ export function AppSidebar() {
 // Grouped items mapping the 3 new pillars:
 
 const intelligenceItems = [
+  { href: "/library", label: "Knowledge Library", icon: Library, desc: "Browse legislative buckets", color: "bg-indigo-600", textHover: "group-hover:text-indigo-600" },
   { href: "/reading", label: "Reading View", icon: BookOpen, desc: "Act viewer & definitions", color: "bg-blue-600", textHover: "group-hover:text-blue-600" },
   { href: "/search", label: "Deep Search", icon: Database, desc: "Semantic legal search", color: "bg-teal-600", textHover: "group-hover:text-teal-600" },
   { href: "/repeal-comparison", label: "Repeal Mapper", icon: Layers, desc: "Old vs New provisions", color: "bg-amber-600", textHover: "group-hover:text-amber-600" },

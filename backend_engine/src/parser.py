@@ -46,14 +46,38 @@ Rules:
 """
 
 
-def extract_text_from_pdf(file_path: str) -> tuple[str, int]:
-    """Extract text and page count from a PDF file."""
+import os
+import fitz
+import pandas as pd
+from docx import Document as DocxDocument
+
+def extract_document_text(file_path: str) -> tuple[str, int]:
+    """Extract text and approximate page/row count from a document file."""
+    ext = os.path.splitext(file_path)[1].lower()
     text_content = ""
     page_count = 0
-    with fitz.open(file_path) as doc:
-        page_count = len(doc)
-        for page in doc:
-            text_content += page.get_text() + "\n"
+
+    if ext == ".pdf":
+        with fitz.open(file_path) as doc:
+            page_count = len(doc)
+            for page in doc:
+                text_content += page.get_text() + "\n"
+    elif ext in [".docx", ".doc"]:
+        doc = DocxDocument(file_path)
+        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+        text_content = "\n".join(paragraphs)
+        page_count = max(1, len(paragraphs) // 30)  # Approximation
+    elif ext in [".xlsx", ".xls"]:
+        df = pd.read_excel(file_path)
+        text_content = df.to_string()
+        page_count = max(1, len(df) // 40)
+    elif ext in [".txt", ".csv"]:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            text_content = f.read()
+            page_count = max(1, len(text_content.splitlines()) // 40)
+    else:
+        raise ValueError(f"Unsupported file format: {ext}")
+
     return text_content, page_count
 
 

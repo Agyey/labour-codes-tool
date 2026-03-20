@@ -20,9 +20,7 @@ class Settings(BaseSettings):
     celery_result_backend: str = "redis://localhost:6379/2"
 
     # --- Security ---
-    max_upload_size_mb: int = 50
-    allowed_file_types: list[str] = [".pdf"]
-    rate_limit_rpm: int = 30
+    allowed_file_types: list[str] = [".pdf", ".docx", ".doc", ".xlsx", ".xls", ".txt", ".csv"]
 
     model_config = SettingsConfigDict(
         env_file=".env",

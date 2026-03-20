@@ -42,7 +42,7 @@ from slowapi.util import get_remote_address
 from src.database import db, connect_db, disconnect_db
 from src.graph_service import close_driver, traverse_for_query
 from src.parser import (
-    extract_text_from_pdf,
+    extract_document_text,
     analyze_document_stream,
     build_graph_and_suggestions,
 )
@@ -144,7 +144,7 @@ async def upload_document(
             buffer.write(contents)
 
         # Extract text + page count
-        raw_text, page_count = extract_text_from_pdf(file_path)
+        raw_text, page_count = extract_document_text(file_path)
 
         # Clean up temp file
         shutil.rmtree(temp_dir, ignore_errors=True)
