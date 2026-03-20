@@ -5,6 +5,7 @@ import { useData } from "@/context/DataContext";
 import { useFilter } from "@/context/FilterContext";
 import { CODES } from "@/config/codes";
 import { Pin } from "lucide-react";
+import { useMemo } from "react";
 
 export function MappingSubNav() {
   const { activeCode, setExpandedProvision } = useUI();
@@ -18,17 +19,20 @@ export function MappingSubNav() {
   };
 
   // Chapters for current code
-  const chapterMap: Record<string, string> = {};
-  provisions
-    .filter((x) => x.code === activeCode)
-    .forEach((p) => {
-      if (!chapterMap[p.ch]) chapterMap[p.ch] = p.chName;
-    });
-  const chapters = Object.entries(chapterMap);
+  const chapters = useMemo(() => {
+    const chapterMap: Record<string, string> = {};
+    for (let i = 0; i < provisions.length; i++) {
+      const p = provisions[i];
+      if (p.code === activeCode) {
+        if (!chapterMap[p.ch]) chapterMap[p.ch] = p.chName;
+      }
+    }
+    return Object.entries(chapterMap);
+  }, [provisions, activeCode]);
 
-  const pinnedProvisions = provisions.filter(
-    (x) => x.code === activeCode && x.pinned
-  );
+  const pinnedProvisions = useMemo(() => {
+    return provisions.filter((x) => x.code === activeCode && x.pinned);
+  }, [provisions, activeCode]);
 
   return (
     <div className="p-3 bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-slate-200 dark:border-zinc-800 mb-4 mr-4">
