@@ -188,9 +188,16 @@ function StreamingProgress({
 
                 {/* Detail text */}
                 {evt.detail && (
-                  <p className="text-[11px] text-zinc-500 mt-1 ml-6 leading-relaxed">
-                    {evt.detail}
-                  </p>
+                  <div className="mt-2 ml-6 bg-zinc-900/50 border border-zinc-800/50 rounded-lg p-3 relative overflow-hidden group">
+                    {evt.status === "running" && (
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/10 to-transparent h-[200%] animate-[pulse_2s_ease-in-out_infinite] pointer-events-none" />
+                    )}
+                    <p className="text-[11px] text-zinc-400 font-mono leading-relaxed whitespace-pre-wrap break-all relative z-10">
+                      {evt.detail.length > 300 
+                        ? `...${evt.detail.slice(-300)}` 
+                        : evt.detail}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -237,6 +244,18 @@ function StreamingProgress({
                 </div>
               ))}
             </div>
+          </motion.div>
+        )}
+
+        {/* Gap Loader */}
+        {!isComplete && !error && displayEvents.length > 0 && displayEvents[displayEvents.length - 1].status === "done" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-3 mt-4 ml-6 text-zinc-600"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-xs font-semibold">Processing extracted data...</span>
           </motion.div>
         )}
 
