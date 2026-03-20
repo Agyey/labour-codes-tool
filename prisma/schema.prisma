@@ -783,6 +783,10 @@ model Document {
   user        User?                @relation(fields: [uploaded_by], references: [id])
   analyses    DocumentAnalysis[]
   suggestions DocumentSuggestion[]
+
+  @@index([status])
+  @@index([name])
+  @@index([file_name])
 }
 
 model DocumentAnalysis {

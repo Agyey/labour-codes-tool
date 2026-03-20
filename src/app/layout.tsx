@@ -14,17 +14,17 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "India Labour Code Reform — Legal Intelligence Platform",
+  title: "LexNexus | India Labour Code Reform Intelligence",
   description:
-    "Enterprise compliance tracking platform for India's 4 new Labour Codes replacing 29 Acts. Per-act change analysis, state-wise tracking, and compliance workflow management for Tier 1 law firms and large corporates.",
+    "Enterprise-grade legal intelligence and compliance platform for India's 4 new Labour Codes. Advanced document analysis, state-wise tracking, and law firm workflow management.",
   keywords: [
     "India labour codes",
     "Code on Wages",
     "Industrial Relations Code",
     "Code on Social Security",
     "OSH Working Conditions Code",
-    "labour law compliance",
     "legal intelligence",
+    "compliance automation",
   ],
 };
 
