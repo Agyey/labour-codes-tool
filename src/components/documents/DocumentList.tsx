@@ -78,7 +78,7 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
     e.stopPropagation();
     if (!confirm(`Delete "${docName}" and all its analysis? This cannot be undone.`)) return;
     try {
-      const res = await fetch(`/api/documents/${docId}`, { method: "DELETE" });
+      const res = await fetch(`/api/documents?id=${docId}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Document deleted");
         fetchDocuments();

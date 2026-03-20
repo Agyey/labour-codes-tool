@@ -444,7 +444,7 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
     if (!confirm("Delete this document and all associated analysis? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/documents/${docId}`, { method: "DELETE" });
+      const res = await fetch(`/api/documents?id=${docId}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Document deleted");
         onBack();

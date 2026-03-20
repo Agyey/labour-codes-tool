@@ -58,6 +58,7 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 15. [x] **Codebase Health & Strict Typing**: Resolved 140+ `mypy --strict` errors, including type definitions for `dict`, `Json`, and all core functions.
 16. [x] **Frontend Decomp**: Completed decomposition of `CompareView.tsx` and `ScenarioWizard.tsx`.
 17. [x] **Lint Config**: Eliminated explicit `any` and unused variables in backend CI.
+18. [x] **Database & API Integrity**: Provisioned native Neo4j GraphDB Railway instance and fixed frontend-to-backend API route parameter mapping for file deletions.
 
 ## Refactor Roadmap (Target: Q1 2026)
 ### 1. Critical Interventions (Strict Typing & Observability)

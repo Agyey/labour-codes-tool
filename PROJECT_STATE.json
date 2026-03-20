@@ -7,16 +7,16 @@
       {
         "name": "backend",
         "path": "backend_engine",
-        "summary": "FastAPI backend with 140+ remediated strict mypy types, Pydantic V2, and 97% test coverage.",
+        "summary": "FastAPI backend with 140+ remediated strict mypy types, Pydantic V2, and 97% test coverage. Connected natively to Neo4j over Bolt.",
         "status": "stable"
       },
       {
         "name": "frontend",
         "path": "frontend",
-        "summary": "Next.js frontend with memoized components, 98.8% test coverage, and decomposed atomic architecture.",
+        "summary": "Next.js frontend with memoized components, 98.8% test coverage, decomposed atomic architecture, and resilient API routing.",
         "status": "stable"
       }
     ]
   },
-  "last_sync": "2026-03-19T08:44:00Z"
+  "last_sync": "2026-03-20T15:20:00Z"
 }
