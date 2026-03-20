@@ -50,6 +50,7 @@ import asyncio
 import time
 from src.audit_chain import record_audit, verify_chain_integrity
 from src.settings import settings
+from src.pipeline_task import run_pipeline_background, stream_pipeline_events
 
 
 @asynccontextmanager
@@ -109,9 +110,9 @@ async def health_check() -> dict[str, str]:
 # ──────────────────────────────────────────────
 
 
-@app.post("/api/documents/upload")
+@app.post("/api/pipeline/ingest")
 @limiter.limit(f"{settings.rate_limit_rpm}/minute")
-async def upload_document(
+async def ingest_document(
     request: Request, file: UploadFile = File(...)
 ) -> dict[str, typing.Any]:
     """Upload a PDF. Stores text, returns document ID for subsequent analysis."""
@@ -177,18 +178,54 @@ async def upload_document(
             f"Document uploaded: {document.id} — {safe_filename} ({page_count} pages)"
         )
 
+        # 🚀 START PIPELINE: Create a ProcessingJob
+        job = await db.processingjob.create(
+            data={
+                "document_id": document.id,
+                "status": "queued",
+                "current_pass": 0,
+                "total_passes": 6,
+            }
+        )
+        
+        # Fire and forget the background pipeline
+        asyncio.create_task(run_pipeline_background(job.id, document.id, raw_text))
+
         return {
             "id": document.id,
+            "job_id": job.id,
             "name": document.name,
             "file_name": document.file_name,
             "file_size": document.file_size,
             "page_count": page_count,
-            "status": document.status,
+            "status": "processing",
         }
 
     except Exception as e:
         logger.error(f"Upload error: {e}")
         raise HTTPException(500, "Upload failed. Please try again.")
+
+# ──────────────────────────────────────────────
+# Pipeline Streaming
+# ──────────────────────────────────────────────
+
+@app.get("/api/pipeline/jobs/{job_id}/stream")
+@limiter.limit("20/minute")
+async def stream_pipeline(request: Request, job_id: str) -> StreamingResponse:
+    """SSE endpoint that streams real-time pipeline progress across all 6 stages."""
+    job = await db.processingjob.find_unique(where={"id": job_id})
+    if not job:
+        raise HTTPException(404, "Job not found.")
+        
+    return StreamingResponse(
+        stream_pipeline_events(job_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 # ──────────────────────────────────────────────
@@ -200,6 +237,11 @@ async def upload_document(
 async def list_documents() -> list[dict[str, typing.Any]]:
     """List all uploaded documents."""
     docs = await db.document.find_many(order={"uploaded_at": "desc"})
+    jobs = await db.processingjob.find_many(
+        where={"document_id": {"in": [d.id for d in docs]}}
+    )
+    job_map = {j.document_id: j for j in jobs if j.document_id}
+
     return [
         {
             "id": d.id,
@@ -207,9 +249,10 @@ async def list_documents() -> list[dict[str, typing.Any]]:
             "file_name": d.file_name,
             "file_size": d.file_size,
             "page_count": d.page_count,
-            "status": d.status,
+            "status": "processing" if d.id in job_map and job_map[d.id].status in ["queued", "running"] else (job_map[d.id].status if d.id in job_map and job_map[d.id].status == "failed" else d.status),
             "uploaded_at": d.uploaded_at.isoformat() if d.uploaded_at else None,
             "analyzed_at": d.analyzed_at.isoformat() if d.analyzed_at else None,
+            "job_id": job_map[d.id].id if d.id in job_map else None,
         }
         for d in docs
     ]

@@ -806,6 +806,8 @@ model DocumentSuggestion {
   id               String            @id @default(cuid())
   document_id      String
   document         Document          @relation(fields: [document_id], references: [id], onDelete: Cascade)
+  legal_doc_id     String?
+  legal_document   LegalDocument?    @relation(fields: [legal_doc_id], references: [id])
   analysis_id      String?
   analysis         DocumentAnalysis? @relation(fields: [analysis_id], references: [id])
   type             String            // create_legislation | create_provision | create_compliance_item | create_penalty | flag_repeal
@@ -834,3 +836,147 @@ model AuditChain {
   @@index([entity_type, entity_id])
   @@index([created_at])
 }
+
+// --- New Pipeline Models ---
+
+model LegalDocument {
+  id                    String           @id @default(cuid())
+  title                 String
+  short_title           String?
+  year                  Int?
+  jurisdiction          String           // Central | State
+  primary_state         String?          // If type=State
+  doc_type              String           // Act | Rule | Notification | Code
+  is_connector_act      Boolean          @default(false)
+  auto_apply_amendments Boolean          @default(true)
+  full_text             String?          @db.Text
+  summary               String?          @db.Text
+  source_url            String?
+  uploaded_at           DateTime         @default(now())
+  analyzed_at           DateTime?
+  units                 StructuralUnit[]
+  suggestions           DocumentSuggestion[]
+  NotificationRecord    NotificationRecord[]
+}
+
+model StructuralUnit {
+  id                     String                  @id @default(cuid())
+  legal_doc_id           String
+  legal_document         LegalDocument           @relation(fields: [legal_doc_id], references: [id], onDelete: Cascade)
+  unit_type              String                  // Chapter | Section | SubSection | Clause
+  unit_number            String
+  title                  String?
+  summary                String?                 @db.Text
+  full_text              String?                 @db.Text
+  sort_order             Int
+  provision_nature       String?                 // Obligatory | Prohibitory | Advisory
+  definitions            LegalDefinition[]
+  obligations            ObligationRecord[]
+  penalties              PenaltyRecord[]
+  xrefs                  CrossReference[]
+  applicability          ApplicabilityCondition?
+  authority              LegalAuthority?
+  rights                 RightsAndRemedy[]
+}
+
+model LegalDefinition {
+  id               String         @id @default(cuid())
+  unit_id          String
+  unit             StructuralUnit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  term             String
+  definition_text  String         @db.Text
+  context          String?
+}
+
+model ObligationRecord {
+  id               String         @id @default(cuid())
+  unit_id          String
+  unit             StructuralUnit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  task             String         @db.Text
+  actor            String?        // Employer | Occupier | Manager
+  frequency        String?        // Once | Monthly | Annual | Event-based
+  due_logic        String?        @db.Text
+  created_at       DateTime       @default(now())
+}
+
+model PenaltyRecord {
+  id               String         @id @default(cuid())
+  unit_id          String
+  unit             StructuralUnit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  imprisonment     String?
+  fine_min         Float?
+  fine_max         Float?
+  fine_currency    String         @default("INR")
+  description      String?        @db.Text
+}
+
+model CrossReference {
+  id                  String         @id @default(cuid())
+  source_unit_id      String
+  source_unit         StructuralUnit @relation(fields: [source_unit_id], references: [id], onDelete: Cascade)
+  target_doc_name     String?
+  target_unit_number  String?
+  target_unit_id      String?
+  ref_type            String         // intra_doc | inter_doc | unresolved
+  is_verified         Boolean        @default(false)
+}
+
+model ApplicabilityCondition {
+  id               String         @id @default(cuid())
+  unit_id          String         @unique
+  unit             StructuralUnit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  condition_type   String         // entity_type | threshold | exemption
+  entity_types     String?        // JSON list
+  thresholds       String?        // JSON map
+  exemptions       String?        // JSON list
+  description      String?        @db.Text
+}
+
+model LegalAuthority {
+  id               String          @id @default(cuid())
+  unit_id          String          @unique
+  unit             StructuralUnit  @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  name             String
+  jurisdiction     String
+  powers           String?         @db.Text
+  links            AuthorityLink[]
+}
+
+model AuthorityLink {
+  id               String         @id @default(cuid())
+  authority_id     String
+  authority        LegalAuthority @relation(fields: [authority_id], references: [id], onDelete: Cascade)
+  related_unit_id  String
+}
+
+model RightsAndRemedy {
+  id               String         @id @default(cuid())
+  unit_id          String
+  unit             StructuralUnit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  right_holder     String
+  summary          String         @db.Text
+  procedure        String?        @db.Text
+}
+
+model ProcessingJob {
+  id               String    @id @default(cuid())
+  document_id      String?   @unique
+  status           String    @default("pending") // pending | processing | completed | failed
+  current_stage    String?
+  progress         Float     @default(0)
+  error_log        String?   @db.Text
+  result_doc_id    String?   // points to the LegalDocument created
+  started_at       DateTime  @default(now())
+  completed_at     DateTime?
+}
+
+model NotificationRecord {
+  id               String        @id @default(cuid())
+  doc_id           String
+  document         LegalDocument @relation(fields: [doc_id], references: [id], onDelete: Cascade)
+  title            String
+  summary          String        @db.Text
+  published_at     DateTime
+  source_url       String?
+}
+

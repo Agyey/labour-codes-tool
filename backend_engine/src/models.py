@@ -197,3 +197,62 @@ class AuditEntry(BaseModel):
     previous_hash: str
     user_id: str | None = None
     timestamp: datetime
+
+
+# ──────────────────────────────────────────────
+# Pipeline Enrichment Schemas (New)
+# ──────────────────────────────────────────────
+
+class DocumentClassification(BaseModel):
+    doc_type: str
+    jurisdiction: str
+    appropriate_govt: str
+    parent_act_hint: str | None
+    parent_act_year: int | None
+    enabling_section_hint: str | None
+    is_connector_act: bool
+    is_amendment: bool
+    confidence: float
+    notes: list[str] = Field(default_factory=list)
+
+
+class PenaltyExtract(BaseModel):
+    fine_amount: str | None = None
+    imprisonment: str | None = None
+    liable_person: str | None = None
+    description: str | None = None
+
+
+class ObligationExtract(BaseModel):
+    obligation_type: str = Field(description="filing | registration | disclosure | record_maintenance | payment | reporting | other")
+    compliance_category: str = Field(description="event_based | annual | quarterly | ongoing | one_time")
+    title: str
+    description: str | None = None
+    trigger_event: str | None = None
+    due_date_rule: str | None = None
+    responsible_person: str | None = None
+    prescribed_form: str | None = None
+    prescribed_authority: str | None = None
+    penalties: list[PenaltyExtract] = Field(default_factory=list)
+
+
+class ProvisionClassification(BaseModel):
+    unit_id: str
+    nature_tags: list[str] = Field(description="List of strings e.g. ['Substantive Obligation', 'Penal']")
+    obligations: list[ObligationExtract] = Field(default_factory=list)
+
+
+class ComplianceBatchResponse(BaseModel):
+    results: list[ProvisionClassification]
+
+
+class ApplicabilityExtract(BaseModel):
+    unit_id: str
+    entity_types: list[str] = Field(default_factory=list, description="e.g. ['Listed Company', 'employer']")
+    thresholds: dict[str, typing.Any] = Field(default_factory=dict, description="e.g. {'net_worth_above': 5000000000}")
+    exemptions: list[str] = Field(default_factory=list, description="e.g. ['Private Company']")
+    description: str | None = None
+
+
+class ApplicabilityBatchResponse(BaseModel):
+    results: list[ApplicabilityExtract]

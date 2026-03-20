@@ -29,7 +29,7 @@ const CODES = {
 const generateId = () => 'c' + crypto.randomBytes(11).toString('hex');
 
 async function main() {
-  const connectionString = "postgresql://postgres:KDOPAXAcyFMApecAtoxHxlSxzVlsSmRl@turntable.proxy.rlwy.net:13912/railway";
+  const connectionString = process.env.DATABASE_URL;
   const client = new Client({ connectionString });
   
   try {

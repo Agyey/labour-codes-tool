@@ -15,6 +15,11 @@ interface CrossRef {
   target_title?: string;
 }
 
+interface StateAmendment {
+  state: string;
+  text: string;
+}
+
 interface ProvisionContentProps {
   unitType: string;
   number?: string;
@@ -24,6 +29,7 @@ interface ProvisionContentProps {
   complianceType: string;
   definitions?: Definition[];
   crossReferences?: CrossRef[];
+  state_amendments?: StateAmendment[];
 }
 
 export default function ProvisionContent({
@@ -35,6 +41,7 @@ export default function ProvisionContent({
   complianceType,
   definitions = [],
   crossReferences = [],
+  state_amendments = [],
 }: ProvisionContentProps) {
   const [hoveredTerm, setHoveredTerm] = useState<string | null>(null);
 
@@ -136,6 +143,26 @@ export default function ProvisionContent({
           <p className="italic text-slate-400">No text available for this provision.</p>
         )}
       </div>
+
+      {/* State Amendments / Overlays */}
+      {state_amendments.length > 0 && (
+        <div className="mt-8 space-y-4">
+          <h3 className="text-sm font-semibold text-indigo-800 dark:text-indigo-400 border-b border-indigo-100 dark:border-indigo-500/20 pb-2">
+            State Amendments & Rules
+          </h3>
+          {state_amendments.map((amendment, i) => (
+            <div key={i} className="bg-indigo-50/50 dark:bg-indigo-500/5 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500 dark:bg-indigo-400" />
+              <div className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-wider mb-2">
+                {amendment.state} Amendment
+              </div>
+              <div className="text-sm text-slate-700 dark:text-slate-300 italic">
+                {renderTextWithDefinitions(amendment.text)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Cross References Sidebar */}
       {crossReferences.length > 0 && (

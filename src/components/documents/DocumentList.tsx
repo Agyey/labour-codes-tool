@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import { Document } from "@/types/document";
 import { StatusBadge } from "@/components/documents/StatusBadge";
 import { DocumentDetailView } from "@/components/documents/DocumentDetailView";
+import { IngestJobCard } from "@/components/documents/IngestJobCard";
+import { PipelineProgressTracker } from "@/components/documents/PipelineProgressTracker";
 
 interface DocumentListProps {
   initialDocuments?: Document[];
@@ -18,6 +20,7 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -66,7 +69,7 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
       if (res.ok) {
         toast.success(`Uploaded: ${data.name}`);
         fetchDocuments();
-        setSelectedDocId(data.id);
+        setSelectedJobId(data.job_id);
       } else {
         toast.error(data.detail || data.error || "Upload failed");
       }
@@ -95,6 +98,26 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
       d.file_name.toLowerCase().includes(debouncedSearch.toLowerCase())
     ).slice(0, 20); // Limit to 20 for initial view performance
   }, [documents, debouncedSearch]);
+
+  if (selectedJobId) {
+    return (
+      <div className="p-0">
+        <PipelineProgressTracker 
+          jobId={selectedJobId} 
+          onComplete={() => {
+            // Option 1: fetchDocuments then go back to list
+            // Option 2: clear selectedJobId and it goes back to list automatically
+          }} 
+        />
+        <button 
+           onClick={() => { setSelectedJobId(null); fetchDocuments(); }}
+           className="mt-6 px-4 py-2 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-xl hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors font-semibold shadow-sm text-sm"
+        >
+          ← Back to Queue
+        </button>
+      </div>
+    );
+  }
 
   if (selectedDocId) {
     return (
@@ -173,34 +196,19 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredDocs.map((doc) => (
-            <motion.div
+          {filteredDocs.map((doc: any) => (
+            <IngestJobCard 
               key={doc.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              onClick={() => setSelectedDocId(doc.id)}
-              className="group flex items-center gap-4 p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-200 dark:hover:border-indigo-500/30 cursor-pointer transition-all"
-            >
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200 truncate">{doc.name}</h3>
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5">
-                  {doc.page_count} pages · {(doc.file_size / 1024).toFixed(0)} KB
-                  {doc.uploaded_at && ` · ${new Date(doc.uploaded_at).toLocaleDateString()}`}
-                </p>
-              </div>
-              <StatusBadge status={doc.status} />
-              <button
-                onClick={(e) => handleDelete(e, doc.id, doc.name)}
-                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                title="Delete document"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-              <ChevronRight className="w-5 h-5 text-slate-300 dark:text-zinc-700 group-hover:text-indigo-500 transition-colors" />
-            </motion.div>
+              job={doc}
+              onClick={(id, isJob) => {
+                if (isJob) {
+                  setSelectedJobId(id);
+                } else {
+                  setSelectedDocId(id);
+                }
+              }}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}

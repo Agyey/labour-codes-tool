@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  experimental: {
-    serverComponentsExternalPackages: ["@prisma/client"],
-  },
+  serverExternalPackages: ["@prisma/client"],
   images: {
     remotePatterns: [
       {
@@ -38,6 +36,14 @@ const nextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
         ],
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/pipeline/:path*',
+        destination: `${process.env.BACKEND_URL || 'http://127.0.0.1:8001'}/api/pipeline/:path*`,
       },
     ];
   },

@@ -5,18 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Search, Scale, FileText, Landmark, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-interface Legislation {
+interface LegalDocument {
   id: string;
-  name: string;
-  short_name: string;
-  type: string;
+  title: string;
+  short_title: string | null;
+  doc_type: string;
   year: number | null;
-  color: string | null;
-  framework?: { name: string } | null;
+  jurisdiction: string;
 }
 
 interface LibraryClientProps {
-  legislations: Legislation[];
+  legislations: LegalDocument[];
 }
 
 export default function LibraryClient({ legislations }: LibraryClientProps) {
@@ -26,9 +25,9 @@ export default function LibraryClient({ legislations }: LibraryClientProps) {
   const filtered = useMemo(() => {
     return legislations.filter((l) => {
       const matchesSearch =
-        l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.short_name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesTab = activeTab === "all" || l.type.toLowerCase() === activeTab.toLowerCase();
+        l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (l.short_title && l.short_title.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesTab = activeTab === "all" || l.doc_type.toLowerCase() === activeTab.toLowerCase();
       return matchesSearch && matchesTab;
     });
   }, [legislations, searchQuery, activeTab]);
@@ -37,7 +36,7 @@ export default function LibraryClient({ legislations }: LibraryClientProps) {
   const buckets = useMemo(() => {
     const counts: Record<string, number> = { all: legislations.length };
     legislations.forEach((l) => {
-      const t = l.type.toLowerCase();
+      const t = l.doc_type.toLowerCase();
       counts[t] = (counts[t] || 0) + 1;
     });
     return counts;
@@ -132,21 +131,21 @@ export default function LibraryClient({ legislations }: LibraryClientProps) {
                 <Link href={`/reading/${item.id}`} className="block h-full group">
                   <div className="h-full flex flex-col bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
-                      <div className={`p-3 rounded-2xl ${item.color || "bg-indigo-50 dark:bg-indigo-500/10"}`}>
-                        <Scale className={`w-6 h-6 ${item.color?.replace("bg-", "text-").replace("-50", "-600") || "text-indigo-600 dark:text-indigo-400"}`} />
+                      <div className={`p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10`}>
+                        <Scale className={`w-6 h-6 text-indigo-600 dark:text-indigo-400`} />
                       </div>
                       <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded-full text-[10px] font-bold tracking-wider uppercase">
-                        {item.type}
+                        {item.jurisdiction} • {item.doc_type}
                       </span>
                     </div>
 
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
-                      {item.name}
+                      {item.title}
                     </h3>
 
-                    {item.short_name !== item.name && (
+                    {item.short_title && item.short_title !== item.title && (
                       <p className="text-sm font-medium text-slate-500 dark:text-zinc-500 mb-4 line-clamp-1">
-                        {item.short_name}
+                        {item.short_title}
                       </p>
                     )}
 

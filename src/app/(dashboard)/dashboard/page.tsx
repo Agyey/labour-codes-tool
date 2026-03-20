@@ -88,18 +88,17 @@ export default async function FirmDashboard() {
     }
   });
 
-  const pendingSignatures = await prisma.task.count({
+  const processingDocs = await prisma.processingJob.count({
     where: {
-      name: { contains: "Signature" },
-      status: { not: "Completed" }
+      status: { in: ["queued", "running"] }
     }
   });
 
   const metrics = [
     { label: "Active Deals", value: activeDeals.toString(), change: "Live from database", icon: Briefcase, color: "text-indigo-500", bg: "bg-indigo-500/10" },
     { label: "Overdue Tasks", value: overdueCount.toString(), change: overdueCount > 0 ? "Requires attention" : "Everything on track", icon: AlertTriangle, color: "text-rose-500", bg: "bg-rose-500/10" },
-    { label: "Completed (7d)", value: completedLast7Days.toString(), change: "Task throughput", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Pending Signatures", value: pendingSignatures.toString(), change: "Execution pipeline", icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "Pipeline Queue", value: processingDocs.toString(), change: "Docs analyzing", icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { label: "Completed Tasks", value: completedLast7Days.toString(), change: "Last 7 days", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   ];
 
   return (

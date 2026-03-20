@@ -5,7 +5,8 @@ from fastapi.testclient import TestClient
 import httpx
 
 from api.main import app
-from api.database import get_db, Base
+from api.database import get_db
+from db.models.base import Base
 
 # Use in-memory SQLite for extremely fast testing
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

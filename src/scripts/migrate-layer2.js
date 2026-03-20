@@ -87,7 +87,7 @@ ALTER TABLE "TaskInstance" ADD CONSTRAINT "TaskInstance_assignee_id_fkey" FOREIG
 `;
 
 async function main() {
-  const connectionString = "postgresql://postgres:KDOPAXAcyFMApecAtoxHxlSxzVlsSmRl@turntable.proxy.rlwy.net:13912/railway";
+  const connectionString = process.env.DATABASE_URL;
   const client = new Client({ connectionString });
   
   try {

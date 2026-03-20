@@ -15,12 +15,10 @@ export default async function LibraryPage() {
     redirect("/auth/signin");
   }
 
-  // Fetch all active legislations with their frameworks
-  const legislations = await prisma.legislation.findMany({
-    where: { is_repealed: false },
-    include: { framework: true },
+  // Fetch all active legal documents
+  const documents = await prisma.legalDocument.findMany({
     orderBy: { year: "desc" },
   });
 
-  return <LibraryClient legislations={legislations} />;
+  return <LibraryClient legislations={documents} />;
 }

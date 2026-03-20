@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import { FrameworkModal } from "./FrameworkModal";
 import { Framework } from "@/types/provision";
-import { PdfUploadWizard } from "@/components/parsers/PdfUploadWizard";
 
 import { ModuleHeader } from "@/components/shared/ModuleHeader";
 
@@ -17,7 +16,6 @@ export function FrameworkDashboard() {
   const { setActiveView, setActiveCode } = useUI();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFw, setEditingFw] = useState<Framework | null>(null);
-  const [showPdfWizard, setShowPdfWizard] = useState(false);
 
   if (loading) {
     return (
@@ -31,7 +29,6 @@ export function FrameworkDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {showPdfWizard && <PdfUploadWizard onClose={() => setShowPdfWizard(false)} />}
       <ModuleHeader 
         title="Legal Operations Nexus"
         description="Central intelligence for complex legal frameworks. Manage legislations, rules, and connectors within their respective buckets."
@@ -39,13 +36,6 @@ export function FrameworkDashboard() {
         actions={
           canEdit && (
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setShowPdfWizard(true)}
-                className="px-6 py-3 bg-emerald-600 text-white text-[12px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-emerald-600/20 whitespace-nowrap flex items-center gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                Upload Act (PDF)
-              </button>
               <button 
                 onClick={() => { setEditingFw(null); setIsModalOpen(true); }}
                 className="px-6 py-3 bg-indigo-600 text-white text-[12px] font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl shadow-indigo-600/20 whitespace-nowrap"

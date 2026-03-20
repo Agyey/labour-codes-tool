@@ -1,17 +1,47 @@
 import pytest
 import io
 from typing import Any, Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 from src.main import app
 
 
 @pytest.fixture
 def client() -> Generator[TestClient, None, None]:
+    mock_db = MagicMock()
+    # Mock common Prisma model accessors to return AsyncMocks
+    mock_db.connect = AsyncMock()
+    mock_db.disconnect = AsyncMock()
+    mock_db.is_connected = MagicMock(return_value=True)
+    
+    mock_db.document = MagicMock()
+    mock_db.document.find_many = AsyncMock(return_value=[])
+    mock_db.document.find_unique = AsyncMock(return_value=None)
+    mock_db.document.create = AsyncMock()
+    mock_db.document.update = AsyncMock()
+    mock_db.document.delete = AsyncMock()
+    
+    mock_db.processingjob = MagicMock()
+    mock_db.processingjob.find_many = AsyncMock(return_value=[])
+    mock_db.processingjob.find_unique = AsyncMock(return_value=None)
+    mock_db.processingjob.create = AsyncMock()
+    mock_db.processingjob.update = AsyncMock()
+    
+    mock_db.documentsuggestion = MagicMock()
+    mock_db.documentsuggestion.find_many = AsyncMock(return_value=[])
+    mock_db.documentsuggestion.find_unique = AsyncMock(return_value=None)
+    mock_db.documentsuggestion.update = AsyncMock()
+    mock_db.documentsuggestion.delete_many = AsyncMock()
+    
+    mock_db.documentanalysis = MagicMock()
+    mock_db.documentanalysis.delete_many = AsyncMock()
+    
     with (
-        patch("prisma.Client.connect", new_callable=AsyncMock),
-        patch("prisma.Client.disconnect", new_callable=AsyncMock),
-        patch("prisma.Client.is_connected", return_value=True),
+        patch("src.database.db", mock_db),
+        patch("src.main.record_audit", new_callable=AsyncMock),
+        patch("src.main.run_pipeline_background", new_callable=AsyncMock),
+        patch("src.main.connect_db", new_callable=AsyncMock),
+        patch("src.main.disconnect_db", new_callable=AsyncMock),
         TestClient(app) as c,
     ):
         yield c
@@ -36,6 +66,7 @@ def test_list_documents(mock_db: Any, client: TestClient) -> None:
         analyzed_at = None
 
     mock_db.document.find_many = AsyncMock(return_value=[MockDoc()])
+    mock_db.processingjob.find_many = AsyncMock(return_value=[])
 
     response = client.get("/api/documents")
     assert response.status_code == 200
@@ -91,12 +122,10 @@ def test_get_document_found(mock_db: Any, client: TestClient) -> None:
 
 @patch("src.main.db")
 @patch("src.main.extract_document_text")
-@patch("src.main.record_audit")
 def test_upload_document(
-    mock_audit: Any, mock_extract: Any, mock_db: Any, client: TestClient
+    mock_extract: Any, mock_db: Any, client: TestClient
 ) -> None:
     mock_extract.return_value = ("raw text", 5)
-    mock_audit.return_value = AsyncMock()
 
     class MockDoc:
         id = "new_doc"
@@ -105,11 +134,17 @@ def test_upload_document(
         file_size = 100
         status = "uploaded"
 
+    class MockJob:
+        id = "job_1"
+        document_id = "new_doc"
+        status = "queued"
+
     mock_db.document.create = AsyncMock(return_value=MockDoc())
+    mock_db.processingjob.create = AsyncMock(return_value=MockJob())
 
     file_content = b"PDF content bytes"
     response = client.post(
-        "/api/documents/upload",
+        "/api/pipeline/ingest",
         files={"file": ("test.pdf", io.BytesIO(file_content), "application/pdf")},
     )
     assert response.status_code == 200
@@ -118,7 +153,7 @@ def test_upload_document(
 
 def test_upload_document_no_filename(client: TestClient) -> None:
     response = client.post(
-        "/api/documents/upload",
+        "/api/pipeline/ingest",
         files={"file": ("", io.BytesIO(b""), "application/pdf")},
     )
     assert response.status_code in (400, 422)
@@ -126,7 +161,7 @@ def test_upload_document_no_filename(client: TestClient) -> None:
 
 def test_upload_document_bad_extension(client: TestClient) -> None:
     response = client.post(
-        "/api/documents/upload",
+        "/api/pipeline/ingest",
         files={"file": ("test.exe", io.BytesIO(b""), "application/octet-stream")},
     )
     assert response.status_code == 400
@@ -137,7 +172,7 @@ def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> No
     mock_settings.allowed_file_types = [".pdf"]
     mock_settings.max_upload_size_mb = 0.0001
     response = client.post(
-        "/api/documents/upload",
+        "/api/pipeline/ingest",
         files={"file": ("test.pdf", io.BytesIO(b"A" * 1024 * 1024), "application/pdf")},
     )
     assert response.status_code == 413
@@ -147,7 +182,7 @@ def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> No
 def test_upload_document_exception(mock_extract: Any, client: TestClient) -> None:
     mock_extract.side_effect = Exception("test error")
     response = client.post(
-        "/api/documents/upload",
+        "/api/pipeline/ingest",
         files={"file": ("test.pdf", io.BytesIO(b"PDF content"), "application/pdf")},
     )
     assert response.status_code == 500
@@ -206,8 +241,7 @@ def test_get_tree_exception(mock_traverse: Any, client: TestClient) -> None:
 
 
 @patch("src.main.db")
-@patch("src.main.record_audit")
-def test_approve_suggestion(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
+def test_approve_suggestion(mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         id = "sug1"
         status = "pending"
@@ -225,7 +259,6 @@ def test_approve_suggestion(mock_audit: Any, mock_db: Any, client: TestClient) -
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=MockSuggestion())
     mock_db.provision.create = AsyncMock()
     mock_db.documentsuggestion.update = AsyncMock()
-    mock_audit.return_value = AsyncMock()
 
     response = client.patch("/api/suggestions/sug1/approve")
     assert response.status_code == 200
@@ -268,9 +301,8 @@ def test_approve_suggestion_legislation_no_framework(
 
 
 @patch("src.main.db")
-@patch("src.main.record_audit")
 def test_approve_suggestion_all_types(
-    mock_audit: Any, mock_db: Any, client: TestClient
+    mock_db: Any, client: TestClient
 ) -> None:
     types = [
         ("create_legislation", "?framework_id=f1"),
@@ -321,8 +353,7 @@ def test_approve_suggestion_exception(mock_db: Any, client: TestClient) -> None:
 
 
 @patch("src.main.db")
-@patch("src.main.record_audit")
-def test_reject_suggestion(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
+def test_reject_suggestion(mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         id = "sug1"
         status = "pending"
@@ -331,7 +362,6 @@ def test_reject_suggestion(mock_audit: Any, mock_db: Any, client: TestClient) ->
 
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=MockSuggestion())
     mock_db.documentsuggestion.update = AsyncMock()
-    mock_audit.return_value = AsyncMock()
 
     response = client.patch("/api/suggestions/sug1/reject")
     assert response.status_code == 200
@@ -352,8 +382,7 @@ def test_verify_audit(mock_verify: Any, client: TestClient) -> None:
 
 
 @patch("src.main.db")
-@patch("src.main.record_audit")
-def test_delete_document(mock_audit: Any, mock_db: Any, client: TestClient) -> None:
+def test_delete_document(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "doc_del"
         name = "ToDelete"
@@ -363,7 +392,6 @@ def test_delete_document(mock_audit: Any, mock_db: Any, client: TestClient) -> N
     mock_db.documentsuggestion.delete_many = AsyncMock()
     mock_db.documentanalysis.delete_many = AsyncMock()
     mock_db.document.delete = AsyncMock()
-    mock_audit.return_value = AsyncMock()
 
     response = client.delete("/api/documents/doc_del")
     assert response.status_code == 200

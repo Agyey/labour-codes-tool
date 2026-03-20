@@ -5,13 +5,11 @@ import { useFilter } from "@/context/FilterContext";
 import { CODES } from "@/config/codes";
 import { FilterBar } from "@/components/shared/FilterBar";
 import { ProvisionCard } from "@/components/provisions/ProvisionCard";
-import { MappingSubNav } from "@/components/layout/MappingSubNav";
 import { createBlankProvision } from "@/lib/utils";
-import { Plus, BookOpen, Database, Upload, FileText } from "lucide-react";
+import { Plus, BookOpen, Database, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { LibraryTable } from "@/components/library/LibraryTable";
 import { injectSampleData } from "@/app/actions/provisions/write";
-import { PdfUploadWizard } from "@/components/parsers/PdfUploadWizard";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
@@ -22,7 +20,6 @@ export function MappingView() {
   const { activeCode, setEditingProvision } = useUI();
   const { canEdit, frameworks } = useData();
   const { filteredProvisions } = useFilter();
-  const [showPdfWizard, setShowPdfWizard] = useState(false);
 
   const cObj = CODES[activeCode as keyof typeof CODES] || {
     n: frameworks.find(f => f.shortName === activeCode || f.id === activeCode)?.name || activeCode,
@@ -52,21 +49,12 @@ export function MappingView() {
 
   return (
     <div>
-      {showPdfWizard && <PdfUploadWizard onClose={() => setShowPdfWizard(false)} />}
-      
       <Breadcrumbs />
       
       <div className="flex items-center justify-between mb-4 mt-2">
-        <MappingSubNav />
+        <div />
         {canEdit && (
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowPdfWizard(true)}
-              className="px-4 py-2 border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors shadow-sm flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Act (PDF)
-            </button>
             <button
               onClick={handleInjectMock}
               className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2 shadow-indigo-500/20"

@@ -1,0 +1,107 @@
+"""Stage 3 / Pass 1: Structural Population.
+
+Takes the output from the Gemini extractor (ExtractedLegislation) and creates
+the LegalDocument + StructuralUnit tree in the database.
+"""
+from __future__ import annotations
+
+import uuid
+from typing import Any
+
+from loguru import logger
+from prisma import Client
+
+from src.models import ExtractedLegislation, DocumentClassification
+
+
+async def run_pass1(
+    db: Client,
+    source_doc_id: str | None,
+    extracted: ExtractedLegislation,
+    classification: DocumentClassification,
+    job_id: str | None = None,
+) -> str:
+    """Populates the database with the LegalDocument and StructuralUnit tree.
+    
+    Returns:
+        The ID of the newly created LegalDocument.
+    """
+    logger.info(f"[Pass 1] Creating structure for '{extracted.metadata.act_name}'")
+    
+    # 1. Create the LegalDocument hub
+    doc_id = str(uuid.uuid4())
+    current_year = extracted.metadata.year if extracted.metadata.year else 2025
+    
+    await db.legaldocument.create(
+        data={
+            "id": doc_id,
+            "title": extracted.metadata.act_name,
+            "short_title": None,
+            "year": current_year,
+            "doc_type": classification.doc_type,
+            "jurisdiction": classification.jurisdiction,
+            "appropriate_govt": classification.appropriate_govt,
+            "is_connector_act": classification.is_connector_act,
+            "source_doc_id": source_doc_id,
+            "processing_job_id": job_id,
+            "status": "published",
+        }
+    )
+    
+    # 2. Build the StructuralUnit tree hierarchically
+    sort_counter = 0
+    
+    async def process_provisions(
+        provisions: list[Any], parent_id: str | None = None
+    ) -> None:
+        nonlocal sort_counter
+        for prov in provisions:
+            unit_id = str(uuid.uuid4())
+            sort_counter += 1
+            
+            # Combine text and summary
+            full_text = prov.text
+            
+            await db.structuralunit.create(
+                data={
+                    "id": unit_id,
+                    "legal_doc_id": doc_id,
+                    "parent_unit_id": parent_id,
+                    "unit_type": "section",  # Extractor treats everything as a nested provision
+                    "unit_number": prov.id,
+                    "title": prov.title,
+                    "full_text": full_text,
+                    "summary": prov.summary,
+                    "sort_order": sort_counter,
+                    "status": "active",
+                    "confidence_score": 1.0,
+                }
+            )
+            
+            if hasattr(prov, "sub_provisions") and prov.sub_provisions:
+                await process_provisions(prov.sub_provisions, unit_id)
+
+    # Walk the chapters -> provisions -> sub-provisions
+    for chapter in extracted.chapters:
+        chapter_id = str(uuid.uuid4())
+        sort_counter += 1
+        
+        await db.structuralunit.create(
+            data={
+                "id": chapter_id,
+                "legal_doc_id": doc_id,
+                "parent_unit_id": None,
+                "unit_type": "chapter",
+                "unit_number": chapter.id,
+                "title": chapter.title,
+                "full_text": None,
+                "sort_order": sort_counter,
+                "status": "active",
+                "confidence_score": 1.0,
+            }
+        )
+        
+        await process_provisions(chapter.provisions, chapter_id)
+        
+    logger.info(f"[Pass 1] Created LegalDocument {doc_id} with {sort_counter} structural units.")
+    return doc_id
