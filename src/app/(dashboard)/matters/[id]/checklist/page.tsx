@@ -26,7 +26,7 @@ export default async function DueDiligenceChecklist({ params }: { params: Promis
   // Scaffolding: Fetch real matter data
   const matters = await getMatters();
   const { id } = await params;
-  const matter = matters.find(m => m.id === id);
+  const matter = matters.find((m: any) => m.id === id);
 
   if (!matter) return notFound();
 

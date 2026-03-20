@@ -2,7 +2,7 @@ import pytest
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from src.parser import (
-    extract_text_from_pdf,
+    extract_document_text,
     analyze_document_stream,
     build_graph_and_suggestions,
 )
@@ -78,7 +78,7 @@ def mock_extracted_legislation() -> ExtractedLegislation:
     )
 
 
-def test_extract_text_from_pdf(mocker: Any) -> None:
+def test_extract_document_text(mocker: Any) -> None:
     mock_doc = MagicMock()
     mock_page = MagicMock()
     mock_page.get_text.return_value = "Page text"
@@ -90,7 +90,7 @@ def test_extract_text_from_pdf(mocker: Any) -> None:
     mock_doc.__len__.return_value = 1
 
     with patch("fitz.open", return_value=mock_doc):
-        text, count = extract_text_from_pdf("dummy.pdf")
+        text, count = extract_document_text("dummy.pdf")
         assert "Page text" in text
         assert count == 1
 

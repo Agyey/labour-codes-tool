@@ -58,6 +58,7 @@ def test_get_document_found(mock_db: Any, client: TestClient) -> None:
         file_size = 100
         page_count = 1
         status = "uploaded"
+        raw_text = "some text"
         uploaded_at = None
         analyzed_at = None
 
@@ -89,7 +90,7 @@ def test_get_document_found(mock_db: Any, client: TestClient) -> None:
 
 
 @patch("src.main.db")
-@patch("src.main.extract_text_from_pdf")
+@patch("src.main.extract_document_text")
 @patch("src.main.record_audit")
 def test_upload_document(
     mock_audit: Any, mock_extract: Any, mock_db: Any, client: TestClient
@@ -142,7 +143,7 @@ def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> No
     assert response.status_code == 413
 
 
-@patch("src.main.extract_text_from_pdf")
+@patch("src.main.extract_document_text")
 def test_upload_document_exception(mock_extract: Any, client: TestClient) -> None:
     mock_extract.side_effect = Exception("test error")
     response = client.post(

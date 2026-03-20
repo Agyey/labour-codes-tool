@@ -29,7 +29,7 @@ export default async function SuperAdminDashboard() {
   // 2. Calculate KPIs
   const kpis = [
     { title: "Monthly Recurring Revenue", value: `$${(orgs.length * 250).toLocaleString()}`, trend: "Est. $250/ten", color: "indigo" },
-    { title: "Active Law Firms (Tenants)", value: orgs.length.toString(), trend: `+${orgs.filter(o => o.created_at > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length} (30d)`, color: "emerald" },
+    { title: "Active Law Firms (Tenants)", value: orgs.length.toString(), trend: `+${orgs.filter((o: any) => o.created_at > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length} (30d)`, color: "emerald" },
     { title: "Total Platform Users", value: totalUsers.toString(), trend: "Live count", color: "blue" },
     { title: "Active Matters Executed", value: matterCount.toString(), trend: "Deal volume", color: "amber" },
   ];
@@ -96,7 +96,7 @@ export default async function SuperAdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {orgs.map(org => (
+                  {orgs.map((org: any) => (
                     <tr key={org.id} className="border-b border-slate-100 dark:border-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors">
                       <td className="px-4 py-4 font-bold text-slate-900 dark:text-white truncate max-w-[200px]">{org.name}</td>
                       <td className="px-4 py-4 text-slate-500 font-medium">{org.users.length}</td>

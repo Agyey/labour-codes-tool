@@ -9,13 +9,13 @@ export async function getFrameworks(): Promise<Framework[]> {
     include: { legislations: true }
   });
 
-  return dbFrameworks.map(f => ({
+  return dbFrameworks.map((f: any) => ({
     id: f.id,
     name: f.name,
     shortName: f.short_name || "",
     description: f.description || "",
     color: (f as any).color || undefined,
-    legislations: f.legislations.map(l => ({
+    legislations: f.legislations.map((l: any) => ({
       id: l.id,
       frameworkId: l.framework_id,
       name: l.name,
@@ -30,7 +30,7 @@ export async function getFrameworks(): Promise<Framework[]> {
 
 export async function getLegislations(): Promise<Legislation[]> {
   const dbLegislations = await prisma.legislation.findMany();
-  return dbLegislations.map(l => ({
+  return dbLegislations.map((l: any) => ({
     id: l.id,
     frameworkId: l.framework_id,
     name: l.name,

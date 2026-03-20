@@ -103,7 +103,7 @@ export default async function EntityDetailView({ params }: { params: Promise<{ i
                 <div className="p-12 text-center text-slate-400 font-bold text-sm">No active matters for this entity.</div>
               ) : (
                 <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
-                  {entity.matters.map((matter) => (
+                  {entity.matters.map((matter: any) => (
                     <div key={matter.id} className="p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/30 transition-colors flex items-center justify-between group">
                       <div className="space-y-1">
                         <div className="text-sm font-bold text-slate-900 dark:text-white">{matter.name}</div>
@@ -127,7 +127,7 @@ export default async function EntityDetailView({ params }: { params: Promise<{ i
                 {(entity.hygieneLogs || []).length === 0 ? (
                   <div className="text-center py-6 text-slate-400 font-bold text-sm">No corporate hygiene logs available yet.</div>
                 ) : (
-                  entity.hygieneLogs.map((log, i) => (
+                  entity.hygieneLogs.map((log: any, i: number) => (
                     <div key={log.id} className="flex gap-4 group">
                       <div className="flex flex-col items-center">
                         <div className={`w-3 h-3 rounded-full mt-1.5 ${log.status === 'Compliant' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
@@ -162,7 +162,7 @@ export default async function EntityDetailView({ params }: { params: Promise<{ i
               {(entity.licenses || []).length === 0 ? (
                 <p className="text-[10px] text-slate-400 font-bold py-2 italic">Zero licenses recorded.</p>
               ) : (
-                entity.licenses.map(lic => (
+                entity.licenses.map((lic: any) => (
                   <div key={lic.id} className="p-3 bg-slate-50 dark:bg-zinc-950/50 rounded-xl border border-slate-100 dark:border-zinc-800/50 space-y-2">
                     <div className="text-xs font-bold text-slate-900 dark:text-white">{lic.name}</div>
                     <div className="flex items-center justify-between">

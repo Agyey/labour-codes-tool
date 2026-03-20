@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import typing
 from datetime import datetime
-from enum import StrEnum
+from enum import Enum
 
 from pydantic import BaseModel, Field
 
@@ -20,14 +20,14 @@ from pydantic import BaseModel, Field
 # ──────────────────────────────────────────────
 
 
-class DocumentStatus(StrEnum):
+class DocumentStatus(str, Enum):
     UPLOADED = "uploaded"
     ANALYZING = "analyzing"
     ANALYZED = "analyzed"
     ERROR = "error"
 
 
-class SuggestionType(StrEnum):
+class SuggestionType(str, Enum):
     CREATE_LEGISLATION = "create_legislation"
     CREATE_PROVISION = "create_provision"
     CREATE_COMPLIANCE_ITEM = "create_compliance_item"
@@ -37,7 +37,7 @@ class SuggestionType(StrEnum):
     UPDATE_PROVISION = "update_provision"
 
 
-class SuggestionStatus(StrEnum):
+class SuggestionStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"

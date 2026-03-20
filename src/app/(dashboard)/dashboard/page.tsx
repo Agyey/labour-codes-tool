@@ -78,7 +78,7 @@ export default async function FirmDashboard() {
   }).slice(0, 8);
 
   // 2. Calculate metrics
-  const activeDeals = matters.filter(m => m.status === "Active").length;
+  const activeDeals = matters.filter((m: any) => m.status === "Active").length;
   const overdueCount = overdueTasks.length;
   
   const completedLast7Days = await prisma.task.count({
@@ -205,7 +205,7 @@ export default async function FirmDashboard() {
             {entities.length === 0 ? (
               <p className="text-xs text-slate-400 text-center py-4 italic">No entities tracked yet.</p>
             ) : (
-              entities.map((ent, i) => (
+              entities.map((ent: any, i: number) => (
                 <div key={i} className="space-y-2">
                   <div className="flex items-center justify-between text-sm font-semibold">
                     <span className="text-slate-800 dark:text-zinc-200 truncate pr-2">{ent.name}</span>

@@ -31,7 +31,7 @@ export async function getProvisions(): Promise<Provision[]> {
 
     logger.info(`Successfully fetched ${dbProvs.length} provisions`);
 
-    return dbProvs.map((p) => ({
+    return dbProvs.map((p: any) => ({
       id: p.id,
       code: p.code,
       frameworkId: p.framework_id || undefined,
@@ -48,7 +48,7 @@ export async function getProvisions(): Promise<Provision[]> {
       ruleAuth: (p.rule_authority as any),
       summary: p.summary,
       fullText: p.full_text,
-      oldMappings: (p.oldMappings || []).map((m) => ({
+      oldMappings: (p.oldMappings || []).map((m: any) => ({
         act: m.act_name,
         sec: m.section,
         subSec: m.sub_section || undefined,
@@ -61,7 +61,7 @@ export async function getProvisions(): Promise<Provision[]> {
       impact: (p.impact as any),
       changeTags: p.change_tags,
       workflowTags: p.workflow_tags,
-      compItems: (p.complianceItems || []).map((c) => ({
+      compItems: (p.complianceItems || []).map((c: any) => ({
         task: c.task,
         assignee: c.assignee || "",
         due: c.due_date ? c.due_date.toISOString() : "",
@@ -69,9 +69,9 @@ export async function getProvisions(): Promise<Provision[]> {
       draftRules: [],
       repealedRules: [],
       forms: [],
-      stateNotes: (p.stateData || []).reduce((acc, s) => ({ ...acc, [s.state]: s.notes || "" }), {}),
-      stateRuleText: (p.stateData || []).reduce((acc, s) => ({ ...acc, [s.state]: s.rule_text || "" }), {}),
-      stateCompStatus: (p.stateData || []).reduce((acc, s) => ({ ...acc, [s.state]: (s.compliance_status as any) || "Not Started" }), {}),
+      stateNotes: (p.stateData || []).reduce((acc: Record<string, string>, s: any) => ({ ...acc, [s.state]: s.notes || "" }), {}),
+      stateRuleText: (p.stateData || []).reduce((acc: Record<string, string>, s: any) => ({ ...acc, [s.state]: s.rule_text || "" }), {}),
+      stateCompStatus: (p.stateData || []).reduce((acc: Record<string, any>, s: any) => ({ ...acc, [s.state]: (s.compliance_status as any) || "Not Started" }), {}),
       penaltyOld: p.penalty_old || "",
       penaltyNew: p.penalty_new || "",
       timelineDates: [],
@@ -80,7 +80,7 @@ export async function getProvisions(): Promise<Provision[]> {
       pinned: p.pinned,
       assignee: p.assignee || "",
       dueDate: p.due_date ? p.due_date.toISOString() : "",
-      comments: (p.comments || []).map((c) => ({
+      comments: (p.comments || []).map((c: any) => ({
         id: c.id,
         body: c.body,
         parentId: c.parent_id,

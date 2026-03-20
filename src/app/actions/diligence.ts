@@ -214,7 +214,7 @@ export async function seedRequisitionsFromScenario(projectId: string, scenarioId
       }
     });
 
-    const requisitionPromises = scenario.rules.map((rule) => {
+    const requisitionPromises = scenario.rules.map((rule: any) => {
       const ob = rule.obligation;
       return prisma.diligenceRequisition.create({
         data: {

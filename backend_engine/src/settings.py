@@ -21,6 +21,8 @@ class Settings(BaseSettings):
 
     # --- Security ---
     allowed_file_types: list[str] = [".pdf", ".docx", ".doc", ".xlsx", ".xls", ".txt", ".csv"]
+    rate_limit_rpm: int = 60
+    max_upload_size_mb: int = 50
 
     model_config = SettingsConfigDict(
         env_file=".env",

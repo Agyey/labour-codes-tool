@@ -68,7 +68,7 @@ export const authOptions: NextAuthOptions = {
             where: { email: user.email },
             data: { role: "admin" },
           })
-          .catch((e) => {
+          .catch((e: any) => {
             logger.warn("Admin role update failed (might be new user)", { error: e.message });
           });
       }

@@ -9,13 +9,17 @@ Flow:
 """
 
 import json
-
 import typing
 import prisma
 import fitz
+import os
+import re
+import pandas as pd
+import json_repair
 from loguru import logger
 from google import genai
 from google.genai import types
+from docx import Document as DocxDocument
 
 from src.settings import settings
 from src.models import (
@@ -45,11 +49,6 @@ Rules:
 9. CRITICAL: Identify major differences, additions, or deletions compared to previous laws (if mentioned or deducible). Map these to 'key_changes'.
 """
 
-
-import os
-import fitz
-import pandas as pd
-from docx import Document as DocxDocument
 
 def extract_document_text(file_path: str) -> tuple[str, int]:
     """Extract text and approximate page/row count from a document file."""
@@ -109,8 +108,6 @@ async def analyze_document_stream(
     full_text = ""
     thought_buffer = ""
 
-    import re
-
     try:
         async for chunk in response_stream:
             text = chunk.text or ""
@@ -150,8 +147,6 @@ async def analyze_document_stream(
 
     json_str = json_match.group(1)
     try:
-        import json_repair
-
         decoded = json_repair.loads(json_str)
         extracted = ExtractedLegislation.model_validate(decoded)
     except Exception as parse_e:

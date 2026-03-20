@@ -16,6 +16,11 @@
 # next.js
 /.next/
 /out/
+.agent/
+.venv/
+venv_alembic/
+__pycache__/
+*.pyc
 
 # production
 /build
