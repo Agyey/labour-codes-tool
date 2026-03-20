@@ -5,6 +5,7 @@ Links subordinate rules to their parent acts.
 Applies amendments (if auto_apply_amendments is true).
 Builds the State Rules mapping to central acts.
 """
+
 from loguru import logger
 from prisma import Client
 

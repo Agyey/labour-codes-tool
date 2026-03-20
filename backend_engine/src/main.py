@@ -187,7 +187,7 @@ async def ingest_document(
                 "total_passes": 6,
             }
         )
-        
+
         # Fire and forget the background pipeline
         asyncio.create_task(run_pipeline_background(job.id, document.id, raw_text))
 
@@ -205,9 +205,11 @@ async def ingest_document(
         logger.error(f"Upload error: {e}")
         raise HTTPException(500, "Upload failed. Please try again.")
 
+
 # ──────────────────────────────────────────────
 # Pipeline Streaming
 # ──────────────────────────────────────────────
+
 
 @app.get("/api/pipeline/jobs/{job_id}/stream")
 @limiter.limit("20/minute")
@@ -216,7 +218,7 @@ async def stream_pipeline(request: Request, job_id: str) -> StreamingResponse:
     job = await db.processingjob.find_unique(where={"id": job_id})
     if not job:
         raise HTTPException(404, "Job not found.")
-        
+
     return StreamingResponse(
         stream_pipeline_events(job_id),
         media_type="text/event-stream",
@@ -249,7 +251,13 @@ async def list_documents() -> list[dict[str, typing.Any]]:
             "file_name": d.file_name,
             "file_size": d.file_size,
             "page_count": d.page_count,
-            "status": "processing" if d.id in job_map and job_map[d.id].status in ["queued", "running"] else (job_map[d.id].status if d.id in job_map and job_map[d.id].status == "failed" else d.status),
+            "status": "processing"
+            if d.id in job_map and job_map[d.id].status in ["queued", "running"]
+            else (
+                job_map[d.id].status
+                if d.id in job_map and job_map[d.id].status == "failed"
+                else d.status
+            ),
             "uploaded_at": d.uploaded_at.isoformat() if d.uploaded_at else None,
             "analyzed_at": d.analyzed_at.isoformat() if d.analyzed_at else None,
             "job_id": job_map[d.id].id if d.id in job_map else None,

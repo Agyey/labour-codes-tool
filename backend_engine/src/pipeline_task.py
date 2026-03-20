@@ -7,6 +7,7 @@ Wires together the 5 stages of the pipeline:
 4. Enrichment (6 passes)
 5. Cross-Linking & Propagation (TBD, stubs for now)
 """
+
 import asyncio
 import json
 import time
@@ -58,88 +59,137 @@ async def publish_progress(job_id: str, pass_num: int, label: str, status: str) 
                 "pass": pass_num,
                 "label": label,
                 "status": status,
-            }
-        )
+            },
+        ),
     )
 
 
 async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) -> None:
     """The main background task spanning Stages 2 through 6."""
     start_time = time.time()
-    
+
     def _elapsed() -> str:
         return f"{time.time() - start_time:.1f}s"
-        
+
     try:
         # Update job status
         await db.processingjob.update(
-            where={"id": job_id},
-            data={"status": "processing"}
+            where={"id": job_id}, data={"status": "processing"}
         )
-        
-        await publish_pipeline_event(job_id, _sse_event("pipeline_start", {"job_id": job_id, "status": "running"}))
-        
+
+        await publish_pipeline_event(
+            job_id,
+            _sse_event("pipeline_start", {"job_id": job_id, "status": "running"}),
+        )
+
         # ──────────────────────────────────────────────
         # Stage 2: Classification
         # ──────────────────────────────────────────────
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "classification", "status": "running"}))
-        
+        await publish_pipeline_event(
+            job_id,
+            _sse_event(
+                "stage_update", {"stage": "classification", "status": "running"}
+            ),
+        )
+
         classification = classify(raw_text)
-        
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "classification", "status": "done", "result": classification.dict() if hasattr(classification, 'dict') else classification.__dict__}))
+
+        await publish_pipeline_event(
+            job_id,
+            _sse_event(
+                "stage_update",
+                {
+                    "stage": "classification",
+                    "status": "done",
+                    "result": classification.dict()
+                    if hasattr(classification, "dict")
+                    else classification.__dict__,
+                },
+            ),
+        )
 
         # ──────────────────────────────────────────────
         # Stage 3: Extraction (Gemini)
         # ──────────────────────────────────────────────
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "extraction", "status": "running"}))
-        
+        await publish_pipeline_event(
+            job_id,
+            _sse_event("stage_update", {"stage": "extraction", "status": "running"}),
+        )
+
         extraction_result: list[typing.Any] = []
         try:
             async for chunk in analyze_document_stream(document_id, raw_text):
                 if isinstance(chunk, str):
-                    await publish_pipeline_event(job_id, _sse_event("extraction_chunk", {"chunk": chunk}))
+                    await publish_pipeline_event(
+                        job_id, _sse_event("extraction_chunk", {"chunk": chunk})
+                    )
                 else:
                     extraction_result.append(chunk)
         except Exception as exc:
             extraction_result.append(exc)
-            
+
         if not extraction_result or isinstance(extraction_result[0], Exception):
-            raise (extraction_result[0] if extraction_result else RuntimeError("Extraction returned no result"))
-            
+            raise (
+                extraction_result[0]
+                if extraction_result
+                else RuntimeError("Extraction returned no result")
+            )
+
         extracted = extraction_result[0]
-        
+
         # Use .name instead of .metadata.act_name for the new models
-        doc_title = getattr(extracted, 'name', 'Unknown Document')
-        
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "extraction", "status": "done", "title": doc_title}))
-        
+        doc_title = getattr(extracted, "name", "Unknown Document")
+
+        await publish_pipeline_event(
+            job_id,
+            _sse_event(
+                "stage_update",
+                {"stage": "extraction", "status": "done", "title": doc_title},
+            ),
+        )
+
         # ──────────────────────────────────────────────
         # Stage 4: Enrichment (6 Passes)
         # ──────────────────────────────────────────────
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "enrichment", "status": "running"}))
-        
+        await publish_pipeline_event(
+            job_id,
+            _sse_event("stage_update", {"stage": "enrichment", "status": "running"}),
+        )
+
         legal_doc_id = await run_enrichment(
             job_id=job_id,
             source_doc_id=document_id,
             extracted=extracted,
             classification=classification,
             db=db,
-            publish_progress=publish_progress
+            publish_progress=publish_progress,
         )
-        
-        await publish_pipeline_event(job_id, _sse_event("stage_update", {"stage": "enrichment", "status": "done", "legal_doc_id": legal_doc_id}))
-        
+
+        await publish_pipeline_event(
+            job_id,
+            _sse_event(
+                "stage_update",
+                {"stage": "enrichment", "status": "done", "legal_doc_id": legal_doc_id},
+            ),
+        )
+
         # Update Job successful
         await db.processingjob.update(
             where={"id": job_id},
             data={
                 "status": "completed",
                 "completed_at": datetime.now(),
-                "result_doc_id": legal_doc_id
-            }
+                "result_doc_id": legal_doc_id,
+            },
         )
-        
-        await publish_pipeline_event(job_id, _sse_event("pipeline_complete", {"job_id": job_id, "legal_doc_id": legal_doc_id, "elapsed": _elapsed()}))
+
+        await publish_pipeline_event(
+            job_id,
+            _sse_event(
+                "pipeline_complete",
+                {"job_id": job_id, "legal_doc_id": legal_doc_id, "elapsed": _elapsed()},
+            ),
+        )
 
     except Exception as e:
         logger.error(f"Pipeline failed for job {job_id}: {e}")
@@ -149,18 +199,20 @@ async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) 
                 "status": "failed",
                 "error_log": str(e),
                 "completed_at": datetime.now(),
-            }
+            },
         )
-        await publish_pipeline_event(job_id, _sse_event("pipeline_error", {"job_id": job_id, "error": str(e)}))
-        
+        await publish_pipeline_event(
+            job_id, _sse_event("pipeline_error", {"job_id": job_id, "error": str(e)})
+        )
+
     finally:
         await publish_pipeline_done(job_id)
-        
+
         # Cleanup routine
         async def _cleanup() -> None:
             await asyncio.sleep(300)
             PIPELINE_EVENTS.pop(job_id, None)
-            
+
         asyncio.create_task(_cleanup())
 
 
@@ -172,7 +224,9 @@ async def stream_pipeline_events(job_id: str) -> typing.AsyncGenerator[str, None
 
     # Check job status
     job = await db.processingjob.find_unique(where={"id": job_id})
-    if not job or (job.status not in ("pending", "processing") and job_id not in PIPELINE_EVENTS):
+    if not job or (
+        job.status not in ("pending", "processing") and job_id not in PIPELINE_EVENTS
+    ):
         return
 
     q: asyncio.Queue[str | None] = asyncio.Queue()

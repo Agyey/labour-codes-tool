@@ -206,6 +206,7 @@ class AuditEntry(BaseModel):
 # Pipeline Enrichment Schemas (New)
 # ──────────────────────────────────────────────
 
+
 class DocumentClassification(BaseModel):
     doc_type: str
     jurisdiction: str
@@ -227,8 +228,12 @@ class PenaltyExtract(BaseModel):
 
 
 class ObligationExtract(BaseModel):
-    obligation_type: str = Field(description="filing | registration | disclosure | record_maintenance | payment | reporting | other")
-    compliance_category: str = Field(description="event_based | annual | quarterly | ongoing | one_time")
+    obligation_type: str = Field(
+        description="filing | registration | disclosure | record_maintenance | payment | reporting | other"
+    )
+    compliance_category: str = Field(
+        description="event_based | annual | quarterly | ongoing | one_time"
+    )
     title: str
     description: str | None = None
     trigger_event: str | None = None
@@ -241,7 +246,9 @@ class ObligationExtract(BaseModel):
 
 class ProvisionClassification(BaseModel):
     unit_id: str
-    nature_tags: list[str] = Field(description="List of strings e.g. ['Substantive Obligation', 'Penal']")
+    nature_tags: list[str] = Field(
+        description="List of strings e.g. ['Substantive Obligation', 'Penal']"
+    )
     obligations: list[ObligationExtract] = Field(default_factory=list)
 
 
@@ -251,9 +258,15 @@ class ComplianceBatchResponse(BaseModel):
 
 class ApplicabilityExtract(BaseModel):
     unit_id: str
-    entity_types: list[str] = Field(default_factory=list, description="e.g. ['Listed Company', 'employer']")
-    thresholds: dict[str, typing.Any] = Field(default_factory=dict, description="e.g. {'net_worth_above': 5000000000}")
-    exemptions: list[str] = Field(default_factory=list, description="e.g. ['Private Company']")
+    entity_types: list[str] = Field(
+        default_factory=list, description="e.g. ['Listed Company', 'employer']"
+    )
+    thresholds: dict[str, typing.Any] = Field(
+        default_factory=dict, description="e.g. {'net_worth_above': 5000000000}"
+    )
+    exemptions: list[str] = Field(
+        default_factory=list, description="e.g. ['Private Company']"
+    )
     description: str | None = None
 
 

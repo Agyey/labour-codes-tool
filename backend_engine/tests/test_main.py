@@ -13,29 +13,29 @@ def client() -> Generator[TestClient, None, None]:
     mock_db.connect = AsyncMock()
     mock_db.disconnect = AsyncMock()
     mock_db.is_connected = MagicMock(return_value=True)
-    
+
     mock_db.document = MagicMock()
     mock_db.document.find_many = AsyncMock(return_value=[])
     mock_db.document.find_unique = AsyncMock(return_value=None)
     mock_db.document.create = AsyncMock()
     mock_db.document.update = AsyncMock()
     mock_db.document.delete = AsyncMock()
-    
+
     mock_db.processingjob = MagicMock()
     mock_db.processingjob.find_many = AsyncMock(return_value=[])
     mock_db.processingjob.find_unique = AsyncMock(return_value=None)
     mock_db.processingjob.create = AsyncMock()
     mock_db.processingjob.update = AsyncMock()
-    
+
     mock_db.documentsuggestion = MagicMock()
     mock_db.documentsuggestion.find_many = AsyncMock(return_value=[])
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=None)
     mock_db.documentsuggestion.update = AsyncMock()
     mock_db.documentsuggestion.delete_many = AsyncMock()
-    
+
     mock_db.documentanalysis = MagicMock()
     mock_db.documentanalysis.delete_many = AsyncMock()
-    
+
     with (
         patch("src.database.db", mock_db),
         patch("src.main.record_audit", new_callable=AsyncMock),
@@ -122,9 +122,7 @@ def test_get_document_found(mock_db: Any, client: TestClient) -> None:
 
 @patch("src.main.db")
 @patch("src.main.extract_document_text")
-def test_upload_document(
-    mock_extract: Any, mock_db: Any, client: TestClient
-) -> None:
+def test_upload_document(mock_extract: Any, mock_db: Any, client: TestClient) -> None:
     mock_extract.return_value = ("raw text", 5)
 
     class MockDoc:
@@ -301,9 +299,7 @@ def test_approve_suggestion_legislation_no_framework(
 
 
 @patch("src.main.db")
-def test_approve_suggestion_all_types(
-    mock_db: Any, client: TestClient
-) -> None:
+def test_approve_suggestion_all_types(mock_db: Any, client: TestClient) -> None:
     types = [
         ("create_legislation", "?framework_id=f1"),
         ("create_compliance_item", "?provision_id=p1"),
