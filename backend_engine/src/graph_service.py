@@ -35,12 +35,17 @@ async def get_driver() -> AsyncDriver:
             error_msg = str(e).lower()
             if "routing" in error_msg or "serviceunavailable" in error_msg:
                 if settings.neo4j_uri.startswith("neo4j://"):
-                    logger.warning(f"Neo4j routing failed: {e}. Falling back to bolt://")
+                    logger.warning(
+                        f"Neo4j routing failed: {e}. Falling back to bolt://"
+                    )
                     await _driver.close()
                     fallback_uri = settings.neo4j_uri.replace("neo4j://", "bolt://", 1)
                     _driver = AsyncGraphDatabase.driver(
                         fallback_uri,
-                        auth=(settings.neo4j_user, settings.neo4j_password.get_secret_value()),
+                        auth=(
+                            settings.neo4j_user,
+                            settings.neo4j_password.get_secret_value(),
+                        ),
                     )
                     await _driver.verify_connectivity()
                     logger.info("Neo4j graph database connected using bolt fallback.")
