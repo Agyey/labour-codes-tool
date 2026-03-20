@@ -27,10 +27,15 @@ export default function ApplicabilityChecker() {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Profile Form (Left Column) */}
       <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm h-fit">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-indigo-500" />
-          Entity Profile
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-indigo-500" />
+            Entity Profile
+          </h2>
+          <button className="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+            Load from Entity Database
+          </button>
+        </div>
 
         <form onSubmit={handleCheck} className="space-y-5">
           <div>
@@ -102,7 +107,7 @@ export default function ApplicabilityChecker() {
             <SearchCheck className="w-16 h-16 text-indigo-300 dark:text-indigo-800 mb-4" />
             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">Applicability Engine</h3>
             <p className="text-slate-500 mt-2 max-w-sm">
-              Fill out your entity profile to determine exactly which statutes, rules, and compliance obligations apply to your business.
+              Fill out your entity profile or load from the Entity Database to determine exactly which statutes, rules, and compliance obligations apply to your business.
             </p>
           </div>
         ) : (
@@ -112,8 +117,11 @@ export default function ApplicabilityChecker() {
                 <h3 className="text-emerald-800 dark:text-emerald-400 font-bold flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5" /> Applicability Analysis Complete
                 </h3>
-                <p className="text-sm text-emerald-600 dark:text-emerald-500 mt-1">Found 14 applicable acts and 102 provisions.</p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-500 mt-1">Found 2 applicable acts and 102 provisions.</p>
               </div>
+              <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors shadow-sm">
+                Generate Setup Scenarios
+              </button>
             </div>
 
             <div className="space-y-3 mt-6">

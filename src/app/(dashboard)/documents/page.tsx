@@ -1,8 +1,8 @@
 import { DocumentList } from "@/components/documents/DocumentList";
 
 export const metadata = {
-  title: "Document Hub | LexNexus",
-  description: "Advanced legal document management and AI analysis suite.",
+  title: "Ingestion Queue | Legal Intelligence",
+  description: "Upload and monitor legal documents moving through the AI extraction pipeline.",
 };
 
 export default function DocumentsPage() {
@@ -11,9 +11,9 @@ export default function DocumentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Document Hub</h1>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Ingestion Queue</h1>
           <p className="text-sm text-slate-500 dark:text-zinc-500 mt-1">
-            Upload legal documents. AI analyzes, you validate.
+            Upload PDFs to the AI Extractor (Agent 0). The pipeline automatically processes them into the SQL Database.
           </p>
         </div>
       </div>
