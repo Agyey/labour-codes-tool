@@ -124,3 +124,31 @@ async def test_get_graph_and_suggestions(mocker: Any) -> None:
     )
     res = await traverse_for_query("doc_1", target_chapter="I")
     assert res[0]["chapter_summary"] == "Ch"
+
+
+@pytest.mark.asyncio
+async def test_get_driver_fallback(mocker: Any) -> None:
+    # Reset singleton for testing
+    import src.graph_service
+    src.graph_service._driver = None
+
+    mock_driver_instance = MagicMock()
+    # First call to verify_connectivity fails with routing error, second (fallback) succeeds
+    mock_driver_instance.verify_connectivity = AsyncMock(
+        side_effect=[Exception("Unable to retrieve routing information"), None]
+    )
+    mock_driver_instance.close = AsyncMock()
+
+    mocker.patch(
+        "src.graph_service.AsyncGraphDatabase.driver", return_value=mock_driver_instance
+    )
+    
+    # Mock settings to use neo4j://
+    mocker.patch("src.graph_service.settings.neo4j_uri", "neo4j://localhost:7687")
+
+    driver = await src.graph_service.get_driver()
+
+    assert driver == mock_driver_instance
+    assert mock_driver_instance.verify_connectivity.call_count == 2
+    assert mock_driver_instance.close.call_count == 1
+    src.graph_service._driver = None # reset for other tests

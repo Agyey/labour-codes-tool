@@ -147,13 +147,18 @@ async def analyze_document_stream(
 
     json_str = json_match.group(1)
     try:
-        decoded = json_repair.loads(json_str)
-        extracted = ExtractedLegislation.model_validate(decoded)
-    except Exception as parse_e:
-        logger.warning(
-            f"json_repair failed, falling back to raw json parsing: {parse_e}"
-        )
+        # 1. Try pure Pydantic fast parsing first
         extracted = ExtractedLegislation.model_validate_json(json_str)
+    except Exception as raw_e:
+        logger.warning(f"Raw JSON parsing failed: {raw_e}. Attempting repair via json_repair.")
+        try:
+            # 2. Fall back to json_repair for syntax errors (e.g., trailing commas)
+            decoded = json_repair.loads(json_str)
+            # ExtractedLegislation will raise validation error if missing fields
+            extracted = ExtractedLegislation.model_validate(decoded)
+        except Exception as repair_e:
+            logger.error(f"Failed to parse and validate JSON even after repair: {repair_e}")
+            raise
 
     logger.info(
         f"Extraction complete: {extracted.name} — "

@@ -146,3 +146,31 @@ async def test_build_graph_and_suggestions(
         assert mock_db.documentanalysis.create.called
         assert mock_db.documentsuggestion.create.call_count == 7
         assert mock_audit.called
+
+
+@pytest.mark.asyncio
+async def test_analyze_document_stream_repair(
+    mocker: Any, mock_extracted_legislation: ExtractedLegislation
+) -> None:
+    # Intentionally broken JSON string missing closing braces/brackets
+    valid_json = mock_extracted_legislation.model_dump_json()
+    broken_json = "```json\n" + valid_json[:-5] + "\n```"
+    mock_response = MagicMock()
+    mock_response.text = broken_json
+
+    with patch("src.parser._client") as mock_client:
+        from collections.abc import AsyncGenerator
+
+        async def mock_stream_gen() -> AsyncGenerator[Any, None]:
+            yield mock_response
+
+        mock_client.aio.models.generate_content_stream = AsyncMock(
+            return_value=mock_stream_gen()
+        )
+
+        chunks = [chunk async for chunk in analyze_document_stream("doc1", "raw text")]
+
+        assert len(chunks) > 0
+        extracted = chunks[-1]
+        assert isinstance(extracted, ExtractedLegislation)
+        assert extracted.name == mock_extracted_legislation.name
