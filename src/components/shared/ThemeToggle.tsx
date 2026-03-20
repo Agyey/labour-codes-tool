@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
   // Avoid hydration mismatch
@@ -32,7 +32,7 @@ export function ThemeToggle() {
     >
       <AnimatePresence mode="wait">
         <motion.div
-          key={theme}
+          key={theme === "system" ? resolvedTheme : theme}
           initial={{ y: 20, opacity: 0, rotate: -45 }}
           animate={{ y: 0, opacity: 1, rotate: 0 }}
           exit={{ y: -20, opacity: 0, rotate: 45 }}
@@ -41,7 +41,11 @@ export function ThemeToggle() {
         >
           {theme === "light" && <Sun className="w-[18px] h-[18px] text-amber-500" />}
           {theme === "dark" && <Moon className="w-[18px] h-[18px] text-blue-400" />}
-          {theme === "system" && <Monitor className="w-[18px] h-[18px] text-slate-500 dark:text-slate-400" />}
+          {theme === "system" && (
+            resolvedTheme === "dark" 
+              ? <Monitor className="w-[18px] h-[18px] text-blue-400 drop-shadow-md" /> 
+              : <Monitor className="w-[18px] h-[18px] text-slate-600" />
+          )}
         </motion.div>
       </AnimatePresence>
       
