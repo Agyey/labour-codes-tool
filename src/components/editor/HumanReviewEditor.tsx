@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { DocumentDetail, Document } from "@/types/document";
 
 // ──────────────────────────────────────────────
 // HumanReviewEditor
@@ -16,7 +17,7 @@ import toast from "react-hot-toast";
 export default function HumanReviewEditor({ documentId }: { documentId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [doc, setDoc] = useState<any>(null);
+  const [doc, setDoc] = useState<Document | null>(null);
   const [formData, setFormData] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [activePane, setActivePane] = useState<"metadata" | "chapters" | "definitions">("metadata");
@@ -31,12 +32,11 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
     try {
       const res = await fetch(`/api/documents?id=${documentId}`);
       if (!res.ok) throw new Error("Failed to load document");
-      const data = await res.json();
-      setDoc(data);
+      const data: DocumentDetail = await res.json();
+      setDoc(data.document);
 
-      const latestAnalysis = data.analyses?.[0];
-      if (latestAnalysis?.structured_data) {
-        setFormData(JSON.parse(JSON.stringify(latestAnalysis.structured_data)));
+      if (data.analysis?.structured_data) {
+        setFormData(JSON.parse(JSON.stringify(data.analysis.structured_data)));
       } else {
         toast.error("No extracted data found. Ensure the document is analyzed first.");
       }
@@ -51,8 +51,14 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
     fetchDocument();
   }, [fetchDocument]);
 
-  const handleMetadataChange = (field: string, value: string) => {
-    setFormData((prev: any) => ({ ...prev, [field]: value }));
+  const updateMetadata = (field: string, value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      metadata: {
+        ...prev?.metadata,
+        [field]: value
+      }
+    }));
   };
 
   const handlePublish = async () => {
@@ -181,8 +187,8 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                       </label>
                       <input 
                         type="text"
-                        value={formData.name || ""}
-                        onChange={(e) => handleMetadataChange("name", e.target.value)}
+                        value={formData.metadata?.name || ""}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("name", e.target.value)}
                         className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all"
                       />
                     </div>
@@ -192,8 +198,8 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                       </label>
                       <input 
                         type="text"
-                        value={formData.short_name || ""}
-                        onChange={(e) => handleMetadataChange("short_name", e.target.value)}
+                        value={formData.metadata?.short_name || ""}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("short_name", e.target.value)}
                         className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all"
                       />
                     </div>
@@ -204,24 +210,19 @@ export default function HumanReviewEditor({ documentId }: { documentId: string }
                         </label>
                         <input 
                           type="number"
-                          value={formData.year || ""}
-                          onChange={(e) => handleMetadataChange("year", e.target.value)}
-                          className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all"
+                          value={formData.metadata?.year || ""}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("year", e.target.value)}
+                          className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-500 mb-1.5">
-                          Type
-                        </label>
-                        <select 
-                          value={formData.document_type || "act"}
-                          onChange={(e) => handleMetadataChange("document_type", e.target.value)}
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Document Type</label>
+                        <input
+                          type="text"
+                          value={formData.metadata?.document_type || ""}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateMetadata("document_type", e.target.value)}
                           className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-zinc-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none transition-all appearance-none"
-                        >
-                          <option value="act">Central Act</option>
-                          <option value="rules">Rules & Regulations</option>
-                          <option value="circular">Circular / Notification</option>
-                        </select>
+                        />
                       </div>
                     </div>
                   </div>

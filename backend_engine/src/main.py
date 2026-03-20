@@ -242,6 +242,7 @@ async def get_document(document_id: str) -> dict[str, typing.Any]:
             "file_size": doc.file_size,
             "page_count": doc.page_count,
             "status": doc.status,
+            "raw_text": doc.raw_text,
             "uploaded_at": doc.uploaded_at.isoformat() if doc.uploaded_at else None,
             "analyzed_at": doc.analyzed_at.isoformat() if doc.analyzed_at else None,
         },

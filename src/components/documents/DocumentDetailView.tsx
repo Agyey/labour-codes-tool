@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Brain,
@@ -260,6 +261,7 @@ function StreamingProgress({
 // ──────────────────────────────────────────────
 
 export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: () => void }) {
+  const router = useRouter();
   const [detail, setDetail] = useState<DocumentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -682,7 +684,7 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
                 animate={{ opacity: 1 }}
                 className="space-y-3"
               >
-                {analysis.status === "complete" && suggestions.length > 0 && (
+                {doc.status === "analyzed" && suggestions.length > 0 && (
                   <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 p-6 text-center">
                     <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-200">Analysis Complete!</h3>
                     <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 mb-6">
@@ -691,18 +693,16 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
                     <div className="flex gap-4 justify-center">
                       <button
                         onClick={() =>
-                          pendingSuggestions.forEach((s) => handleApprove(s.id))
+                          pendingSuggestions.forEach((s: any) => handleApprove(s.id))
                         }
                         disabled={pendingSuggestions.length === 0}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 flex items-center gap-2"
                       >
-                        {/* Assuming 'approvingAll' and 'approving' states are available in the component scope */}
-                        {/* {approvingAll ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />} */}
                         <CheckCircle2 className="w-5 h-5" />
                         Approve All ({pendingSuggestions.length})
                       </button>
                       <button
-                        onClick={() => router.push(`/editor/${doc.id}`)} {/* Assuming router and doc.id are available */}
+                        onClick={() => router.push(`/editor/${docId}`)}
                         className="bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 text-indigo-600 dark:text-indigo-400 px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2"
                       >
                         <FileSignature className="w-5 h-5" />
@@ -728,7 +728,7 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
                         <div className="flex gap-2">
                           <button
                             onClick={() =>
-                              pendingSuggestions.forEach((s) => handleApprove(s.id))
+                              pendingSuggestions.forEach((s: any) => handleApprove(s.id))
                             }
                             className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                           >

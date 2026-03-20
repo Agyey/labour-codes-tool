@@ -12,10 +12,11 @@ interface EditorPageProps {
 }
 
 export default async function EditorPage({ params }: EditorPageProps) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
     redirect("/auth/signin");
   }
 
-  return <HumanReviewEditor documentId={params.id} />;
+  return <HumanReviewEditor documentId={id} />;
 }
