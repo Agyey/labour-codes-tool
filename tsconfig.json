@@ -37,6 +37,10 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "db",
+    "api",
+    "backend",
+    "backend_engine"
   ]
 }

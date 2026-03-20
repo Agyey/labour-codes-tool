@@ -1,3 +1,5 @@
+"use client";
+
 import ProvisionTree from "@/components/reading-view/ProvisionTree";
 import ProvisionContent from "@/components/reading-view/ProvisionContent";
 import PointInTimeSlider from "@/components/reading-view/PointInTimeSlider";

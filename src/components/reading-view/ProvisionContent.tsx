@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, Info, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface Definition {
   term: string;
@@ -42,7 +42,7 @@ export default function ProvisionContent({
   const renderTextWithDefinitions = (text: string) => {
     if (!definitions.length) return <p className="whitespace-pre-wrap">{text}</p>;
 
-    let result = text;
+
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
 
