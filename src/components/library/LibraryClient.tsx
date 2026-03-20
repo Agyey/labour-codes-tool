@@ -174,7 +174,7 @@ export default function LibraryClient({ legislations }: LibraryClientProps) {
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No legislations found</h3>
               <p className="text-slate-500 dark:text-zinc-500">
-                Adjust your search or category filters to find what you're looking for.
+                Adjust your search or category filters to find what you&apos;re looking for.
               </p>
             </motion.div>
           )}
