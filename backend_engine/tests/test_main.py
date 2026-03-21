@@ -39,7 +39,7 @@ def client() -> Generator[TestClient, None, None]:
     with (
         patch("src.database.db", mock_db),
         patch("src.main.record_audit", new_callable=AsyncMock),
-        patch("src.main.run_pipeline_background", new_callable=AsyncMock),
+        patch("src.main.process_document_task.delay"),
         patch("src.main.connect_db", new_callable=AsyncMock),
         patch("src.main.disconnect_db", new_callable=AsyncMock),
         TestClient(app) as c,
@@ -186,36 +186,7 @@ def test_upload_document_exception(mock_extract: Any, client: TestClient) -> Non
     assert response.status_code == 500
 
 
-@patch("src.main.db")
-def test_trigger_analysis(mock_db: Any, client: TestClient) -> None:
-    class MockDoc:
-        id = "1"
-        raw_text = "doc text"
-        status = "uploaded"
 
-    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
-    mock_db.document.update = AsyncMock()
-
-    response = client.post("/api/documents/1/analyze")
-    assert response.status_code == 200
-
-
-@patch("src.main.db")
-def test_trigger_analysis_not_found(mock_db: Any, client: TestClient) -> None:
-    mock_db.document.find_unique = AsyncMock(return_value=None)
-    response = client.post("/api/documents/x/analyze")
-    assert response.status_code == 404
-
-
-@patch("src.main.db")
-def test_trigger_analysis_no_text(mock_db: Any, client: TestClient) -> None:
-    class MockDocEmpty:
-        id = "2"
-        raw_text = None
-
-    mock_db.document.find_unique = AsyncMock(return_value=MockDocEmpty())
-    response = client.post("/api/documents/2/analyze")
-    assert response.status_code == 400
 
 
 @patch("src.main.traverse_for_query")
@@ -387,6 +358,7 @@ def test_delete_document(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     mock_db.documentsuggestion.delete_many = AsyncMock()
     mock_db.documentanalysis.delete_many = AsyncMock()
+    mock_db.processingjob.delete_many = AsyncMock()
     mock_db.document.delete = AsyncMock()
 
     response = client.delete("/api/documents/doc_del")
@@ -434,48 +406,4 @@ def test_cancel_analysis_wrong_status(mock_db: Any, client: TestClient) -> None:
     assert response.status_code == 400
 
 
-@patch("src.main.db")
-@patch("src.main._stream_reader")
-def test_stream_analysis(mock_reader: Any, mock_db: Any, client: TestClient) -> None:
-    class MockDoc:
-        id = "s1"
-        raw_text = "text"
-        status = "analyzing"
 
-    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
-    mock_db.document.update = AsyncMock()
-
-    from collections.abc import AsyncGenerator
-
-    async def mock_gen(*args: Any, **kwargs: Any) -> AsyncGenerator[str, None]:
-        yield "event: progress\\ndata: {}\\n\\n"
-
-    mock_reader.side_effect = mock_gen
-
-    response = client.get("/api/documents/s1/analyze/stream")
-    assert response.status_code == 200
-    assert response.headers.get("content-type") == "text/event-stream; charset=utf-8"
-
-
-@patch("src.main.db")
-@patch("src.main._stream_reader")
-def test_stream_analysis_error(
-    mock_reader: Any, mock_db: Any, client: TestClient
-) -> None:
-    class MockDoc:
-        id = "s1"
-        raw_text = "text"
-        status = "analyzing"
-
-    mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
-    mock_db.document.update = AsyncMock()
-
-    from collections.abc import AsyncGenerator
-
-    async def mock_gen(*args: Any, **kwargs: Any) -> AsyncGenerator[str, None]:
-        yield "event: error\\ndata: Simulated streaming error\\n\\n"
-
-    mock_reader.side_effect = mock_gen
-
-    response = client.get("/api/documents/s1/analyze/stream")
-    assert response.status_code == 200

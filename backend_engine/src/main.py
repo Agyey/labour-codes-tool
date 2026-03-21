@@ -30,7 +30,6 @@ from fastapi import (
     UploadFile,
     HTTPException,
     Query,
-    BackgroundTasks,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -334,7 +333,11 @@ async def delete_document(document_id: str) -> dict[str, str]:
     if not doc:
         raise HTTPException(404, "Document not found.")
 
-    # Manual Cascade: we must manually delete all children due to lack of DB-level ON DELETE CASCADE
+    # Manual Cascade: Sequentially tear down metadata bounds before root deletion
+    await db.documentsuggestion.delete_many(where={"document_id": document_id})
+    await db.documentanalysis.delete_many(where={"document_id": document_id})
+    await db.processingjob.delete_many(where={"document_id": document_id})
+    
     await db.document.delete(where={"id": document_id})
 
     await record_audit(
