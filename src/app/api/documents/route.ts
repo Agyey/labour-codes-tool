@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
+const BACKEND_URL = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? "http://backend-engine.railway.internal:8080" : "http://127.0.0.1:8001");
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);

@@ -37,10 +37,11 @@ const nextConfig = {
     ];
   },
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? 'http://backend-engine.railway.internal:8080' : 'http://127.0.0.1:8001');
     return [
       {
         source: '/api/pipeline/:path*',
-        destination: `${process.env.BACKEND_URL || 'http://127.0.0.1:8001'}/api/pipeline/:path*`,
+        destination: `${backendUrl}/api/pipeline/:path*`,
       },
     ];
   },

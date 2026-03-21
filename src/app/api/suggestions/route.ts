@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Missing id or action (approve/reject)" }, { status: 400 });
     }
 
-    const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8001";
+    const BACKEND_URL = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? "http://backend-engine.railway.internal:8080" : "http://127.0.0.1:8001");
     let url = `${BACKEND_URL}/api/suggestions/${id}/${action}`;
     
     if (action === "approve" && frameworkId) {
