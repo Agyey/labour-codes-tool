@@ -1,11 +1,15 @@
 import typing
 from datetime import datetime, timezone
 from loguru import logger
+from neo4j import AsyncSession
 from src.graph.connection import get_driver, content_hash
 
 
 async def build_doc_node(
-    session, document_id: str, extracted_data: dict[str, object], now_iso: str
+    session: AsyncSession,
+    document_id: str,
+    extracted_data: dict[str, object],
+    now_iso: str,
 ) -> int:
     await session.run(
         """
@@ -32,7 +36,7 @@ async def build_doc_node(
 
 
 async def build_definitions(
-    session, document_id: str, definitions_list: list[dict[str, object]]
+    session: AsyncSession, document_id: str, definitions_list: list[dict[str, object]]
 ) -> tuple[int, int]:
     nc, rc = 0, 0
     for def_idx, defn in enumerate(definitions_list):
@@ -62,7 +66,7 @@ async def build_definitions(
 
 
 async def build_chapters(
-    session, document_id: str, chapters_list: list[dict[str, object]]
+    session: AsyncSession, document_id: str, chapters_list: list[dict[str, object]]
 ) -> tuple[int, int]:
     nc, rc = 0, 0
     for ch_idx, chapter in enumerate(chapters_list):
@@ -104,7 +108,7 @@ async def build_chapters(
 
 
 async def build_sections(
-    session,
+    session: AsyncSession,
     document_id: str,
     ch_idx: int,
     ch_uid: str,
@@ -193,7 +197,7 @@ async def build_sections(
 
 
 async def build_sub_sections(
-    session,
+    session: AsyncSession,
     document_id: str,
     ch_idx: int,
     sec_idx: int,
