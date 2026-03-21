@@ -57,6 +57,7 @@ htmlcov/
 # ========================
 .DS_Store
 *.pem
+*.log
 .agent/
 *.tsbuildinfo
 next-env.d.ts
