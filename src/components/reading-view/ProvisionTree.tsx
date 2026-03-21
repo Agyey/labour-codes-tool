@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronRight, ChevronDown, FileText, Book, Scale } from "lucide-react";
 
-interface TreeNode {
+export interface TreeNode {
   id: string;
   unit_type: string;
   number?: string;

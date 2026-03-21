@@ -2,21 +2,21 @@
   "project": "LexNexus",
   "root": {
     "path": "/Users/agyeyarya/Development/Labor Law Code Review",
-    "summary": "Legal knowledge system for labor law review with 100% strict type safety and mandatory operational directives (Local tests, Build validation, CI monitoring).",
+    "summary": "Legal knowledge system for labor law review with 100% strict type safety and mandatory operational directives. MUST bypass manual testing and rely on the automated .git/hooks/pre-commit pipeline enforcing Next.js Linting, Vitest, Ruff, and Pytest coverage.",
     "children": [
       {
         "name": "backend",
         "path": "backend_engine",
-        "summary": "FastAPI backend with 140+ remediated strict mypy types, Pydantic V2, and 97% test coverage. Connected natively to Neo4j over Bolt.",
+        "summary": "FastAPI backend architecture decoupled via Celery workers and a Redis broker. Features 140+ remediated strict mypy types, robust Server-Sent Events (SSE) streaming isolated from process memory, and 97% Pytest coverage.",
         "status": "stable"
       },
       {
         "name": "frontend",
         "path": "frontend",
-        "summary": "Next.js frontend with memoized components, explicit server actions re-exports for Turbopack compatibility, and resilient routing.",
+        "summary": "Next.js frontend with memoized components, explicit server actions re-exports for Turbopack compatibility, integrated auth, and deep Prisma graph relations.",
         "status": "stable"
       }
     ]
   },
-  "last_sync": "2026-03-20T19:07:00Z"
+  "last_sync": "2026-03-20T23:55:00Z"
 }

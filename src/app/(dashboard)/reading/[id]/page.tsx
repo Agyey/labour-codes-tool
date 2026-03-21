@@ -5,15 +5,21 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
+import { LegalDocument, StructuralUnit } from "@prisma/client";
+import { TreeNode } from "@/components/reading-view/ProvisionTree";
+
+// Resolves recursive TypeScript generic relationships
+type FlatUnit = StructuralUnit & { child_units: FlatUnit[] };
+
 // Formats the Prisma tree into ProvisionTree generic generic schemas
-function formatDetailedTree(units: any[], depth: number = 1): any[] {
+function formatDetailedTree(units: FlatUnit[], depth: number = 1): TreeNode[] {
   if (!units || !units.length) return [];
   
   return units.map(unit => ({
     id: unit.id,
     unit_type: unit.unit_type,
     number: unit.unit_number,
-    title: unit.title,
+    title: unit.title || undefined,
     depth_level: depth,
     children: formatDetailedTree(unit.child_units, depth + 1)
   }));

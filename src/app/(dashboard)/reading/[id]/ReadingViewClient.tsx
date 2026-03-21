@@ -9,12 +9,17 @@ import { StateOverlayBanner } from "@/components/reading-view/StateOverlayBanner
 import { FileText, Loader2 } from "lucide-react";
 import { getUnitDetails } from "@/app/actions/reading";
 
-export default function ReadingViewClient({ document, initialTreeNodes }: { document: any, initialTreeNodes: any[] }) {
+import { LegalDocument } from "@prisma/client";
+import { TreeNode } from "@/components/reading-view/ProvisionTree";
+
+type TabId = "index" | "rules" | "circulars" | "cases" | "analytics";
+
+export default function ReadingViewClient({ document, initialTreeNodes }: { document: LegalDocument, initialTreeNodes: TreeNode[] }) {
   const [selectedState, setSelectedState] = useState<string | null>(null);
-  const [selectedNodeData, setSelectedNodeData] = useState<any>(null);
+  const [selectedNodeData, setSelectedNodeData] = useState<Awaited<ReturnType<typeof getUnitDetails>> | null>(null);
   const [isLoadingNode, setIsLoadingNode] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"index" | "rules" | "circulars" | "cases" | "analytics">("index");
+  const [activeTab, setActiveTab] = useState<TabId>("index");
 
   const handleSelectNode = async (nodeId: string) => {
     try {
@@ -69,7 +74,7 @@ export default function ReadingViewClient({ document, initialTreeNodes }: { docu
              ].map(tab => (
                <button
                  key={tab.id}
-                 onClick={() => setActiveTab(tab.id as any)}
+                 onClick={() => setActiveTab(tab.id as TabId)}
                  className={`px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors whitespace-nowrap border-b-2 ${
                    activeTab === tab.id 
                      ? "border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-500/10" 
