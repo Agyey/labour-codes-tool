@@ -9,6 +9,10 @@ from src.models import (
     ExtractedLegislation,
     AuditEntry,
     SuggestionResponse,
+    ExtractedChapter,
+    ExtractedSection,
+    ExtractedSubSection,
+    ExtractedPenalty,
 )
 
 
@@ -109,3 +113,37 @@ def test_audit_entry_validation() -> None:
         previous_hash="0",
         timestamp=datetime.now(timezone.utc),
     )
+
+
+def test_extracted_section_complex_nesting() -> None:
+    # Verifying deeply nested Pydantic arrays conform to strict schemas natively
+    section = ExtractedSection(
+        section_number="42",
+        title="Offences by Companies",
+        full_text="Where an offence is committed by a company...",
+        summary="Company liability parameters",
+        sub_sections=[
+            ExtractedSubSection(
+                sub_section_number="1", full_text="Subtext", summary="Subtext summary"
+            )
+        ],
+        compliance_tasks=[],
+        penalties=[ExtractedPenalty(description="Fine up to 1 Lakh")],
+    )
+    assert len(section.sub_sections) == 1
+    assert section.sub_sections[0].sub_section_number == "1"
+    assert len(section.penalties) == 1
+    assert section.penalties[0].description == "Fine up to 1 Lakh"
+
+
+def test_invalid_array_types_rejected() -> None:
+    # Verifying strict boundaries catch malformed downstream mappings
+    with pytest.raises(ValidationError):
+        ExtractedChapter(
+            chapter_number="IX",
+            chapter_name="Penalties",
+            summary="Penalty summary",
+            sections=[
+                "This is a string, not an ExtractedSection object"  # type: ignore
+            ],
+        )
