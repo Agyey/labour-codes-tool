@@ -1,6 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# ========================
+# Next.js & Node.js
+# ========================
 /node_modules
 /.pnp
 .pnp.*
@@ -10,39 +10,59 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
 /.next/
 /out/
-.agent/
-.venv/
-venv_alembic/
-__pycache__/
-*.pyc
-.temp_venv/
-
-# production
 /build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
 .vercel
 
-# typescript
+# ========================
+# Python & FastAPI & Celery
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.temp_venv/
+venv_alembic/
+
+# Celery
+celerybeat-schedule
+*.pid
+
+# Testing & Linting Caches
+/coverage
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ========================
+# Environment Variables
+# ========================
+.env*
+!.env.example
+
+# ========================
+# Misc & OS & Editors
+# ========================
+.DS_Store
+*.pem
+.agent/
 *.tsbuildinfo
 next-env.d.ts
-coverage/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
