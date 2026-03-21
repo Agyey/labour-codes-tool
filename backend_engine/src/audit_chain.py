@@ -6,7 +6,6 @@ is hashed into an immutable chain stored in Postgres.
 
 import hashlib
 import json
-import typing
 from datetime import datetime, timezone
 
 from loguru import logger
@@ -27,7 +26,7 @@ def compute_hash(
     action: str,
     entity_type: str,
     entity_id: str,
-    data: dict[str, typing.Any],
+    data: dict[str, object],
     timestamp: str,
 ) -> str:
     """Compute SHA-256 hash for the chain entry."""
@@ -49,7 +48,7 @@ async def record_audit(
     action: str,
     entity_type: str,
     entity_id: str,
-    data: dict[str, typing.Any],
+    data: dict[str, object],
     user_id: str | None = None,
 ) -> str:
     """Append a new entry to the audit chain. Returns the new hash."""
@@ -80,7 +79,7 @@ async def record_audit(
     return current_hash
 
 
-async def verify_chain_integrity() -> dict[str, typing.Any]:
+async def verify_chain_integrity() -> dict[str, object]:
     """Verify the entire audit chain has not been tampered with."""
     entries = await db.auditchain.find_many(order={"created_at": "asc"})
     if not entries:

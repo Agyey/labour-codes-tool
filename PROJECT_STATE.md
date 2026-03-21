@@ -46,13 +46,12 @@ Build a premium, enterprise-grade compliance tracking platform for India's 4 new
 2. [x] **Database & API Integrity**: Transitioned to native Neo4j GraphDB instance, stabilized frontend deletion payload mapping against orphaned database constraints via Python Manual API hooks.
 3. [x] **Background Queue Migration**: Moved `async_create_task` blockers to a durable Celery / Redis isolated PubSub loop avoiding UI stream timeouts.
 4. [x] **PR & CI Cleanup**: Successfully verified, synced, and merged 6 pending remote GitHub branch UI optimisations manually mapped to the updated `dev` base upstream.
-5. [ ] **Statelessness Audit**: Audit server actions for disk writes.
-6. [ ] **Type Hardening**: Refine recursive types for comments.
+5. [x] **Statelessness Audit**: Completed full worker decoupling audit via Celery/Redis without writing directly to disk paths.
+6. [x] **Type Hardening**: Refined recursive Prisma mapping structures inside the Dashboard reading interfaces.
 
 ## Refactor Roadmap (Target: Q1 2026)
 ### 1. High-Impact Refactors (Atomic Architecture)
-- **Frontend Decomposition**: Break down `src/app/actions/provisions.ts` into smaller, domain-specific server action files.
-- **Component Splits**: Break down `src/components/views/CompareView.tsx` and decouple `src/context/DataContext.tsx`.
+- **Frontend Decomposition**: Break down `src/components/documents/DocumentDetailView.tsx` (856 lines) into granular specific atomic layout sub-components.
 
-### 2. Standardization Sweep
-- Audit remaining inline Python tasks for explicit types.
+### 2. Standardization Sweep (Strict Backend Type Safety)
+- Audit remaining inline Python tasks for explicit types by running a global eradication of all `typing.Any` and arbitrary `Any` interfaces across `models.py` and `enrichment` pipelines.

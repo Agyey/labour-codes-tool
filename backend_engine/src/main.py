@@ -86,7 +86,7 @@ app.add_middleware(
 # ──────────────────────────────────────────────
 
 
-def _sse_event(event: str, data: dict[str, typing.Any]) -> str:
+def _sse_event(event: str, data: dict[str, object]) -> str:
     """Format a single SSE event."""
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
@@ -110,7 +110,7 @@ async def health_check() -> dict[str, str]:
 @limiter.limit(f"{settings.rate_limit_rpm}/minute")
 async def ingest_document(
     request: Request, file: UploadFile = File(...)
-) -> dict[str, typing.Any]:
+) -> dict[str, object]:
     """Upload a PDF. Stores text, returns document ID for subsequent analysis."""
     if not file.filename:
         raise HTTPException(400, "No filename provided.")
@@ -232,7 +232,7 @@ async def stream_pipeline(request: Request, job_id: str) -> StreamingResponse:
 
 
 @app.get("/api/documents")
-async def list_documents() -> list[dict[str, typing.Any]]:
+async def list_documents() -> list[dict[str, object]]:
     """List all uploaded documents."""
     docs = await db.document.find_many(order={"uploaded_at": "desc"})
     jobs = await db.processingjob.find_many(
@@ -263,7 +263,7 @@ async def list_documents() -> list[dict[str, typing.Any]]:
 
 
 @app.get("/api/documents/{document_id}")
-async def get_document(document_id: str) -> dict[str, typing.Any]:
+async def get_document(document_id: str) -> dict[str, object]:
     """Get document detail with analysis and suggestions."""
     doc = await db.document.find_unique(where={"id": document_id})
     if not doc:
@@ -374,9 +374,7 @@ async def cancel_analysis(document_id: str) -> dict[str, str]:
 
 
 @app.get("/api/documents/{document_id}/tree")
-async def get_tree(
-    document_id: str, chapter: str | None = None
-) -> dict[str, typing.Any]:
+async def get_tree(document_id: str, chapter: str | None = None) -> dict[str, object]:
     """Get the vectorless RAG tree from Neo4j."""
     try:
         if chapter:
@@ -412,7 +410,7 @@ async def approve_suggestion(
     if suggestion.suggested_data is None:
         raise HTTPException(400, "Suggestion data is empty.")
 
-    data = typing.cast(dict[str, typing.Any], suggestion.suggested_data)
+    data = typing.cast(dict[str, object], suggestion.suggested_data)
     try:
         match suggestion.type:
             case "create_legislation":
@@ -424,7 +422,7 @@ async def approve_suggestion(
                     data={
                         "name": str(data.get("name", "")),
                         "short_name": str(data.get("short_name", "")),
-                        "year": int(data.get("year", 0)),
+                        "year": int(str(data.get("year", 0))),
                         "type": str(data.get("type", "act")),
                         "framework_id": framework_id,
                     }
@@ -441,7 +439,11 @@ async def approve_suggestion(
                         "title": str(data.get("title", "")),
                         "summary": str(data.get("summary", "")),
                         "full_text": str(data.get("full_text", "")),
-                        "sub_sections": prisma.Json(data.get("sub_sections", [])),
+                        "sub_sections": prisma.Json(
+                            typing.cast(
+                                list[dict[str, object]], data.get("sub_sections", [])
+                            )
+                        ),
                         "impact": "Pending Review",
                         "rule_authority": "Appropriate Government",
                         "status": "active",
@@ -538,7 +540,7 @@ async def reject_suggestion(
 
 
 @app.get("/api/audit/verify")
-async def verify_audit() -> dict[str, typing.Any]:
+async def verify_audit() -> dict[str, object]:
     """Verify the integrity of the audit chain."""
     result = await verify_chain_integrity()
     return result

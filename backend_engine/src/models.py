@@ -8,7 +8,6 @@ Strict typing for:
 
 from __future__ import annotations
 
-import typing
 from datetime import datetime
 from enum import Enum
 
@@ -138,7 +137,7 @@ class ExtractedLegislation(BaseModel):
     repealed_acts: list[str] = Field(
         default_factory=list, description="Names of acts repealed by this legislation"
     )
-    metadata: dict[str, typing.Any] = Field(
+    metadata: dict[str, object] = Field(
         default_factory=dict, description="Metadata for extraction (jurisdiction, etc)"
     )
 
@@ -164,8 +163,8 @@ class AnalysisResponse(BaseModel):
     document_id: str
     summary: str | None
     document_type: str | None
-    structured_data: dict[str, typing.Any] | None
-    graph_stats: dict[str, typing.Any] | None
+    structured_data: dict[str, object] | None
+    graph_stats: dict[str, object] | None
     created_at: datetime
 
 
@@ -174,7 +173,7 @@ class SuggestionResponse(BaseModel):
     document_id: str
     type: SuggestionType
     target_module: str
-    suggested_data: dict[str, typing.Any]
+    suggested_data: dict[str, object]
     confidence: float
     status: SuggestionStatus
     created_at: datetime
@@ -184,7 +183,7 @@ class DocumentDetailResponse(BaseModel):
     document: DocumentResponse
     analysis: AnalysisResponse | None = None
     suggestions: list[SuggestionResponse] = Field(default_factory=list)
-    graph_stats: dict[str, typing.Any] | None = None
+    graph_stats: dict[str, object] | None = None
 
 
 # ──────────────────────────────────────────────
@@ -261,7 +260,7 @@ class ApplicabilityExtract(BaseModel):
     entity_types: list[str] = Field(
         default_factory=list, description="e.g. ['Listed Company', 'employer']"
     )
-    thresholds: dict[str, typing.Any] = Field(
+    thresholds: dict[str, object] = Field(
         default_factory=dict, description="e.g. {'net_worth_above': 5000000000}"
     )
     exemptions: list[str] = Field(

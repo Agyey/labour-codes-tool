@@ -7,15 +7,15 @@ the LegalDocument + StructuralUnit tree in the database.
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from prisma import Client
 
 from loguru import logger
 
-from ..models import ExtractedLegislation, DocumentClassification
+from ..models import ExtractedLegislation, DocumentClassification, ExtractedSection
 
 
 async def run_pass1(
-    db: Any,
+    db: Client,
     source_doc_id: str | None,
     extracted: ExtractedLegislation,
     classification: DocumentClassification,
@@ -52,7 +52,7 @@ async def run_pass1(
     sort_counter: list[int] = [0]
 
     async def process_sections(
-        sections: list[Any], parent_id: str | None = None
+        sections: list[ExtractedSection], parent_id: str | None = None
     ) -> None:
         for sec in sections:
             unit_id = str(uuid.uuid4())

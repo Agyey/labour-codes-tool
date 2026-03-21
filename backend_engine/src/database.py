@@ -1,7 +1,6 @@
-from typing import Any
 from prisma import Client
 
-db: Any = Client()
+db: Client = Client()
 
 
 async def connect_db() -> None:

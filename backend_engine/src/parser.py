@@ -176,7 +176,7 @@ async def analyze_document_stream(
 
 async def build_graph_and_suggestions(
     document_id: str, extracted: ExtractedLegislation
-) -> dict[str, typing.Any]:
+) -> dict[str, object]:
     """Build Neo4j tree and generate approval-pending suggestions."""
     # 1. Build the vectorless RAG tree in Neo4j
     graph_stats = await create_document_tree(document_id, extracted.model_dump())

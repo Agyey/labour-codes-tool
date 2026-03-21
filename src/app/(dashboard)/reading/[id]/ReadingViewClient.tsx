@@ -48,10 +48,10 @@ export default function ReadingViewClient({ document, initialTreeNodes }: { docu
         <div>
           <h1 className="text-lg font-bold text-slate-800 dark:text-zinc-100 flex items-center gap-2">
             <FileText className="w-5 h-5 text-indigo-500" />
-            {document.name}
+            {document.title}
           </h1>
           <div className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5">
-            {document.jurisdiction || document.state || "Central"} • {document.doc_type || "Act"}
+            {document.jurisdiction || document.primary_state || "Central"} • {document.doc_type || "Act"}
           </div>
         </div>
         
@@ -135,12 +135,12 @@ export default function ReadingViewClient({ document, initialTreeNodes }: { docu
           {selectedNodeData ? (
              <ProvisionContent
                 unitType={selectedNodeData.unit_type}
-                number={selectedNodeData.unit_number}
-                title={selectedNodeData.title}
-                fullText={selectedNodeData.full_text || selectedNodeData.summary}
+                number={selectedNodeData.unit_number || undefined}
+                title={selectedNodeData.title || undefined}
+                fullText={selectedNodeData.full_text || selectedNodeData.summary || undefined}
                 status="Active"
                 complianceType="None"
-                definitions={selectedNodeData.definitions || []}
+                definitions={(selectedNodeData.definitions || []).map(d => ({ ...d, is_inclusive: "is_inclusive" in d ? d.is_inclusive as boolean : false }))}
                 crossReferences={selectedNodeData.xrefs || []}
              />
           ) : (

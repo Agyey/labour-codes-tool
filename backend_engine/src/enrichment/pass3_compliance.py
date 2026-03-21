@@ -7,7 +7,8 @@ and extract ObligationRecords and PenaltyRecords.
 from __future__ import annotations
 
 import json
-from typing import Any, cast
+from typing import cast
+from prisma import Client
 from loguru import logger
 from google.genai import types
 
@@ -27,17 +28,14 @@ Output JSON tracking the exact unit_id provided.
 """
 
 
-async def run_pass3(db: Any, legal_doc_id: str) -> None:
+async def run_pass3(db: Client, legal_doc_id: str) -> None:
     """Classifies provisions and extracts obligations using Gemini."""
     logger.info(f"[Pass 3] Compliance extraction for doc {legal_doc_id}")
 
     # Fetch units that haven't been processed yet
     # Fetch units that haven't been processed yet
-    units = cast(
-        list[Any],
-        await db.structuralunit.find_many(
-            where={"legal_doc_id": legal_doc_id, "unit_type": "section"}
-        ),
+    units = await db.structuralunit.find_many(
+        where={"legal_doc_id": legal_doc_id, "unit_type": "section"}
     )
 
     if not units:
@@ -48,7 +46,7 @@ async def run_pass3(db: Any, legal_doc_id: str) -> None:
     obligation_count = 0
 
     for i in range(0, len(units), ASYNC_BATCH_SIZE):
-        batch: list[Any] = units[i : i + ASYNC_BATCH_SIZE]
+        batch = units[i : i + ASYNC_BATCH_SIZE]
 
         batch_prompt = "Analyze these provisions:\n\n"
         for u in batch:
@@ -72,11 +70,11 @@ async def run_pass3(db: Any, legal_doc_id: str) -> None:
             try:
                 # If the SDK supports automatic parsing to the schema:
                 batch_data = ComplianceBatchResponse.model_validate_json(response.text)
-                results: list[Any] = batch_data.results
+                results = batch_data.results
             except Exception:
                 # Fallback to manual parse if schema validation on response text fails
-                data: dict[str, Any] = json.loads(response.text)
-                results = cast(list[Any], data.get("results", []))
+                data: dict[str, object] = json.loads(response.text)
+                results = cast(list[dict[str, object]], data.get("results", []))  # type: ignore[assignment]
 
             # Process results
             for result in results:
@@ -84,7 +82,7 @@ async def run_pass3(db: Any, legal_doc_id: str) -> None:
                 if hasattr(result, "model_dump"):
                     res_dict = result.model_dump()
                 else:
-                    res_dict = cast(dict[str, Any], result)
+                    res_dict = cast(dict[str, object], result)
 
                 unit_id = res_dict.get("unit_id")
                 if not unit_id:

@@ -71,7 +71,7 @@ def _content_hash(text: str) -> str:
 
 
 async def create_document_tree(
-    document_id: str, extracted_data: dict[str, typing.Any]
+    document_id: str, extracted_data: dict[str, object]
 ) -> dict[str, int]:
     """Build the full vectorless RAG tree in Neo4j from extracted data.
 
@@ -101,14 +101,17 @@ async def create_document_tree(
             short_name=extracted_data.get("short_name", ""),
             year=extracted_data.get("year", 0),
             summary=extracted_data.get("summary", ""),
-            hash=_content_hash(extracted_data.get("summary", "")),
+            hash=_content_hash(str(extracted_data.get("summary", ""))),
             created_at=now_iso,
             pg_id=document_id,
         )
         node_count += 1
 
         # 1b. Create Definition nodes
-        for def_idx, defn in enumerate(extracted_data.get("definitions", [])):
+        definitions_list = typing.cast(
+            list[dict[str, object]], extracted_data.get("definitions", [])
+        )
+        for def_idx, defn in enumerate(definitions_list):
             def_uid = f"doc_{document_id}_def_{def_idx}"
             await session.run(
                 """
@@ -126,14 +129,17 @@ async def create_document_tree(
                 term=defn.get("term", ""),
                 definition=defn.get("definition", ""),
                 ref=defn.get("section_ref", ""),
-                hash=_content_hash(defn.get("definition", "")),
+                hash=_content_hash(str(defn.get("definition", ""))),
                 doc_uid=f"doc_{document_id}",
             )
             node_count += 1
             rel_count += 1
 
         # 2. Create Chapter nodes + relationships
-        for ch_idx, chapter in enumerate(extracted_data.get("chapters", [])):
+        chapters_list = typing.cast(
+            list[dict[str, object]], extracted_data.get("chapters", [])
+        )
+        for ch_idx, chapter in enumerate(chapters_list):
             ch_uid = f"doc_{document_id}_ch_{ch_idx}"
             await session.run(
                 """
@@ -153,14 +159,17 @@ async def create_document_tree(
                 name=chapter.get("chapter_name", ""),
                 summary=chapter.get("summary", ""),
                 order=ch_idx,
-                hash=_content_hash(chapter.get("summary", "")),
+                hash=_content_hash(str(chapter.get("summary", ""))),
                 doc_uid=f"doc_{document_id}",
             )
             node_count += 1
             rel_count += 1
 
             # 3. Create Section nodes
-            for sec_idx, section in enumerate(chapter.get("sections", [])):
+            sections_list = typing.cast(
+                list[dict[str, object]], chapter.get("sections", [])
+            )
+            for sec_idx, section in enumerate(sections_list):
                 sec_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}"
                 await session.run(
                     """
@@ -182,14 +191,17 @@ async def create_document_tree(
                     summary=section.get("summary", ""),
                     full_text=section.get("full_text", ""),
                     order=sec_idx,
-                    hash=_content_hash(section.get("full_text", "")),
+                    hash=_content_hash(str(section.get("full_text", ""))),
                     ch_uid=ch_uid,
                 )
                 node_count += 1
                 rel_count += 1
 
                 # 3b. Create Section Compliance Task nodes
-                for t_idx, task in enumerate(section.get("compliance_tasks", [])):
+                tasks_list = typing.cast(
+                    list[dict[str, object]], section.get("compliance_tasks", [])
+                )
+                for t_idx, task in enumerate(tasks_list):
                     t_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_task_{t_idx}"
                     await session.run(
                         """
@@ -207,14 +219,17 @@ async def create_document_tree(
                         task=task.get("task", ""),
                         due_logic=task.get("due_logic", ""),
                         severity=task.get("severity", "medium"),
-                        hash=_content_hash(task.get("task", "")),
+                        hash=_content_hash(str(task.get("task", ""))),
                         sec_uid=sec_uid,
                     )
                     node_count += 1
                     rel_count += 1
 
                 # 3c. Create Penalty nodes
-                for p_idx, penalty in enumerate(section.get("penalties", [])):
+                penalties_list = typing.cast(
+                    list[dict[str, object]], section.get("penalties", [])
+                )
+                for p_idx, penalty in enumerate(penalties_list):
                     p_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_pen_{p_idx}"
                     await session.run(
                         """
@@ -232,14 +247,17 @@ async def create_document_tree(
                         desc=penalty.get("description", ""),
                         fine=penalty.get("fine_amount", ""),
                         imp=penalty.get("imprisonment", ""),
-                        hash=_content_hash(penalty.get("description", "")),
+                        hash=_content_hash(str(penalty.get("description", ""))),
                         sec_uid=sec_uid,
                     )
                     node_count += 1
                     rel_count += 1
 
                 # 4. Create SubSection nodes
-                for sub_idx, sub in enumerate(section.get("sub_sections", [])):
+                sub_sections_list = typing.cast(
+                    list[dict[str, object]], section.get("sub_sections", [])
+                )
+                for sub_idx, sub in enumerate(sub_sections_list):
                     sub_uid = (
                         f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_sub_{sub_idx}"
                     )
@@ -261,14 +279,17 @@ async def create_document_tree(
                         full_text=sub.get("full_text", ""),
                         summary=sub.get("summary", ""),
                         order=sub_idx,
-                        hash=_content_hash(sub.get("full_text", "")),
+                        hash=_content_hash(str(sub.get("full_text", ""))),
                         sec_uid=sec_uid,
                     )
                     node_count += 1
                     rel_count += 1
 
                     # 4b. Create SubSection Compliance Task nodes
-                    for st_idx, stask in enumerate(sub.get("compliance_tasks", [])):
+                    sub_tasks_list = typing.cast(
+                        list[dict[str, object]], sub.get("compliance_tasks", [])
+                    )
+                    for st_idx, stask in enumerate(sub_tasks_list):
                         st_uid = f"doc_{document_id}_ch_{ch_idx}_sec_{sec_idx}_sub_{sub_idx}_task_{st_idx}"
                         await session.run(
                             """
@@ -286,7 +307,7 @@ async def create_document_tree(
                             task=stask.get("task", ""),
                             due_logic=stask.get("due_logic", ""),
                             severity=stask.get("severity", "medium"),
-                            hash=_content_hash(stask.get("task", "")),
+                            hash=_content_hash(str(stask.get("task", ""))),
                             sub_uid=sub_uid,
                         )
                         node_count += 1
@@ -299,7 +320,7 @@ async def create_document_tree(
     return {"nodes": node_count, "relationships": rel_count}
 
 
-async def get_document_tree(document_id: str) -> list[dict[str, typing.Any]]:
+async def get_document_tree(document_id: str) -> list[dict[str, object]]:
     """Retrieve the full tree for a document (for UI rendering)."""
     driver = await get_driver()
     async with driver.session() as session:
@@ -319,7 +340,7 @@ async def get_document_tree(document_id: str) -> list[dict[str, typing.Any]]:
 
 async def traverse_for_query(
     document_id: str, target_chapter: str | None = None
-) -> list[dict[str, typing.Any]]:
+) -> list[dict[str, object]]:
     """Vectorless RAG traversal: drill down to specific branch."""
     driver = await get_driver()
     async with driver.session() as session:

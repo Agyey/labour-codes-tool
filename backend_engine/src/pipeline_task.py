@@ -20,6 +20,7 @@ from src.database import db
 from src.classifier import classify
 from src.parser import analyze_document_stream
 from src.enrichment import run_enrichment
+from src.models import ExtractedLegislation
 
 
 # Global SSE state for the new pipeline
@@ -27,7 +28,7 @@ PIPELINE_EVENTS: dict[str, list[str]] = {}
 PIPELINE_LISTENERS: dict[str, list[asyncio.Queue[str | None]]] = {}
 
 
-def _sse_event(event: str, data: dict[str, typing.Any]) -> str:
+def _sse_event(event: str, data: dict[str, object]) -> str:
     """Format a single SSE event."""
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
@@ -116,7 +117,7 @@ async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) 
             _sse_event("stage_update", {"stage": "extraction", "status": "running"}),
         )
 
-        extraction_result: list[typing.Any] = []
+        extraction_result: list[object] = []
         try:
             async for chunk in analyze_document_stream(document_id, raw_text):
                 if isinstance(chunk, str):
@@ -129,13 +130,14 @@ async def run_pipeline_background(job_id: str, document_id: str, raw_text: str) 
             extraction_result.append(exc)
 
         if not extraction_result or isinstance(extraction_result[0], Exception):
-            raise (
+            raise typing.cast(
+                BaseException,
                 extraction_result[0]
                 if extraction_result
-                else RuntimeError("Extraction returned no result")
+                else RuntimeError("Extraction returned no result"),
             )
 
-        extracted = extraction_result[0]
+        extracted = typing.cast(ExtractedLegislation, extraction_result[0])
 
         # Use .name instead of .metadata.act_name for the new models
         doc_title = getattr(extracted, "name", "Unknown Document")

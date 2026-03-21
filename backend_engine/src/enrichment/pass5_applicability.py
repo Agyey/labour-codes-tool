@@ -7,7 +7,8 @@ Entities, thresholds (e.g. net worth, employee count), and exemptions.
 from __future__ import annotations
 
 import json
-from typing import Any, cast
+from typing import cast
+from prisma import Client
 from loguru import logger
 from google.genai import types
 
@@ -30,7 +31,7 @@ If a provision is general with no specific applicability language, return empty 
 """
 
 
-async def run_pass5(db: Any, legal_doc_id: str) -> None:
+async def run_pass5(db: Client, legal_doc_id: str) -> None:
     """Classifies applicability conditions using Gemini."""
     logger.info(f"[Pass 5] Applicability extraction for doc {legal_doc_id}")
 
@@ -38,12 +39,9 @@ async def run_pass5(db: Any, legal_doc_id: str) -> None:
     # scanning all for safety if they have substantive text
     # Usually only section 1 or specific applicability sections matter, but
     # scanning all for safety if they have substantive text
-    units = cast(
-        list[Any],
-        await db.structuralunit.find_many(
-            where={"legal_doc_id": legal_doc_id, "unit_type": "section"},
-            order={"sort_order": "asc"},
-        ),
+    units = await db.structuralunit.find_many(
+        where={"legal_doc_id": legal_doc_id, "unit_type": "section"},
+        order={"sort_order": "asc"},
     )
 
     if not units:
@@ -53,7 +51,7 @@ async def run_pass5(db: Any, legal_doc_id: str) -> None:
     condition_count = 0
 
     for i in range(0, len(units), ASYNC_BATCH_SIZE):
-        batch: list[Any] = units[i : i + ASYNC_BATCH_SIZE]
+        batch = units[i : i + ASYNC_BATCH_SIZE]
 
         batch_prompt = "Analyze these provisions for Applicability:\n\n"
         for u in batch:
@@ -79,11 +77,11 @@ async def run_pass5(db: Any, legal_doc_id: str) -> None:
                 batch_data = ApplicabilityBatchResponse.model_validate_json(
                     response.text
                 )
-                results: list[Any] = batch_data.results
+                results = batch_data.results
             except Exception:
                 # Fallback to manual parse if schema validation on response text fails
-                data: dict[str, Any] = json.loads(response.text)
-                results = cast(list[Any], data.get("results", []))
+                data: dict[str, object] = json.loads(response.text)
+                results = cast(list[dict[str, object]], data.get("results", []))  # type: ignore[assignment]
 
             # Process results
             for result in results:
@@ -91,7 +89,7 @@ async def run_pass5(db: Any, legal_doc_id: str) -> None:
                 if hasattr(result, "model_dump"):
                     res_dict = result.model_dump()
                 else:
-                    res_dict = cast(dict[str, Any], result)
+                    res_dict = cast(dict[str, object], result)
 
                 unit_id = res_dict.get("unit_id")
                 if not unit_id:
