@@ -1,5 +1,5 @@
 import { render, screen, cleanup } from "@testing-library/react";
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, beforeAll, vi } from "vitest";
 import { StreamingProgress, StreamEvent } from "./StreamingProgress";
 
 describe("StreamingProgress", () => {

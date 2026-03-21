@@ -2,8 +2,27 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 
+interface ChapterNode {
+  chapter_number: string;
+  chapter_name: string;
+  summary?: string;
+  sections?: SectionNode[];
+}
+
+interface SectionNode {
+  section_number: string;
+  title: string;
+  summary?: string;
+}
+
+interface StructureAnalysis {
+  structured_data?: {
+    chapters?: ChapterNode[];
+  };
+}
+
 interface DocumentStructureTabProps {
-  analysis: any;
+  analysis: StructureAnalysis | null;
 }
 
 export function DocumentStructureTab({ analysis }: DocumentStructureTabProps) {
@@ -19,7 +38,7 @@ export function DocumentStructureTab({ analysis }: DocumentStructureTabProps) {
       </h3>
       {analysis?.structured_data?.chapters ? (
         <div className="space-y-3">
-          {analysis.structured_data.chapters.map((ch: any, i: number) => (
+          {analysis.structured_data.chapters.map((ch: ChapterNode, i: number) => (
             <details key={i} className="group">
               <summary className="flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800 p-3 rounded-xl transition-colors">
                 <ChevronRight className="w-4 h-4 text-slate-400 group-open:rotate-90 transition-transform" />
@@ -37,7 +56,7 @@ export function DocumentStructureTab({ analysis }: DocumentStructureTabProps) {
                 <p className="text-xs text-slate-500 dark:text-zinc-500 mb-2 italic">
                   {ch.summary}
                 </p>
-                {ch.sections?.map((sec: any, j: number) => (
+                {ch.sections?.map((sec: SectionNode, j: number) => (
                   <details key={j} className="group/sec">
                     <summary className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-zinc-800 p-2 rounded-lg transition-colors">
                       <ChevronRight className="w-3 h-3 text-slate-400 group-open/sec:rotate-90 transition-transform" />

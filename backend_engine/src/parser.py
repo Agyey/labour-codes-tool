@@ -27,7 +27,7 @@ from src.models import (
     SuggestionType,
 )
 from src.database import db
-from src.graph_service import create_document_tree
+from src.graph import create_document_tree
 from src.audit_chain import record_audit
 
 # Initialize Gemini Client

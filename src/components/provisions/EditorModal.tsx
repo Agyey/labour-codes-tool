@@ -1,14 +1,13 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import { Save, X } from "lucide-react";
 import { CommentSection } from "./CommentSection";
 import { addComment } from "@/app/actions/comments";
-import { createBlankOldMapping } from "@/lib/utils";
-import type { Provision, OldMapping, ComplianceItem, Comment } from "@/types/provision";
+import type { Comment } from "@/types/provision";
 import { BasicInfoFields } from "./BasicInfoFields";
 import { StatuteFields } from "./StatuteFields";
 import { RepealedMappingFields } from "./RepealedMappingFields";
@@ -22,6 +21,7 @@ import { MetadataFields } from "./MetadataFields";
 import { HierarchyConnectors } from "./HierarchyConnectors";
 import { ApplicabilityFields } from "./ApplicabilityFields";
 import { Layout, FileText, GitPullRequest, ShieldCheck, Map, MessageSquare } from "lucide-react";
+import { useProvisionForm } from "./useProvisionForm";
 
 type EditorTab = "BASIC" | "STATUTE" | "MAPPING" | "COMPLIANCE" | "STATE_WISE" | "DISCUSSION";
 
@@ -29,14 +29,24 @@ export function EditorModal() {
   const { editingProvision, setEditingProvision } = useUI();
   const { saveProvision, users } = useData();
   const [isSaving, setIsSaving] = useState(false);
-  const [form, setForm] = useState<Provision | null>(null);
-  const [activeTab, setActiveTab] = useState<EditorTab>("BASIC");
+  const {
+    form,
+    setForm,
+    update,
+    toggleInArray,
+    updateOldMapping,
+    toggleOldMappingTag,
+    addOldMapping,
+    removeOldMapping,
+    addArrayItem,
+    removeArrayItem,
+    updateArrayItem,
+    addCompItem,
+    removeCompItem,
+    updateCompItem,
+  } = useProvisionForm(editingProvision);
 
-  useEffect(() => {
-    if (editingProvision) {
-      setForm(JSON.parse(JSON.stringify(editingProvision)));
-    }
-  }, [editingProvision]);
+  const [activeTab, setActiveTab] = useState<EditorTab>("BASIC");
 
   if (!editingProvision || !form) return null;
 
@@ -45,71 +55,6 @@ export function EditorModal() {
   const labelCls = "block text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5 ml-1";
   const sectionCls = "p-8 bg-slate-50/50 dark:bg-zinc-900/50 rounded-[40px] border border-slate-100 dark:border-zinc-800/50 space-y-6";
   const textareaCls = "w-full p-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl text-sm font-bold text-slate-700 dark:text-zinc-200 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none font-sans min-h-[120px]";
-
-  function update<K extends keyof Provision>(key: K, val: Provision[K]) {
-    setForm((prev) => prev ? ({ ...prev, [key]: val }) : null);
-  }
-
-  function toggleInArray(key: "changeTags" | "workflowTags", val: string) {
-    setForm((prev) => {
-      if (!prev) return null;
-      const arr = prev[key] || [];
-      return {
-        ...prev,
-        [key]: arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val],
-      };
-    });
-  }
-
-  function updateOldMapping(idx: number, key: keyof OldMapping, val: any) {
-    setForm((prev) => {
-      if (!prev) return null;
-      const mappings = [...prev.oldMappings];
-      mappings[idx] = { ...mappings[idx], [key]: val };
-      return { ...prev, oldMappings: mappings };
-    });
-  }
-
-  function toggleOldMappingTag(idx: number, tag: string) {
-    setForm((prev) => {
-      if (!prev) return null;
-      const mappings = [...prev.oldMappings];
-      const tags = mappings[idx].changeTags || [];
-      mappings[idx] = {
-        ...mappings[idx],
-        changeTags: tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag],
-      };
-      return { ...prev, oldMappings: mappings };
-    });
-  }
-
-  function addArrayItem(key: "draftRules" | "repealedRules" | "forms") {
-    update(key, [...(form![key] || []), { ref: "", summary: "" }]);
-  }
-
-  function removeArrayItem(key: "draftRules" | "repealedRules" | "forms", idx: number) {
-    update(key, (form![key] || []).filter((_, i) => i !== idx));
-  }
-
-  function updateArrayItem(key: "draftRules" | "repealedRules" | "forms", idx: number, field: string, val: string) {
-    const arr = [...(form![key] || [])];
-    arr[idx] = { ...arr[idx], [field]: val };
-    update(key, arr);
-  }
-
-  function addCompItem() {
-    update("compItems", [...(form!.compItems || []), { task: "", assignee: "", due: "" }]);
-  }
-
-  function removeCompItem(idx: number) {
-    update("compItems", (form!.compItems || []).filter((_, i) => i !== idx));
-  }
-
-  function updateCompItem(idx: number, field: keyof ComplianceItem, val: string) {
-    const arr = [...(form!.compItems || [])];
-    arr[idx] = { ...arr[idx], [field]: val };
-    update("compItems", arr);
-  }
 
   const tabs: { id: EditorTab; label: string; icon: any }[] = [
     { id: "BASIC", label: "Basic Info", icon: Layout },
@@ -208,8 +153,8 @@ export function EditorModal() {
                 form={form} 
                 updateOldMapping={updateOldMapping} 
                 toggleOldMappingTag={toggleOldMappingTag} 
-                addOldMapping={() => update("oldMappings", [...form.oldMappings, createBlankOldMapping()])}
-                removeOldMapping={(idx) => update("oldMappings", form.oldMappings.filter((_, i) => i !== idx))}
+                addOldMapping={addOldMapping}
+                removeOldMapping={removeOldMapping}
                 inputCls={inputCls} 
                 textareaCls={textareaCls}
                 labelCls={labelCls} 

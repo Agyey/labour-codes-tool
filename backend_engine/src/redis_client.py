@@ -4,7 +4,7 @@ import json
 import typing
 
 # Create a connection pool / client using the settings
-redis_db: redis.Redis = redis.from_url(settings.redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
+redis_db: redis.Redis = redis.from_url(settings.redis_url, decode_responses=True)
 
 
 async def publish_sse_event(

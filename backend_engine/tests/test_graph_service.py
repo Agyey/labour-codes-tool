@@ -1,7 +1,7 @@
 import pytest
 from typing import Any, AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
-from src.graph_service import (
+from src.graph import (
     close_driver,
     create_document_tree,
     traverse_for_query,
@@ -13,10 +13,10 @@ async def test_get_close_driver(mocker: Any) -> None:
     mock_driver = MagicMock()
     mock_driver.close = AsyncMock()
     mocker.patch(
-        "src.graph_service.AsyncGraphDatabase.driver", return_value=mock_driver
+        "src.graph.connection.AsyncGraphDatabase.driver", return_value=mock_driver
     )
 
-    with mocker.patch("src.graph_service._driver", mock_driver):
+    with mocker.patch("src.graph.connection._driver", mock_driver):
         await close_driver()
         mock_driver.close.assert_called_once()
 
@@ -28,7 +28,7 @@ async def test_create_document_tree(mocker: Any) -> None:
     mock_session_ctx = AsyncMock()
     mock_session_ctx.__aenter__.return_value = mock_session
     mock_driver.session = MagicMock(return_value=mock_session_ctx)
-    mocker.patch("src.graph_service.get_driver", return_value=mock_driver)
+    mocker.patch("src.graph.builder.get_driver", return_value=mock_driver)
 
     mock_legislation = MagicMock()
     mock_legislation.id = "leg1"
@@ -109,7 +109,7 @@ async def test_get_graph_and_suggestions(mocker: Any) -> None:
     mock_session_ctx = AsyncMock()
     mock_session_ctx.__aenter__.return_value = mock_session
     mock_driver.session.return_value = mock_session_ctx
-    mocker.patch("src.graph_service.get_driver", return_value=mock_driver)
+    mocker.patch("src.graph.queries.get_driver", return_value=mock_driver)
 
     # Test Global Traversal
     mock_session.run.return_value = MockResult(
@@ -129,9 +129,9 @@ async def test_get_graph_and_suggestions(mocker: Any) -> None:
 @pytest.mark.asyncio
 async def test_get_driver_fallback(mocker: Any) -> None:
     # Reset singleton for testing
-    import src.graph_service
+    import src.graph
 
-    src.graph_service._driver = None
+    src.graph.connection._driver = None
 
     mock_driver_instance = MagicMock()
     # First call to verify_connectivity fails with routing error, second (fallback) succeeds
@@ -141,15 +141,16 @@ async def test_get_driver_fallback(mocker: Any) -> None:
     mock_driver_instance.close = AsyncMock()
 
     mocker.patch(
-        "src.graph_service.AsyncGraphDatabase.driver", return_value=mock_driver_instance
+        "src.graph.connection.AsyncGraphDatabase.driver",
+        return_value=mock_driver_instance,
     )
 
     # Mock settings to use neo4j://
-    mocker.patch("src.graph_service.settings.neo4j_uri", "neo4j://localhost:7687")
+    mocker.patch("src.graph.connection.settings.neo4j_uri", "neo4j://localhost:7687")
 
-    driver = await src.graph_service.get_driver()
+    driver = await src.graph.connection.get_driver()
 
     assert driver == mock_driver_instance
     assert mock_driver_instance.verify_connectivity.call_count == 2
     assert mock_driver_instance.close.call_count == 1
-    src.graph_service._driver = None  # reset for other tests
+    src.graph.connection._driver = None  # reset for other tests

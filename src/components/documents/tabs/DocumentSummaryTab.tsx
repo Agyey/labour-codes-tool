@@ -1,8 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+interface SummaryAnalysis {
+  summary?: string | null;
+  document_type?: string | null;
+}
+
 interface DocumentSummaryTabProps {
-  analysis: any;
+  analysis: SummaryAnalysis;
 }
 
 export function DocumentSummaryTab({ analysis }: DocumentSummaryTabProps) {

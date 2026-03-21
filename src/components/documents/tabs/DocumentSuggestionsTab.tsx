@@ -2,14 +2,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Sparkles, CheckCircle2, FileSignature } from "lucide-react";
 import { SuggestionCard } from "../SuggestionCard";
+import { Suggestion, DocumentDetail } from "@/types/document";
 
 interface DocumentSuggestionsTabProps {
-  doc: any;
-  suggestions: any[];
-  pendingSuggestions: any[];
+  doc: DocumentDetail["document"];
+  suggestions: Suggestion[];
+  pendingSuggestions: Suggestion[];
   handleApprove: (id: string) => void;
   handleReject: (id: string) => void;
-  router: any;
+  router: { push: (url: string) => void };
   docId: string;
 }
 
@@ -38,7 +39,7 @@ export function DocumentSuggestionsTab({
           <div className="flex gap-4 justify-center">
             <button
               onClick={() =>
-                pendingSuggestions.forEach((s: any) => handleApprove(s.id))
+                pendingSuggestions.forEach((s: Suggestion) => handleApprove(s.id))
               }
               disabled={pendingSuggestions.length === 0}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 flex items-center gap-2"
@@ -73,7 +74,7 @@ export function DocumentSuggestionsTab({
               <div className="flex gap-2">
                 <button
                   onClick={() =>
-                    pendingSuggestions.forEach((s: any) => handleApprove(s.id))
+                    pendingSuggestions.forEach((s: Suggestion) => handleApprove(s.id))
                   }
                   className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors"
                 >
@@ -82,7 +83,7 @@ export function DocumentSuggestionsTab({
               </div>
             </div>
           )}
-          {suggestions.map((s: any) => (
+          {suggestions.map((s: Suggestion) => (
             <SuggestionCard
               key={s.id}
               suggestion={s}

@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-import { LegalDocument, StructuralUnit } from "@prisma/client";
+import { StructuralUnit } from "@prisma/client";
 import { TreeNode } from "@/components/reading-view/ProvisionTree";
 
 // Resolves recursive TypeScript generic relationships

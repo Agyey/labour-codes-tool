@@ -38,8 +38,12 @@ def client() -> Generator[TestClient, None, None]:
 
     with (
         patch("src.database.db", mock_db),
-        patch("src.main.record_audit", new_callable=AsyncMock),
-        patch("src.main.process_document_task.delay"),
+        patch("src.routers.document_router.db", mock_db),
+        patch("src.routers.pipeline_router.db", mock_db),
+        patch("src.routers.suggestion_router.db", mock_db),
+        patch("src.routers.document_router.record_audit", new_callable=AsyncMock),
+        patch("src.routers.suggestion_router.record_audit", new_callable=AsyncMock),
+        patch("src.routers.document_router.process_document_task.delay"),
         patch("src.main.connect_db", new_callable=AsyncMock),
         patch("src.main.disconnect_db", new_callable=AsyncMock),
         TestClient(app) as c,
@@ -53,7 +57,7 @@ def test_health_check(client: TestClient) -> None:
     assert response.json()["status"] == "ok"
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_list_documents(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "1"
@@ -73,14 +77,14 @@ def test_list_documents(mock_db: Any, client: TestClient) -> None:
     assert len(response.json()) == 1
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_get_document_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=None)
     response = client.get("/api/documents/nonexistent")
     assert response.status_code == 404
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_get_document_found(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "1"
@@ -120,8 +124,8 @@ def test_get_document_found(mock_db: Any, client: TestClient) -> None:
     assert response.json()["document"]["id"] == "1"
 
 
-@patch("src.main.db")
-@patch("src.main.extract_document_text")
+@patch("src.routers.document_router.db")
+@patch("src.routers.document_router.extract_document_text")
 def test_upload_document(mock_extract: Any, mock_db: Any, client: TestClient) -> None:
     mock_extract.return_value = ("raw text", 5)
 
@@ -165,7 +169,7 @@ def test_upload_document_bad_extension(client: TestClient) -> None:
     assert response.status_code == 400
 
 
-@patch("src.main.settings")
+@patch("src.routers.document_router.settings")
 def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> None:
     mock_settings.allowed_file_types = [".pdf"]
     mock_settings.max_upload_size_mb = 0.0001
@@ -176,7 +180,7 @@ def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> No
     assert response.status_code == 413
 
 
-@patch("src.main.extract_document_text")
+@patch("src.routers.document_router.extract_document_text")
 def test_upload_document_exception(mock_extract: Any, client: TestClient) -> None:
     mock_extract.side_effect = Exception("test error")
     response = client.post(
@@ -186,7 +190,7 @@ def test_upload_document_exception(mock_extract: Any, client: TestClient) -> Non
     assert response.status_code == 500
 
 
-@patch("src.main.traverse_for_query")
+@patch("src.routers.document_router.traverse_for_query")
 def test_get_tree(mock_traverse: Any, client: TestClient) -> None:
     mock_traverse.return_value = [{"summary": "s"}]
 
@@ -199,14 +203,14 @@ def test_get_tree(mock_traverse: Any, client: TestClient) -> None:
     assert response_no_query.status_code == 200
 
 
-@patch("src.main.traverse_for_query")
+@patch("src.routers.document_router.traverse_for_query")
 def test_get_tree_exception(mock_traverse: Any, client: TestClient) -> None:
     mock_traverse.side_effect = Exception("tree error")
     response = client.get("/api/documents/1/tree")
     assert response.status_code == 500
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_approve_suggestion(mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         id = "sug1"
@@ -230,14 +234,14 @@ def test_approve_suggestion(mock_db: Any, client: TestClient) -> None:
     assert response.status_code == 200
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_approve_suggestion_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=None)
     response = client.patch("/api/suggestions/invalid/approve")
     assert response.status_code == 404
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_approve_suggestion_not_pending(mock_db: Any, client: TestClient) -> None:
     class MockSuggestionDone:
         status = "approved"
@@ -249,7 +253,7 @@ def test_approve_suggestion_not_pending(mock_db: Any, client: TestClient) -> Non
     assert response.status_code == 400
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_approve_suggestion_legislation_no_framework(
     mock_db: Any, client: TestClient
 ) -> None:
@@ -266,7 +270,7 @@ def test_approve_suggestion_legislation_no_framework(
     assert response.status_code == 400
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_approve_suggestion_all_types(mock_db: Any, client: TestClient) -> None:
     types = [
         ("create_legislation", "?framework_id=f1"),
@@ -302,7 +306,7 @@ def test_approve_suggestion_all_types(mock_db: Any, client: TestClient) -> None:
         assert res.status_code == 200
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_approve_suggestion_exception(mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         status = "pending"
@@ -316,7 +320,7 @@ def test_approve_suggestion_exception(mock_db: Any, client: TestClient) -> None:
     assert response.status_code == 500
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_reject_suggestion(mock_db: Any, client: TestClient) -> None:
     class MockSuggestion:
         id = "sug1"
@@ -331,21 +335,21 @@ def test_reject_suggestion(mock_db: Any, client: TestClient) -> None:
     assert response.status_code == 200
 
 
-@patch("src.main.db")
+@patch("src.routers.suggestion_router.db")
 def test_reject_suggestion_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.documentsuggestion.find_unique = AsyncMock(return_value=None)
     response = client.patch("/api/suggestions/none/reject")
     assert response.status_code == 404
 
 
-@patch("src.main.verify_chain_integrity")
+@patch("src.routers.audit_router.verify_chain_integrity")
 def test_verify_audit(mock_verify: Any, client: TestClient) -> None:
     mock_verify.return_value = {"valid": True}
     response = client.get("/api/audit/verify")
     assert response.status_code == 200
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_delete_document(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "doc_del"
@@ -364,14 +368,14 @@ def test_delete_document(mock_db: Any, client: TestClient) -> None:
     mock_db.document.delete.assert_called_once()
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_delete_document_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=None)
     response = client.delete("/api/documents/missing")
     assert response.status_code == 404
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_cancel_analysis(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         id = "doc_cancel"
@@ -386,14 +390,14 @@ def test_cancel_analysis(mock_db: Any, client: TestClient) -> None:
     mock_db.document.update.assert_called_once()
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_cancel_analysis_not_found(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=None)
     response = client.patch("/api/documents/x/cancel")
     assert response.status_code == 404
 
 
-@patch("src.main.db")
+@patch("src.routers.document_router.db")
 def test_cancel_analysis_wrong_status(mock_db: Any, client: TestClient) -> None:
     class MockDoc:
         status = "uploaded"
