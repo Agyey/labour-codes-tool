@@ -147,7 +147,7 @@ export function RequisitionTable({
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                  <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors" aria-label="Options">
                     <MoreVertical className="w-4 h-4" />
                   </button>
                 </td>

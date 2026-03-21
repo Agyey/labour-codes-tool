@@ -126,7 +126,7 @@ export default async function FirmDashboard() {
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${m.bg} ${m.color}`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                <button className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors" aria-label="Options">
                   <MoreVertical className="w-4 h-4" />
                 </button>
               </div>

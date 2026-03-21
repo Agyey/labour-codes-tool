@@ -134,7 +134,7 @@ export default async function DueDiligenceChecklist({ params }: { params: Promis
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-all">
+                    <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-all" aria-label="Options">
                       <MoreVertical className="w-4 h-4" />
                     </button>
                   </td>

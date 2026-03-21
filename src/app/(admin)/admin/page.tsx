@@ -107,7 +107,7 @@ export default async function SuperAdminDashboard() {
                         </span>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <button className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                        <button className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" aria-label="Options">
                           <MoreVertical className="w-4 h-4" />
                         </button>
                       </td>
