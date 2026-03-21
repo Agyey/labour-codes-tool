@@ -6,6 +6,7 @@ import { FileText, Eye, EyeOff, Scale, Gavel, Link2, ChevronDown, ChevronRight, 
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
 import type { Provision } from "@/types/provision";
+import { confirmAction } from "@/lib/confirm";
 
 interface StatuteViewProps {
   provision: Provision;
@@ -21,7 +22,7 @@ export const StatuteView = React.memo(function StatuteView({ provision: p, codeS
   const TypeIcon = isRule ? Gavel : Scale;
 
   const handleDeleteSubSection = async (index: number) => {
-    if (!confirm("Are you sure you want to delete this sub-section/clause?")) return;
+    if (!(await confirmAction("Are you sure you want to delete this sub-section/clause?"))) return;
     
     const updatedSubSections = [...(p.subSections || [])];
     updatedSubSections.splice(index, 1);

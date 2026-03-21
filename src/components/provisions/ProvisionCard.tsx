@@ -5,6 +5,7 @@ import { useState, memo } from "react";
 import toast from "react-hot-toast";
 import { useUI } from "@/context/UIContext";
 import { useData } from "@/context/DataContext";
+import { confirmAction } from "@/lib/confirm";
 import { CODES } from "@/config/codes";
 import { IMPACT_COLORS, WORKFLOW_TAG_COLORS } from "@/config/tags";
 import { Badge } from "@/components/shared/Badge";
@@ -253,7 +254,7 @@ export const ProvisionCard = memo(function ProvisionCard({ provision: p }: Provi
                   {canEdit && (
                     <>
                       <button onClick={() => setEditingProvision(p)} className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-all"><Pencil className="w-5 h-5" /></button>
-                      <button onClick={() => { if (confirm("Delete?")) deleteProvision(p.id); }} className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"><Trash2 className="w-5 h-5" /></button>
+                      <button onClick={async () => { if (await confirmAction("Delete this provision?")) deleteProvision(p.id); }} className="p-2.5 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"><Trash2 className="w-5 h-5" /></button>
                     </>
                   )}
                 </div>

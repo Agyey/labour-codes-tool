@@ -23,6 +23,7 @@ import { PenaltyInfo } from "@/components/provisions/PenaltyInfo";
 import { RulesAndForms } from "@/components/provisions/RulesAndForms";
 import { StateNotesTable } from "@/components/provisions/StateNotesTable";
 import { ComplianceItemsList } from "@/components/provisions/ComplianceItemsList";
+import { confirmAction } from "@/lib/confirm";
 
 interface LibraryTableProps {
   data: Provision[];
@@ -259,7 +260,7 @@ export function LibraryTable({ data }: LibraryTableProps) {
                         {canEdit && <button onClick={() => setEditingProvision(row.original)} className="p-2 bg-white dark:bg-zinc-800 border dark:border-zinc-700 rounded-xl text-xs font-bold ml-auto shadow-sm hover:bg-slate-50 transition-colors"><Pencil className="w-4 h-4" /></button>}
                         {canEdit && (
                           <button 
-                            onClick={() => { if(confirm("Delete?")) deleteProvision(row.original.id); }} 
+                            onClick={async () => { if(await confirmAction("Delete?")) deleteProvision(row.original.id); }} 
                             className="p-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-bold shadow-sm hover:bg-rose-100 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />

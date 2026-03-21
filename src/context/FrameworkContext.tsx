@@ -21,6 +21,7 @@ import {
   deleteLegislation as deleteLegislationAction
 } from "@/app/actions/frameworks";
 import toast from "react-hot-toast";
+import { confirmAction } from "@/lib/confirm";
 
 interface FrameworkState {
   frameworks: Framework[];
@@ -88,7 +89,7 @@ export function FrameworkProvider({ children }: { children: ReactNode }) {
   }, [refreshFrameworks]);
 
   const deleteFramework = useCallback(async (id: string) => {
-    if (!confirm("Delete this framework and all its contents?")) return false;
+    if (!(await confirmAction("Delete this framework and all its contents?"))) return false;
     const res = await deleteFrameworkAction(id);
     if (res.success) {
       await refreshFrameworks();

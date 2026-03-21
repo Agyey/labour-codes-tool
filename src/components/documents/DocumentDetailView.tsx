@@ -12,6 +12,7 @@ import { DocumentStructureTab } from "./tabs/DocumentStructureTab";
 import { DocumentDetailHeader } from "./DocumentDetailHeader";
 import { DocumentDetailStats } from "./DocumentDetailStats";
 import { DocumentDetailCTA } from "./DocumentDetailCTA";
+import { confirmAction } from "@/lib/confirm";
 
 interface StreamPayload {
   message?: string;
@@ -188,7 +189,7 @@ export function DocumentDetailView({ docId, onBack }: { docId: string; onBack: (
 
   // Delete handler
   const handleDelete = useCallback(async () => {
-    if (!confirm("Delete this document and all associated analysis? This cannot be undone.")) return;
+    if (!(await confirmAction("Delete this document and all associated analysis? This cannot be undone."))) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/documents?id=${docId}`, { method: "DELETE" });

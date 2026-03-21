@@ -10,6 +10,7 @@ import { Document } from "@/types/document";
 import { DocumentDetailView } from "@/components/documents/DocumentDetailView";
 import { IngestJobCard } from "@/components/documents/IngestJobCard";
 import { PipelineProgressTracker } from "@/components/documents/PipelineProgressTracker";
+import { confirmAction } from "@/lib/confirm";
 
 interface DocumentListProps {
   initialDocuments?: Document[];
@@ -80,7 +81,7 @@ export function DocumentList({ initialDocuments = [] }: DocumentListProps) {
 
   const handleDelete = useCallback(async (e: React.MouseEvent, docId: string, docName: string) => {
     e.stopPropagation();
-    if (!confirm(`Delete "${docName}" and all its analysis? This cannot be undone.`)) return;
+    if (!(await confirmAction(`Delete "${docName}" and all its analysis? This cannot be undone.`))) return;
     try {
       const res = await fetch(`/api/documents?id=${docId}`, { method: "DELETE" });
       if (res.ok) {

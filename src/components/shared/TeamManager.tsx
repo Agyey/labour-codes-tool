@@ -6,6 +6,7 @@ import { updateMemberRole, removeMember } from "@/app/actions/organizations";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { InviteMemberModal } from "./InviteMemberModal";
+import { confirmAction } from "@/lib/confirm";
 
 interface Member {
   id: string;
@@ -42,7 +43,7 @@ export function TeamManager({ members, orgId, maxUsers }: TeamManagerProps) {
   };
 
   const handleRemove = async (userId: string) => {
-    if (!confirm("Are you sure you want to remove this member?")) return;
+    if (!(await confirmAction("Are you sure you want to remove this member?"))) return;
     setBusyUser(userId);
     try {
       const res = await removeMember(userId, orgId);

@@ -2,6 +2,7 @@
 
 import { Legislation } from "@/types/provision";
 import { Scale, FileText, CheckCircle2, Trash2 } from "lucide-react";
+import { confirmAction } from "@/lib/confirm";
 
 interface LegislationTileProps {
   legislation: Legislation & { provisions?: { id: string }[] };
@@ -64,10 +65,10 @@ export function LegislationTile({ legislation, onSelect, onDelete, canEdit }: Le
           {canEdit && (
             <button 
               type="button"
-              onClick={(e) => { 
+              onClick={async (e) => { 
                 e.stopPropagation(); 
                 e.preventDefault();
-                if (confirm("Delete this legislation tile?")) onDelete?.(); 
+                if (await confirmAction("Delete this legislation tile?")) onDelete?.(); 
               }}
               className="p-2.5 bg-slate-50 dark:bg-zinc-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 rounded-xl transition-all"
             >
