@@ -16,6 +16,10 @@ celery_app.conf.update(
     task_track_started=True,
     # Prevent memory leaks over long running workers
     worker_max_tasks_per_child=50,
+    broker_connection_retry_on_startup=True,
+    redis_socket_keepalive=True,
+    redis_retry_on_timeout=True,
+    broker_pool_limit=10,
 )
 
 # Auto-discover tasks
