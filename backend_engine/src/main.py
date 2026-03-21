@@ -337,7 +337,7 @@ async def delete_document(document_id: str) -> dict[str, str]:
     await db.documentsuggestion.delete_many(where={"document_id": document_id})
     await db.documentanalysis.delete_many(where={"document_id": document_id})
     await db.processingjob.delete_many(where={"document_id": document_id})
-    
+
     await db.document.delete(where={"id": document_id})
 
     await record_audit(
@@ -366,9 +366,6 @@ async def cancel_analysis(document_id: str) -> dict[str, str]:
 
     logger.info(f"Analysis cancelled for document: {document_id}")
     return {"message": "Analysis cancelled.", "status": "uploaded"}
-
-
-
 
 
 # ──────────────────────────────────────────────

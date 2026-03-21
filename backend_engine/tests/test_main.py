@@ -186,9 +186,6 @@ def test_upload_document_exception(mock_extract: Any, client: TestClient) -> Non
     assert response.status_code == 500
 
 
-
-
-
 @patch("src.main.traverse_for_query")
 def test_get_tree(mock_traverse: Any, client: TestClient) -> None:
     mock_traverse.return_value = [{"summary": "s"}]
@@ -404,6 +401,3 @@ def test_cancel_analysis_wrong_status(mock_db: Any, client: TestClient) -> None:
     mock_db.document.find_unique = AsyncMock(return_value=MockDoc())
     response = client.patch("/api/documents/y/cancel")
     assert response.status_code == 400
-
-
-
