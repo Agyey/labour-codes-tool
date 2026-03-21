@@ -4,7 +4,7 @@ import json
 import typing
 
 # Create a connection pool / client using the settings
-redis_db = redis.from_url(settings.redis_url, decode_responses=True)
+redis_db: redis.Redis = redis.from_url(settings.redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
 
 
 async def publish_sse_event(
@@ -15,12 +15,12 @@ async def publish_sse_event(
 
     # Store in history list (tail-capped to 500 events just in case)
     history_key = f"analysis:history:{document_id}"
-    await redis_db.rpush(history_key, event_str)
+    await redis_db.rpush(history_key, event_str)  # type: ignore[misc]
     await redis_db.expire(history_key, 86400)  # Expire after 24h
 
     # Publish to active subscribers
     channel = f"analysis:stream:{document_id}"
-    await redis_db.publish(channel, event_str)  # type: ignore # mypy has issues with redis async union return types
+    await redis_db.publish(channel, event_str)
 
 
 async def publish_sse_done(document_id: str) -> None:

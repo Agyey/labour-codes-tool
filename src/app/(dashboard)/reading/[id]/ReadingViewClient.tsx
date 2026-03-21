@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import ProvisionTree from "@/components/reading-view/ProvisionTree";
 import ProvisionContent from "@/components/reading-view/ProvisionContent";
 import PointInTimeSlider from "@/components/reading-view/PointInTimeSlider";
@@ -21,7 +21,7 @@ export default function ReadingViewClient({ document, initialTreeNodes }: { docu
 
   const [activeTab, setActiveTab] = useState<TabId>("index");
 
-  const handleSelectNode = async (nodeId: string) => {
+  const handleSelectNode = useCallback(async (nodeId: string) => {
     try {
       setIsLoadingNode(true);
       const data = await getUnitDetails(nodeId);
@@ -31,7 +31,15 @@ export default function ReadingViewClient({ document, initialTreeNodes }: { docu
     } finally {
       setIsLoadingNode(false);
     }
-  };
+  }, []);
+
+  const tabs = useMemo(() => [
+    { id: "index", label: "Index" },
+    { id: "rules", label: "Rules" },
+    { id: "circulars", label: "Circulars" },
+    { id: "cases", label: "Case Law" },
+    { id: "analytics", label: "Analytics" },
+  ], []);
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-50 dark:bg-zinc-950">
@@ -65,13 +73,7 @@ export default function ReadingViewClient({ document, initialTreeNodes }: { docu
         <div className="w-80 border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col">
           {/* Tabs */}
           <div className="flex overflow-x-auto hide-scrollbar border-b border-slate-200 dark:border-zinc-800 px-2 pt-2 gap-1 items-end">
-             {[
-               { id: "index", label: "Index" },
-               { id: "rules", label: "Rules" },
-               { id: "circulars", label: "Circulars" },
-               { id: "cases", label: "Case Law" },
-               { id: "analytics", label: "Analytics" },
-             ].map(tab => (
+             {tabs.map(tab => (
                <button
                  key={tab.id}
                  onClick={() => setActiveTab(tab.id as TabId)}
