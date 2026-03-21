@@ -146,7 +146,7 @@ def test_upload_document(mock_extract: Any, mock_db: Any, client: TestClient) ->
 
     file_content = b"PDF content bytes"
     response = client.post(
-        "/api/pipeline/ingest",
+        "/api/documents/upload",
         files={"file": ("test.pdf", io.BytesIO(file_content), "application/pdf")},
     )
     assert response.status_code == 200
@@ -155,7 +155,7 @@ def test_upload_document(mock_extract: Any, mock_db: Any, client: TestClient) ->
 
 def test_upload_document_no_filename(client: TestClient) -> None:
     response = client.post(
-        "/api/pipeline/ingest",
+        "/api/documents/upload",
         files={"file": ("", io.BytesIO(b""), "application/pdf")},
     )
     assert response.status_code in (400, 422)
@@ -163,7 +163,7 @@ def test_upload_document_no_filename(client: TestClient) -> None:
 
 def test_upload_document_bad_extension(client: TestClient) -> None:
     response = client.post(
-        "/api/pipeline/ingest",
+        "/api/documents/upload",
         files={"file": ("test.exe", io.BytesIO(b""), "application/octet-stream")},
     )
     assert response.status_code == 400
@@ -174,7 +174,7 @@ def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> No
     mock_settings.allowed_file_types = [".pdf"]
     mock_settings.max_upload_size_mb = 0.0001
     response = client.post(
-        "/api/pipeline/ingest",
+        "/api/documents/upload",
         files={"file": ("test.pdf", io.BytesIO(b"A" * 1024 * 1024), "application/pdf")},
     )
     assert response.status_code == 413
@@ -184,7 +184,7 @@ def test_upload_document_too_large(mock_settings: Any, client: TestClient) -> No
 def test_upload_document_exception(mock_extract: Any, client: TestClient) -> None:
     mock_extract.side_effect = Exception("test error")
     response = client.post(
-        "/api/pipeline/ingest",
+        "/api/documents/upload",
         files={"file": ("test.pdf", io.BytesIO(b"PDF content"), "application/pdf")},
     )
     assert response.status_code == 500

@@ -16,7 +16,7 @@ from src.graph import traverse_for_query
 router = APIRouter(tags=["documents"])
 
 
-@router.post("/api/pipeline/ingest")
+@router.post("/api/documents/upload")
 @limiter.limit(f"{settings.rate_limit_rpm}/minute")
 async def ingest_document(
     request: Request, file: UploadFile = File(...)
