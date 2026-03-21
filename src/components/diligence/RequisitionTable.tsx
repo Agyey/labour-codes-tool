@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   Search, 
   Plus, 
@@ -37,9 +37,15 @@ export function RequisitionTable({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSeedModal, setShowSeedModal] = useState(false);
 
-  const filteredItems = items.filter((r: any) => 
-    r.title.toLowerCase().includes(filter.toLowerCase())
-  );
+  // ⚡ Bolt: Memoize filteredItems to prevent O(n) filtering on every render
+  // (e.g., when modals toggle or other state changes)
+  const filteredItems = useMemo(() => {
+    if (!filter) return items;
+    const lowerFilter = filter.toLowerCase();
+    return items.filter((r: any) =>
+      r.title.toLowerCase().includes(lowerFilter)
+    );
+  }, [items, filter]);
 
   const handleSeed = async (scenarioId: string) => {
     setIsSeeding(true);

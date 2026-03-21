@@ -5,7 +5,7 @@ import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { FolderKanban, Scale, ChevronRight, Activity, Pencil, Trash2, PieChart, Plus, BarChart3, Edit2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { FrameworkModal } from "./FrameworkModal";
 import { Framework } from "@/types/provision";
 
@@ -16,6 +16,23 @@ export function FrameworkDashboard() {
   const { setActiveView, setActiveCode } = useUI();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFw, setEditingFw] = useState<Framework | null>(null);
+
+  // ⚡ Bolt: Memoize legislation counts map to avoid repetitive O(N) filtering inside map loops on every render
+  const legislationCounts = useMemo(() => {
+    const counts: Record<string, { inForce: number, repealed: number }> = {};
+    if (!frameworks) return counts;
+
+    for (const fw of frameworks) {
+      let inForce = 0;
+      let repealed = 0;
+      for (const l of (fw.legislations || [])) {
+        if (l.isRepealed) repealed++;
+        else inForce++;
+      }
+      counts[fw.id] = { inForce, repealed };
+    }
+    return counts;
+  }, [frameworks]);
 
   if (loading) {
     return (
@@ -118,14 +135,14 @@ export function FrameworkDashboard() {
                      <Activity className="w-3.5 h-3.5" />
                      <span className="text-[10px] font-black uppercase tracking-tighter">In Force</span>
                   </div>
-                  <p className="text-xl font-black text-slate-900 dark:text-white">{(fw.legislations || []).filter(l => !l.isRepealed).length}</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{legislationCounts[fw.id]?.inForce || 0}</p>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
                      <Scale className="w-3.5 h-3.5" />
                      <span className="text-[10px] font-black uppercase tracking-tighter">Repealed</span>
                   </div>
-                  <p className="text-xl font-black text-slate-900 dark:text-white">{(fw.legislations || []).filter(l => l.isRepealed).length}</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">{legislationCounts[fw.id]?.repealed || 0}</p>
                 </div>
               </div>
 
