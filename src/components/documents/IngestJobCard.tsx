@@ -86,8 +86,9 @@ export function IngestJobCard({ job, onClick, onDelete }: IngestJobCardProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0 md:pl-4 md:border-l border-slate-100 dark:border-zinc-800">
-        {job.status !== "processing" && (
+        {true && (
           <button
+            type="button"
             onClick={(e) => onDelete(e, job.id, job.name)}
             className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all md:opacity-0 group-hover:opacity-100"
             title="Delete document"

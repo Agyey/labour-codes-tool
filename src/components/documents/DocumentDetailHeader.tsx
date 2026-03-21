@@ -26,7 +26,7 @@ export function DocumentDetailHeader({ doc, onBack, handleDelete, deleting, anal
         </div>
         <StatusBadge status={doc.status} />
 
-        <button onClick={handleDelete} disabled={deleting || analyzing} className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-xl transition-all disabled:opacity-30 group" title="Delete document">
+        <button type="button" onClick={handleDelete} disabled={deleting} className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-xl transition-all disabled:opacity-30 group" title="Delete document">
           {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />}
         </button>
 
