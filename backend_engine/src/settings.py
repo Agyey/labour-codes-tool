@@ -16,8 +16,20 @@ class Settings(BaseSettings):
 
     # --- Task Queue (Redis / Celery) ---
     redis_url: str = "redis://localhost:6379/0"
-    celery_broker_url: str = "redis://localhost:6379/1"
-    celery_result_backend: str = "redis://localhost:6379/2"
+
+    @property
+    def celery_broker_url(self) -> str:
+        import urllib.parse
+
+        parsed = urllib.parse.urlparse(self.redis_url)
+        return str(urllib.parse.urlunparse(parsed._replace(path="/1")))
+
+    @property
+    def celery_result_backend(self) -> str:
+        import urllib.parse
+
+        parsed = urllib.parse.urlparse(self.redis_url)
+        return str(urllib.parse.urlunparse(parsed._replace(path="/2")))
 
     # --- Security ---
     allowed_file_types: list[str] = [
